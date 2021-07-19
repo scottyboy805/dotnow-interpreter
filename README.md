@@ -14,6 +14,9 @@ The end goal is to create a performant and feature complete runtime for managed 
 - Execute code as fast as is reasonably possible.
 - Support for debugging.
 
+# Dependencies
+- Mono.Cecil (0.10.0.0) or newer. Used to read managed assembly images into memory.
+
 # Limitations
 Trivial CLR is still very in early development although it is able to run most CIL code in its current form. There are however a few inherant limitations to the project:
 - In order for user types to derive from interpreted types defined in external assemblies, a proxy binding must be created ahead of time.
