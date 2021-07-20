@@ -22,9 +22,13 @@ Trivial CLR is still very in early development although it is able to run most C
 - In order for user types to derive from interpreted types defined in external assemblies, a proxy binding must be created ahead of time.
 - Invoking interop methods can be very slow unless a direct call binding is implemented ahead of time.
 - Code stripping can cause issues in builds. You can use link.xml or direct call bindings to get around the problem. 
+- AOT code for some generic types may not be emitted at build, causing runtime errors. For example If 'List`(int)' is not used inside the main project at any time but runtime interpreted code does use this generic type, it will cause a runtime exception stating (correctly) that no AOT code was generated. The workarounds for this are nasty hacks at the moment and involve declaring variables for all potential generic combinations ahead or time.
 
 # Getting Started
 Take a look at the [wiki](https://github.com/scottyboy805/Trivial-CLR/wiki) to get started.
+
+# Demos
+- Snake: A simple snake game that is dynamically loaded and interpreted on Unity WebGL with IL2CPP backend. Demo scripts use arrays, collections, generics, enums and derive from MonoBehaviour. Find the demo game [here](https://trivialinteractive.co.uk/products/demo/trivialclr/snake). Find the demo project in 'ExampleProjects/SnakeExample' (Game runtime scripts - dynamically loaded) and 'Assets/Examples/Snake' (Loading and setup code).
 
 # Sponsors
 You can sponsor this project to help it grow
