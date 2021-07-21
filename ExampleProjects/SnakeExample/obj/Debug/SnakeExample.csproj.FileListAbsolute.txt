@@ -1,8 +1,0 @@
-E:\Unity\Trivial CLR\Unity - Trivial CLR\ExampleProjects\SnakeExample\obj\Debug\SnakeExample.csproj.CoreCompileInputs.cache
-E:\Unity\Trivial CLR\Unity - Trivial CLR\ExampleProjects\SnakeExample\bin\Debug\SnakeExample.dll
-E:\Unity\Trivial CLR\Unity - Trivial CLR\ExampleProjects\SnakeExample\bin\Debug\SnakeExample.pdb
-E:\Unity\Trivial CLR\Unity - Trivial CLR\ExampleProjects\SnakeExample\bin\Debug\UnityEngine.dll
-E:\Unity\Trivial CLR\Unity - Trivial CLR\ExampleProjects\SnakeExample\obj\Debug\SnakeExample.csproj.CopyComplete
-E:\Unity\Trivial CLR\Unity - Trivial CLR\ExampleProjects\SnakeExample\obj\Debug\SnakeExample.dll
-E:\Unity\Trivial CLR\Unity - Trivial CLR\ExampleProjects\SnakeExample\obj\Debug\SnakeExample.pdb
-E:\Unity\Trivial CLR\Unity - Trivial CLR\ExampleProjects\SnakeExample\obj\Debug\SnakeExample.csproj.AssemblyReference.cache
