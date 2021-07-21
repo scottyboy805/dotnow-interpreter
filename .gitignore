@@ -12,6 +12,12 @@
 /Assets/Exclude/
 /UnitTest/TrivialCLR.Tests/TestResults
 
+# Output folders for test and example projects
+*/**/bin/Debug
+*/**/bin/Release
+*/**/obj/Debug
+*/**/obj/Release
+
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
 
