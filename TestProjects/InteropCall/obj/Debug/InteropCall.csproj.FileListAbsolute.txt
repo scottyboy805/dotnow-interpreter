@@ -1,0 +1,8 @@
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\InteropCall\bin\Debug\InteropCall.dll
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\InteropCall\bin\Debug\InteropCall.pdb
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\InteropCall\bin\Debug\UnityEngine.dll
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\InteropCall\obj\Debug\InteropCall.csproj.AssemblyReference.cache
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\InteropCall\obj\Debug\InteropCall.csproj.CoreCompileInputs.cache
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\InteropCall\obj\Debug\InteropCall.csproj.CopyComplete
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\InteropCall\obj\Debug\InteropCall.dll
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\InteropCall\obj\Debug\InteropCall.pdb

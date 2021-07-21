@@ -1,0 +1,6 @@
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\Fibonacci\bin\Debug\Fibonacci.dll
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\Fibonacci\bin\Debug\Fibonacci.pdb
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\Fibonacci\obj\Debug\Fibonacci.csproj.AssemblyReference.cache
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\Fibonacci\obj\Debug\Fibonacci.csproj.CoreCompileInputs.cache
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\Fibonacci\obj\Debug\Fibonacci.dll
+E:\Unity\Trivial CLR\Unity - Trivial CLR\TestProjects\Fibonacci\obj\Debug\Fibonacci.pdb

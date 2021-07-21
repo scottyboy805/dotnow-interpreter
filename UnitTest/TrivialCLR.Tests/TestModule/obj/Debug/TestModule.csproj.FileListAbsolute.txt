@@ -1,0 +1,12 @@
+E:\Unity\Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\bin\Debug\TestModule.dll
+E:\Unity\Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\bin\Debug\TestModule.pdb
+E:\Unity\Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\obj\Debug\TestModule.csproj.CoreCompileInputs.cache
+E:\Unity\Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\obj\Debug\TestModule.dll
+E:\Unity\Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\obj\Debug\TestModule.pdb
+E:\Unity\Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\obj\Debug\TestModule.csprojAssemblyReference.cache
+E:\Unity\Trivial CLR\Unity - Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\bin\Debug\TestModule.dll
+E:\Unity\Trivial CLR\Unity - Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\bin\Debug\TestModule.pdb
+E:\Unity\Trivial CLR\Unity - Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\obj\Debug\TestModule.csproj.CoreCompileInputs.cache
+E:\Unity\Trivial CLR\Unity - Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\obj\Debug\TestModule.dll
+E:\Unity\Trivial CLR\Unity - Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\obj\Debug\TestModule.pdb
+E:\Unity\Trivial CLR\Unity - Trivial CLR\UnitTest\TrivialCLR.Tests\TestModule\obj\Debug\TestModule.csprojAssemblyReference.cache

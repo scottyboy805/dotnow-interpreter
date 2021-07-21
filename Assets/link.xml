@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<linker>
+  <assembly preserve="all" fullname="UnityEngine.CoreModule"> </assembly>
+  <assembly fullname="UnityEngine">
+    <type preserve="all" fullname="UnityEngine.Avatar"/>
+    <type preserve="all" fullname="UnityEngine.Animator"/>
+    <type preserve="all" fullname="UnityEngine.SkinnedMeshRenderer"/>
+    <type preserve="all" fullname="UnityEngine.MeshFilter"/>
+    <type preserve="all" fullname="UnityEngine.MeshRenderer"/>
+    <type preserve="all" fullname="UnityEngine.Light"/>
+    <type preserve="all" fullname="UnityEngine.FlareLayer"/>
+    <type preserve="all" fullname="UnityEngine.AudioListener"/>
+    <type preserve="all" fullname="UnityEngine.Mesh"/>
+    <type preserve="all" fullname="UnityEngine.Input"/>
+    <type preserve="all" fullname="UnityEngine.UI.Canvas"/>
+    <type preserve="all" fullname="UnityEngine.UI.CanvasRenderer"/>
+  </assembly>
+  <assembly preserve="all" fullname="mscorlib"></assembly>
+</linker>
