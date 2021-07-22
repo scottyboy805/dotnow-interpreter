@@ -6,6 +6,7 @@ using Mono.Cecil;
 using TrivialCLR.Interop;
 using TrivialCLR.Reflection;
 using TrivialCLR.Runtime;
+using TrivialCLR.Runtime.JIT;
 using TypeAttributes = System.Reflection.TypeAttributes;
 
 #if INTEROP_UNITYENGINE
@@ -15,7 +16,7 @@ using TrivialIL.Runtime.Interop.UnityEngine;
 
 namespace TrivialCLR
 {
-    public sealed class CLRType : Type
+    public sealed class CLRType : Type, IJITOptimizable
     {
         // Types
         [Flags]
@@ -247,6 +248,17 @@ namespace TrivialCLR
         }
 
         // Methods
+        void IJITOptimizable.EnsureJITOptimized()
+        {
+            // Ensure all constructors are optimzed and ready to be invoked
+            foreach (CLRConstructor ctor in constructors)
+                JITOptimize.EnsureJITOptimized(ctor);
+
+            // Ensure all methods are optimized and ready to be invoked
+            foreach (CLRMethod method in methods)
+                JITOptimize.EnsureJITOptimized(method);
+        }
+
         public override string ToString()
         {
             return type.ToString();

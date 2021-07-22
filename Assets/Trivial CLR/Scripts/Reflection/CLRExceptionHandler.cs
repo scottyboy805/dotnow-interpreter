@@ -12,7 +12,7 @@ namespace TrivialCLR.Reflection
     {
         // Private
         private AppDomain domain = null;
-        private CLRMethodBody declaringMethodBody = null;
+        private CLRMethodBodyBase declaringMethodBody = null;
         private ExceptionHandler handler = null;
         private Lazy<Type> exceptionType = null;
 
@@ -34,7 +34,7 @@ namespace TrivialCLR.Reflection
         }
 
         // Constructor
-        internal CLRExceptionHandler(AppDomain domain, CLRMethodBody declaringMethodBody, MethodBody body, ExceptionHandler handler)
+        internal CLRExceptionHandler(AppDomain domain, CLRMethodBodyBase declaringMethodBody, MethodBody body, ExceptionHandler handler)
         {
             this.domain = domain;
             this.declaringMethodBody = declaringMethodBody;

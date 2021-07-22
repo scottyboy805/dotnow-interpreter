@@ -2540,7 +2540,7 @@ namespace TrivialCLR.Runtime.CIL
                             if (targetMethod is CLRMethod)
                             {
                                 CLRMethod clrMethod = targetMethod as CLRMethod;
-                                CLRMethodBody body = clrMethod.Body;
+                                CLRMethodBodyBase body = clrMethod.Body;
 
                                 // Create call frame
                                 ExecutionFrame callFrame;//= new ExecutionFrame(engine, targetMethod, body.MaxStack, argSize, body.Locals);

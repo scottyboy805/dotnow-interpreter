@@ -9,49 +9,29 @@ using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace TrivialCLR.Reflection
 {
-    public sealed class CLRMethodBody
+    public sealed class CLRMethodBody : CLRMethodBodyBase, IJITOptimizable
     {
         // Private
-        private AppDomain domain = null;
-        private MethodBase method = null;
         private MethodBody body = null;
         private MethodBodyCompiler bodyCompiler = null;      
         private CILOperation[] instructions = null;
-        private Lazy<CLRExceptionHandler[]> exceptionHandlers = null;
-        private Lazy<StackLocal[]> locals = null;
         private bool jitFailed = false;
 
         // Properties
-        public MethodBase Method
-        {
-            get { return method; }
-        }
-
-        public bool InitLocals
+        public override bool InitLocals
         {
             get { return body.InitLocals; }
         }
 
-        public int MaxStack
+        public override int MaxStack
         {
             get { return body.MaxStackSize; }
         }
 
-        public CLRExceptionHandler[] ExceptionHandlers
-        {
-            get { return exceptionHandlers.Value; }
-        }
-
-        public StackLocal[] Locals
-        {
-            get { return locals.Value; }
-        }
-
         // Constructor
         internal CLRMethodBody(AppDomain domain, MethodBase method, MethodBody body)
+            : base(domain, method)
         {
-            this.domain = domain;
-            this.method = method;
             this.body = body;
             this.bodyCompiler = new MethodBodyCompiler(body);
 
@@ -63,7 +43,7 @@ namespace TrivialCLR.Reflection
         }
 
         // Methods
-        public void ExecuteMethodBody(ExecutionEngine engine, ExecutionFrame frame)
+        void IJITOptimizable.EnsureJITOptimized()
         {
             // Create instructions
             if (instructions == null)
@@ -99,22 +79,15 @@ namespace TrivialCLR.Reflection
             // Check for error
             if (instructions == null)
                 throw new InvalidProgramException("Failed to JIT compile method body: " + method);
-
-            // Profiling entry
-#if UNITY && DEBUG && PROFILE
-            UnityEngine.Profiling.Profiler.BeginSample(string.Concat("[CLR Interpreted] ", Method.DeclaringType.Name, ".", Method.Name, "()"));
-#endif
-
-            // Run interpreted
-            engine.Execute(domain, frame, instructions, exceptionHandlers.Value);
-
-            // Profiling entry
-#if UNITY && DEBUG && PROFILE
-            UnityEngine.Profiling.Profiler.EndSample();
-#endif
         }
 
-        private StackLocal[] InitLocalDefaults()
+        protected override CILOperation[] InitOperations()
+        {
+            JITOptimize.EnsureJITOptimized(this);
+            return instructions;
+        }
+
+        protected override StackLocal[] InitLocalDefaults()
         {
             // Allocate locals
             StackLocal[] locals = new StackLocal[body.Variables.Count];
@@ -148,7 +121,7 @@ namespace TrivialCLR.Reflection
             return locals;
         }
 
-        private CLRExceptionHandler[] InitExceptionHandlers()
+        protected override CLRExceptionHandler[] InitExceptionHandlers()
         {
             CLRExceptionHandler[] handlers = new CLRExceptionHandler[body.ExceptionHandlers.Count];
 

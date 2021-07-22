@@ -4,18 +4,20 @@ using System.Reflection;
 using Mono.Cecil;
 using TrivialCLR.Runtime;
 using TrivialCLR.Runtime.CIL;
+using TrivialCLR.Runtime.JIT;
 using MethodAttributes = System.Reflection.MethodAttributes;
 using MethodImplAttributes = System.Reflection.MethodImplAttributes;
 
 namespace TrivialCLR.Reflection
 {
-    public sealed class CLRConstructor : ConstructorInfo
+    public sealed class CLRConstructor : ConstructorInfo, IJITOptimizable
     {
         // Private
-        private AppDomain domain = null;
-        private CLRType declaringType = null;
-        private MethodDefinition method = null;
-        private CLRMethodBody body = null;
+        private readonly AppDomain domain = null;
+        private readonly CLRType declaringType = null;
+        private readonly MethodDefinition method = null;
+        private readonly CLRMethodBodyBase body = null;
+        private ExecutionMethod executableCtor = null;
         private CLRParameter[] parameters = null;
         private Lazy<CILSignature> signature = null;
         private Lazy<CLRAttributeBuilder> attributeProvider = null;
@@ -75,6 +77,15 @@ namespace TrivialCLR.Reflection
         }
 
         // Methods
+        void IJITOptimizable.EnsureJITOptimized()
+        {
+            JITOptimize.EnsureJITOptimized(body);
+
+            // Initialize executable method
+            if (executableCtor == null)
+                executableCtor = new ExecutionMethod(domain, signature.Value, this, body, false, true);
+        }
+
         public override object[] GetCustomAttributes(bool inherit)
         {
             return attributeProvider.Value.GetAttributeInstances();
@@ -117,36 +128,13 @@ namespace TrivialCLR.Reflection
             // Make sure type is initialized
             declaringType.StaticInitializeType();
 
-            // Get the exeuction engine
-            ExecutionEngine engine = domain.GetExecutionEngine();
 
-            StackLocal[] locals = null;
+            // Initialize executable method
+            if (executableCtor == null)
+                executableCtor = new ExecutionMethod(domain, signature.Value, this, body, false, true);
 
-            // Get locals
-            if (body.InitLocals == true)
-                locals = body.Locals;
-
-            int instanceCount = (obj == null) ? 0 : 1;
-            int paramCount = (parameters == null) ? 0 : parameters.Length;
-
-            // Create the method frame
-            ExecutionFrame frame;//= new ExecutionFrame(engine, this, body.MaxStack + paramCount + instanceCount, paramCount, locals);
-            frame = new ExecutionFrame(domain, engine, null, this, body.MaxStack, paramCount, locals);
-
-            // Push instance
-            if (instanceCount > 0)
-            {
-                frame.stack[frame.stackIndex].refValue = obj;
-                frame.stack[frame.stackIndex++].type = StackData.ObjectType.Ref;
-            }
-
-            // Push parameters
-            for (int i = 0; i < paramCount; i++)
-                StackData.AllocTyped(ref frame.stack[frame.stackIndex++], signature.Value.parameterTypeInfos[i], parameters[i]);
-                //frame.stack[frame.stackIndex++] = StackObject.AllocTyped(this.parameters[i].ParameterTypeCode, parameters[i]);
-
-            // Execute method body
-            body.ExecuteMethodBody(engine, frame);
+            // Invoke the method
+            executableCtor.ReflectionInvoke(obj, parameters);
 
             return obj;
         }

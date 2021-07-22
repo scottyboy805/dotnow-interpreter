@@ -9,45 +9,31 @@ using TrivialCLR.Runtime.CIL;
 
 namespace TrivialCLR.Reflection
 {
-    internal sealed class CLRAnonymousMethodBody
+    internal sealed class CLRAnonymousMethodBody : CLRMethodBodyBase
     {
         // Private
         private static readonly CLRExceptionHandler[] defaultExceptionHandlers = new CLRExceptionHandler[0];
 
-        private AppDomain domain = null;
-        private MethodBase method = null;
         private bool initLocals = false;
         private int maxStack = 0;
         private Type[] localTypes = null;
         private CILOperation[] instructions = null;
-        private Lazy<StackLocal[]> locals = null;
 
         // Properties
-        public MethodBase Method
-        {
-            get { return method; }
-        }
-
-        public bool InitLocals
+        public override bool InitLocals
         {
             get { return initLocals; }
         }
 
-        public int MaxStack
+        public override int MaxStack
         {
             get { return maxStack; }
         }
 
-        public StackLocal[] Locals
-        {
-            get { return locals.Value; }
-        }
-
         // Constructor
         internal CLRAnonymousMethodBody(AppDomain domain, MethodBase method, CILOperation[] instructions, bool initLocals, int maxStack, Type[] localTypes)
+            : base(domain, method)
         {
-            this.domain = domain;
-            this.method = method;
             this.instructions = instructions;
             this.initLocals = initLocals;
             this.maxStack = maxStack;
@@ -58,23 +44,12 @@ namespace TrivialCLR.Reflection
         }
 
         // Methods
-        public void ExecuteMethodBody(ExecutionEngine engine, ExecutionFrame frame)
+        protected override CILOperation[] InitOperations()
         {
-            // Profiling entry
-#if UNITY && DEBUG && PROFILE
-            UnityEngine.Profiling.Profiler.BeginSample(string.Concat("[CLR Interpreted] ", Method.DeclaringType.Name, ".", Method.Name, "()"));
-#endif
-
-            // Run interpreted
-            engine.Execute(domain, frame, instructions, defaultExceptionHandlers);
-
-            // Profiling entry
-#if UNITY && DEBUG && PROFILE
-            UnityEngine.Profiling.Profiler.EndSample();
-#endif
+            return instructions;
         }
 
-        private StackLocal[] InitLocalDefaults()
+        protected override StackLocal[] InitLocalDefaults()
         {
             // Allocate locals
             StackLocal[] locals = new StackLocal[localTypes.Length];
@@ -87,6 +62,12 @@ namespace TrivialCLR.Reflection
             }
 
             return locals;
+        }
+
+        protected override CLRExceptionHandler[] InitExceptionHandlers()
+        {
+            // Not supported at the moment
+            return defaultExceptionHandlers;
         }
     }
 }

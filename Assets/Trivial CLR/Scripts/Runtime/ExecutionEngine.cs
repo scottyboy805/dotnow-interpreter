@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,9 +43,12 @@ namespace TrivialCLR.Runtime
         // Internal
         internal Dictionary<int, object[]> argumentCache = new Dictionary<int, object[]>();
 
+        internal ExecutionFrame currentFrame = null;
         internal StackData[] stack = null;
 
         // Private        
+        private Stack<ExecutionFrame> availableFrames = new Stack<ExecutionFrame>();
+
         private bool shouldPauseDebugger = false;
         private bool isDebuggerPaused = false;
         private bool debugStepOnce = false;
@@ -72,7 +76,7 @@ namespace TrivialCLR.Runtime
         // Constructor
         public ExecutionEngine(Thread thread, int maxStack = 0)
         {
-            int stackSize = (maxStack != 0) ? maxStack : defaultStackSize;
+            int stackSize = (maxStack > 0) ? maxStack : defaultStackSize;
 
             this.thread = thread;
             this.stack = new StackData[stackSize];
@@ -542,6 +546,35 @@ namespace TrivialCLR.Runtime
                 }
             }
             return null;
+        }
+
+        internal void AllocExecutionFrame(out ExecutionFrame frame, AppDomain domain, ExecutionEngine engine, MethodBase method, int maxStack, int paramCount, StackLocal[] locals)
+        {
+            if (availableFrames.Count > 0)
+            {
+                // Use pooled frame
+                frame = availableFrames.Pop();
+                frame.SetupFrame(domain, engine, currentFrame, method, maxStack, paramCount, locals);
+            }
+            else
+            {
+                frame = new ExecutionFrame(domain, engine, currentFrame, method, maxStack, paramCount, locals);
+            }
+
+            // Set current
+            currentFrame = frame;
+        }
+
+        internal void FreeExecutionFrame(ExecutionFrame frame)
+        {
+            lock (availableFrames)
+            {
+                availableFrames.Push(frame);
+
+                // Pop current frame
+                if (currentFrame == frame && frame != null)
+                    currentFrame = frame.Parent;
+            }
         }
     }
 }

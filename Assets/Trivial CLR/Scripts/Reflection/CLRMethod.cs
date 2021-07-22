@@ -5,25 +5,27 @@ using System.Reflection;
 using Mono.Cecil;
 using TrivialCLR.Runtime;
 using TrivialCLR.Runtime.CIL;
+using TrivialCLR.Runtime.JIT;
 using MethodAttributes = System.Reflection.MethodAttributes;
 using MethodImplAttributes = System.Reflection.MethodImplAttributes;
 
 namespace TrivialCLR.Reflection
 {
-    public sealed class CLRMethod : MethodInfo
+    public sealed class CLRMethod : MethodInfo, IJITOptimizable
     {
         // Private
         private readonly AppDomain domain = null;
-        private CLRType declaringType = null;
-        private MethodDefinition method = null;
-        private CLRMethodBody body = null;
+        private readonly CLRType declaringType = null;
+        private readonly MethodDefinition method = null;
+        private readonly CLRMethodBodyBase body = null;
+        private ExecutionMethod executableMethod = null;
         private CLRParameter[] parameters = null;
         private Lazy<CILSignature> signature = null;
         private Lazy<CLRTypeInfo> returnType = null;
         private Lazy<CLRAttributeBuilder> attributeProvider = null;
 
         // Properties
-        public CLRMethodBody Body
+        public CLRMethodBodyBase Body
         {
             get { return body; }
         }
@@ -103,6 +105,15 @@ namespace TrivialCLR.Reflection
         }
 
         // Methods
+        void IJITOptimizable.EnsureJITOptimized()
+        {
+            JITOptimize.EnsureJITOptimized(body);
+
+            // Initialize executable method
+            if (executableMethod == null)
+                executableMethod = new ExecutionMethod(domain, signature.Value, this, body, IsStatic, false);
+        }
+
         public override MethodInfo GetBaseDefinition()
         {
             // Check for interface
@@ -198,64 +209,16 @@ namespace TrivialCLR.Reflection
             if (obj != null && IsStatic == true)
                 obj = null;
 
-            // Make sure type is initialized
+            // Make sure type is initialized (Run static initializers etc)
             declaringType.StaticInitializeType();
 
-            // Get the exeuction engine
-            ExecutionEngine engine = domain.GetExecutionEngine();
 
-            StackLocal[] locals = null;
+            // Initialize executable method
+            if (executableMethod == null)
+                executableMethod = new ExecutionMethod(domain, signature.Value, this, body, IsStatic, false);
 
-            // Get locals
-            if (body.InitLocals == true)
-                locals = body.Locals;
-
-            int instanceCount = (obj == null) ? 0 : 1;
-            int paramCount = (parameters == null) ? 0 : parameters.Length;
-
-            // Check parameter types
-            if(paramCount > 0)
-            {
-                for(int i = 0; i < paramCount; i++)
-                {
-                    // Check if patameters should be passed by reference
-                    if (this.parameters[i].ParameterType.IsByRef == true && i < parameters.Length && (parameters[i] is IByRef) == false)
-                    {
-                        throw new TargetInvocationException(string.Format("The argument at index '{0}' of type '{1}' must be passed by reference. You can use the ByRef type to pass external variables by reference", i, this.parameters[i].ParameterType),
-                            new ArgumentException("Expected reference type for method invocation"));
-                    }
-                }
-            }
-
-            // Create the method frame
-            ExecutionFrame frame;//= new ExecutionFrame(engine, this, body.MaxStack + paramCount + instanceCount, paramCount, locals);
-
-            frame = new ExecutionFrame(domain, engine, null, this, body.MaxStack, paramCount, locals);
-
-            // Push instance
-            if (instanceCount > 0)
-            {
-                frame.stack[frame.stackIndex].refValue = obj;
-                frame.stack[frame.stackIndex++].type = StackData.ObjectType.Ref;
-            }
-
-            // Push parameters
-            for (int i = 0; i < paramCount; i++)
-                StackData.AllocTyped(ref frame.stack[frame.stackIndex++], signature.Value.parameterTypeInfos[i], parameters[i]);
-                //frame.stack[frame.stackIndex++] = StackObject.AllocTyped(this.parameters[i].ParameterTypeCode, parameters[i]);
-
-            // Execute method body
-            body.ExecuteMethodBody(engine, frame);
-
-            // Get return object
-            if (ReturnType != typeof(void))
-            {
-                StackData result = frame.stack[--frame.stackIndex];
-
-                return result.UnboxAsType(returnType.Value);
-            }
-
-            return null;
+            // Invoke the method
+            return executableMethod.ReflectionInvoke(obj, parameters);
         }
 
         public override bool IsDefined(Type attributeType, bool inherit)
