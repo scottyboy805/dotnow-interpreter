@@ -3,14 +3,16 @@ using System.Globalization;
 using System.Reflection;
 using TrivialCLR.Runtime;
 using TrivialCLR.Runtime.CIL;
+using TrivialCLR.Runtime.JIT;
 
 namespace TrivialCLR.Reflection
 {
-    internal class CLRAnonymousMethod : MethodInfo
+    internal class CLRAnonymousMethod : MethodInfo, IJITOptimizable
     {
         // Private
-        private AppDomain domain = null;
-        private CLRAnonymousMethodBody body = null;
+        private readonly AppDomain domain = null;
+        private readonly CLRAnonymousMethodBody body = null;
+        private ExecutionMethod executableMethod = null;
         private CLRTypeInfo returnType = default;
         private CLRAnonymousParameter[] parameters = null;
         private Lazy<CILSignature> signature = null;
@@ -23,7 +25,7 @@ namespace TrivialCLR.Reflection
 
         public override MethodAttributes Attributes
         {
-            get { return 0; }
+            get { return MethodAttributes.Static; }
         }
 
         public override RuntimeMethodHandle MethodHandle
@@ -67,6 +69,15 @@ namespace TrivialCLR.Reflection
         }
 
         // Methods
+        void IJITOptimizable.EnsureJITOptimized()
+        {
+            JITOptimize.EnsureJITOptimized(body);
+
+            // Initialize executable method
+            if (executableMethod == null)
+                executableMethod = new ExecutionMethod(domain, signature.Value, this, body, true, false);
+        }
+
         public override MethodInfo GetBaseDefinition()
         {
             throw new NotImplementedException();
@@ -94,59 +105,12 @@ namespace TrivialCLR.Reflection
 
         public override object Invoke(object obj, BindingFlags invokeAttr, Binder binder, object[] parameters, CultureInfo culture)
         {
-            // Get the exeuction engine
-            ExecutionEngine engine = domain.GetExecutionEngine();
+            // Initialize executable method
+            if (executableMethod == null)
+                executableMethod = new ExecutionMethod(domain, signature.Value, this, body, IsStatic, false);
 
-            StackLocal[] locals = null;
-
-            // Get locals
-            if (body.InitLocals == true)
-                locals = body.Locals;
-
-            int instanceCount = (obj == null) ? 0 : 1;
-            int paramCount = (parameters == null) ? 0 : parameters.Length;
-
-            // Check parameter types
-            if (paramCount > 0)
-            {
-                for (int i = 0; i < paramCount; i++)
-                {
-                    // Check if patameters should be passed by reference
-                    if (this.parameters[i].ParameterType.IsByRef == true && i < parameters.Length && (parameters[i] is IByRef) == false)
-                    {
-                        throw new TargetInvocationException(string.Format("The argument at index '{0}' of type '{1}' must be passed by reference. You can use the ByRef type to pass external variables by reference", i, this.parameters[i].ParameterType),
-                            new ArgumentException("Expected reference type for method invocation"));
-                    }
-                }
-            }
-
-            // Create the method frame
-            ExecutionFrame frame;//= new ExecutionFrame(engine, this, body.MaxStack + paramCount + instanceCount, paramCount, locals);
-            frame = new ExecutionFrame(domain, engine, null, this, body.MaxStack, paramCount, locals);
-
-            // Push instance
-            if (instanceCount > 0)
-            {
-                frame.stack[frame.stackIndex].refValue = obj;
-                frame.stack[frame.stackIndex++].type = StackData.ObjectType.Ref;
-            }
-
-            // Push parameters
-            for (int i = 0; i < paramCount; i++)
-                StackData.AllocTyped(ref frame.stack[frame.stackIndex++], signature.Value.parameterTypeInfos[i], parameters[i]);
-            
-            // Execute method body
-            body.ExecuteMethodBody(engine, frame);
-
-            // Get return object
-            if (ReturnType != typeof(void))
-            {
-                StackData result = frame.stack[--frame.stackIndex];
-
-                return result.UnboxAsType(returnType);
-            }
-
-            return null;
+            // Invoke the method
+            return executableMethod.ReflectionInvoke(obj, parameters);
         }
 
         public override bool IsDefined(Type attributeType, bool inherit)

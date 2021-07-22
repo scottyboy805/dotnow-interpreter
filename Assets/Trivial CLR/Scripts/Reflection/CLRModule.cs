@@ -6,10 +6,11 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using Mono.Cecil;
 using Mono.Collections.Generic;
+using TrivialCLR.Runtime.JIT;
 
 namespace TrivialCLR.Reflection
 {
-    public sealed class CLRModule : Assembly
+    public sealed class CLRModule : Assembly, IJITOptimizable
     {
         // Private
         private AppDomain domain = null;
@@ -137,6 +138,12 @@ namespace TrivialCLR.Reflection
         }
 
         // Methods
+        void IJITOptimizable.EnsureJITOptimized()
+        {
+            foreach (Type type in types)
+                JITOptimize.EnsureJITOptimized(type);
+        }
+
         public IMetadataTokenProvider GetRuntimeToken(MetadataToken token)
         {
             return assembly.MainModule.LookupToken(token);

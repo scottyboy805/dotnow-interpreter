@@ -14,7 +14,6 @@ namespace TrivialCLR.Runtime.JIT
         // Private
         private MethodBody methodBody = null;
         private ExecutableILGenerator il;
-        private Instruction[] instructionSet = null;
         private CILOperation[] operations = null;
 
         // Constructor

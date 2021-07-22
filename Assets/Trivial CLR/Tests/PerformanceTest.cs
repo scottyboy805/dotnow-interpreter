@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using TrivialCLR.Reflection;
+using TrivialCLR.Runtime.JIT;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -18,8 +19,8 @@ namespace TrivialCLR.Tests
 
         // Public
         public TextAsset assemblyImage;
-        [Tooltip("Note that tests may run faster the second time around due to JIT optimization statges for interpreter and JIT compilation for mono")]
         public int testIterations = 1;
+        public bool optimizeMethodsBeforeInvoke = true;
 
         // Properties
         public virtual string TestName
@@ -82,6 +83,10 @@ namespace TrivialCLR.Tests
                 Debug.LogError("Failed to load main method: Main");
                 return;
             }
+
+            // Make sure method is optimized
+            if (optimizeMethodsBeforeInvoke == true)
+                JITOptimize.EnsureJITOptimized(mainMethod);
 
             // Run the test
             RunTestTimed(mainMethod, true);
