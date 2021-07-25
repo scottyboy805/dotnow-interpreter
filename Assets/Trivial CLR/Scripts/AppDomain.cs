@@ -110,7 +110,7 @@ namespace TrivialCLR
 
             // Check for context already created - This should never happen
             if (threadEngines.ContainsKey(threadContext) == true)
-                throw new ExecutionEngineException("Corrupt execution state! Attempting to create a new execution context for an existing thread context");
+                throw new CLRRuntimeException("Corrupt execution state! Attempting to create a new execution context for an existing thread context");
 
             // Register context
             threadEngines.Add(threadContext, context);
@@ -137,7 +137,7 @@ namespace TrivialCLR
                 if (threadEngines.TryGetValue(executingThread, out context) == true)
                     return context.engine;
 
-                throw new ExecutionEngineException("Execution context is not valid or initialized. Execution cannot continue!");
+                throw new CLRRuntimeException("Execution context is not valid or initialized for the current thread. Execution cannot continue!");
             }
 
             return engine;
