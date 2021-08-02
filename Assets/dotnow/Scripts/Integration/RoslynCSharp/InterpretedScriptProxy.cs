@@ -42,7 +42,7 @@ namespace RoslynCSharp
             get
             {
                 if (fields == null)
-                    fields = new TrivialCLRScriptFieldDataProxy(type, this, false, true);
+                    fields = new InterpretedScriptFieldDataProxy(type, this, false, true);
 
                 return fields;
             }
@@ -53,7 +53,7 @@ namespace RoslynCSharp
             get
             {
                 if (safeFields == null)
-                    safeFields = new TrivialCLRScriptFieldDataProxy(type, this, false, false);
+                    safeFields = new InterpretedScriptFieldDataProxy(type, this, false, false);
 
                 return safeFields;
             }
@@ -64,7 +64,7 @@ namespace RoslynCSharp
             get
             {
                 if (properties == null)
-                    properties = new TrivialCLRScriptPropertyDataProxy(type, this, false, true);
+                    properties = new InterpretedScriptPropertyDataProxy(type, this, false, true);
 
                 return properties;
             }
@@ -75,7 +75,7 @@ namespace RoslynCSharp
             get
             {
                 if (safeProperties == null)
-                    safeProperties = new TrivialCLRScriptPropertyDataProxy(type, this, false, false);
+                    safeProperties = new InterpretedScriptPropertyDataProxy(type, this, false, false);
 
                 return safeProperties;
             }

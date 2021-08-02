@@ -26,7 +26,7 @@ namespace RoslynCSharp
         }
 
         // Constructor
-        public TrivialCLRScriptFieldDataProxy(ScriptType type, ScriptProxy proxy, bool isStatic, bool throwOnError)
+        public InterpretedScriptFieldDataProxy(ScriptType type, ScriptProxy proxy, bool isStatic, bool throwOnError)
         {
             this.scriptType = type;
             this.scriptProxy = proxy;

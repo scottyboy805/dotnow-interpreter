@@ -22,7 +22,7 @@ namespace RoslynCSharp
         }
 
         // Constructor
-        public TrivialCLRScriptPropertyDataProxy(ScriptType type, ScriptProxy proxy, bool isStatic, bool throwOnError)
+        public InterpretedScriptPropertyDataProxy(ScriptType type, ScriptProxy proxy, bool isStatic, bool throwOnError)
         {
             this.scriptType = type;
             this.scriptProxy = proxy;

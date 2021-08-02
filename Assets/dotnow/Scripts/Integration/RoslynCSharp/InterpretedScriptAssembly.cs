@@ -47,7 +47,7 @@ namespace RoslynCSharp
         // Methods
         protected override ScriptType CreateRootScriptType(Type systemType)
         {
-            return ScriptType.CreateScriptType<TrivialCLRScriptType>(this, null, systemType);
+            return ScriptType.CreateScriptType<InterpretedScriptType>(this, null, systemType);
         }
     }
 }

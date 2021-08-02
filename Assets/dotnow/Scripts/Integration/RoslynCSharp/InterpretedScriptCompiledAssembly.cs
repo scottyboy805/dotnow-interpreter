@@ -5,7 +5,7 @@ using Trivial.CodeSecurity;
 
 namespace RoslynCSharp
 {
-    internal class InterpretedScriptCompiledAssembly : TrivialCLRScriptAssembly, IScriptCompiledAssembly
+    internal class InterpretedScriptCompiledAssembly : InterpretedScriptAssembly, IScriptCompiledAssembly
     {
         // Private
         private CompilationResult result = null;

@@ -64,7 +64,7 @@ namespace RoslynCSharp
             get
             {
                 if (fields == null)
-                    fields = new TrivialCLRScriptFieldDataProxy(this, null, true, true);
+                    fields = new InterpretedScriptFieldDataProxy(this, null, true, true);
 
                 return fields;
             }
@@ -75,7 +75,7 @@ namespace RoslynCSharp
             get
             {
                 if (safeFields == null)
-                    safeFields = new TrivialCLRScriptFieldDataProxy(this, null, true, false);
+                    safeFields = new InterpretedScriptFieldDataProxy(this, null, true, false);
 
                 return safeFields;
             }
@@ -86,7 +86,7 @@ namespace RoslynCSharp
             get
             {
                 if (properties == null)
-                    properties = new TrivialCLRScriptPropertyDataProxy(this, null, true, true);
+                    properties = new InterpretedScriptPropertyDataProxy(this, null, true, true);
 
                 return properties;
             }
@@ -97,7 +97,7 @@ namespace RoslynCSharp
             get
             {
                 if (safeProperties == null)
-                    safeProperties = new TrivialCLRScriptPropertyDataProxy(this, null, false, false);
+                    safeProperties = new InterpretedScriptPropertyDataProxy(this, null, false, false);
 
                 return safeProperties;
             }
@@ -141,7 +141,7 @@ namespace RoslynCSharp
 
             // Create proxy
             if (instance != null)
-                return ScriptProxy.CreateScriptProxy<TrivialCLRScriptProxy>(this, instance);
+                return ScriptProxy.CreateScriptProxy<InterpretedScriptProxy>(this, instance);
 
             // Error adding component
             return null;
@@ -162,7 +162,7 @@ namespace RoslynCSharp
 
             // Create proxy
             if (instance != null)
-                return ScriptProxy.CreateScriptProxy<TrivialCLRScriptProxy>(this, instance);
+                return ScriptProxy.CreateScriptProxy<InterpretedScriptProxy>(this, instance);
 
             // Error creating instance
             return null;
