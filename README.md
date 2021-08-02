@@ -3,7 +3,7 @@
 
 A pure C# CIL interpreter designed to load and execute managed code on AOT/IL2CPP (Unity) platforms.
 
-Being able to run dynamically loaded code can be a great thing, especially in game development as it allows for modding support and much more. Combine it iwith a runtime compiler like Roslyn and the possibilities are practically endless. Unfortunately, it is not possible to natviley load code dynamically if AOT is used, since JIT is not available. Trivial CLR was created to make this possible by interpreting the managed CIL instructions in software, and replicating the runtime environment.
+Being able to run dynamically loaded code can be a great thing, especially in game development as it allows for modding support and much more. Combine it iwith a runtime compiler like Roslyn and the possibilities are practically endless. Unfortunately, it is not possible to natviley load code dynamically if AOT is used, since JIT is not available. dotnow was created to make this possible by interpreting the managed CIL instructions in software, and replicating the runtime environment.
 
 # Project Goals
 The end goal is to create a performant and feature complete runtime for managed code with support for AOT platforms including IL2CPP (Unity).
