@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using TrivialCLR.Reflection;
+using dotnow.Reflection;
 
-namespace TrivialCLR.Tests
+namespace dotnow.Tests
 {
     public class TestUtils
     {

@@ -1,14 +1,9 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using TrivialCLR.Reflection;
-using TrivialCLR.Runtime;
+using dotnow.Reflection;
+using dotnow.Runtime;
 
-namespace TrivialCLR.Tests
+namespace dotnow.Tests
 {
     [TestClass]
     public class UnitTestVariables

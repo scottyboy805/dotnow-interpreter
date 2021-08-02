@@ -6,9 +6,9 @@
 //using System.Text;
 //using System.Threading.Tasks;
 //using Trivial.Mono.Cecil.Cil;
-//using TrivialCLR.Runtime.JIT;
+//using dotnow.Runtime.JIT;
 
-//namespace TrivialCLR.Tests
+//namespace dotnow.Tests
 //{
 //    [TestClass]
 //    public class UnitTestILGenerator

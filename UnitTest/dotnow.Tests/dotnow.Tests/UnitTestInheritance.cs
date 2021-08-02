@@ -1,8 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using TrivialCLR.Reflection;
+using dotnow.Reflection;
 
-namespace TrivialCLR.Tests
+namespace dotnow.Tests
 {
     [TestClass]
     public class UnitTestInheritance

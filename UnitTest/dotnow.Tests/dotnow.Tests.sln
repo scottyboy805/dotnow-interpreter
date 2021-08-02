@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30711.63
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrivialCLR.Tests", "TrivialCLR.Tests\TrivialCLR.Tests.csproj", "{50F093A3-630C-4B08-90C1-2356968348DE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnow.Tests", "dotnow.Tests\dotnow.Tests.csproj", "{50F093A3-630C-4B08-90C1-2356968348DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestModule", "TestModule\TestModule.csproj", "{599E13E8-872B-4A3D-8609-9940EDFEFBD3}"
 EndProject

@@ -1,9 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using TrivialCLR.Reflection;
+using dotnow.Reflection;
 
-namespace TrivialCLR.Tests
+namespace dotnow.Tests
 {
     [TestClass]
     public class UnitTestOperations
