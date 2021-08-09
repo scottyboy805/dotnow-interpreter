@@ -36,7 +36,6 @@ namespace dotnow.Runtime.CIL
             int[] int32ArrImpl;
             uint[] uint32ArrImpl;
             long[] int64ArrImpl;
-            ulong[] uint64ArrImpl;
             float[] singleArrImpl;
             double[] doubleArrImpl;
             object[] objArrImpl;

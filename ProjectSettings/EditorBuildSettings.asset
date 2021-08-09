@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Trivial CLR/Examples/Snake/SnakeGame.unity
+    path: Assets/dotnow/Examples/Snake/SnakeGame.unity
     guid: 364788d69a661654389b9acbb4da8aa6
   m_configObjects: {}

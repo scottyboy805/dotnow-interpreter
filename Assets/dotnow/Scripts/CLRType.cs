@@ -258,6 +258,20 @@ namespace dotnow
             return type.ToString();
         }
 
+        public override bool Equals(object o)
+        {
+            if (ReferenceEquals(o, null) == true || (o is CLRType) == false)
+                return false;
+
+            // Check for equal type declarations - this will probably need more work to support generics
+            return ((CLRType)o).type == this.type;
+        }
+
+        public override int GetHashCode()
+        {
+            return type.GetHashCode();
+        }
+
         public List<CLRField> GetInstanceFields()
         {
             if(instanceFields == null)

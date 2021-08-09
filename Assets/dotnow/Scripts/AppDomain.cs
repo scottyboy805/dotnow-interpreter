@@ -755,11 +755,9 @@ namespace dotnow
                     return GetOverrideMethodBinding(resolvedMethod);
             }
 
-            string additionalHint = "";
-
 #if UNITY
             if(UnityEngine.Application.isPlayer == true)
-                additionalHint = "This method may have been stripped from the build if you are using IL2CPP!";
+                Debug.Log("This method may have been stripped from the build if you are using IL2CPP!");
 #endif
 
             // Failed to resolve
