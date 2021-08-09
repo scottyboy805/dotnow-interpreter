@@ -181,7 +181,7 @@ namespace dotnow.Runtime
                 }
                 catch (Exception e)
                 {
-#if UNITY
+#if (UNITY_EDITOR || UNITY_STANDALONE)
                     UnityEngine.Debug.LogError("At method body: " + ((frame.Method != null) ? frame.Method.ToString() : "<Unknown>"));
                     UnityEngine.Debug.LogError("At instruction: " + ((frame.instructionPtr < methodInstructions.Length) ? methodInstructions[frame.instructionPtr].ToString() : "<Unknown>"));
 #endif

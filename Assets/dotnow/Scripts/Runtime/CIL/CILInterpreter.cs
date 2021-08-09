@@ -56,7 +56,8 @@ namespace dotnow.Runtime.CIL
                 CILOperation instruction = instructions[instructionPtr];
 
 
-#if UNITY && PROFILE
+                /// ### WARNING - Only enable this for small snippets of non-looping (Or very shallow looping) code otherwise the performance and memory allocations will be horrific and likley cause an editor crash
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS
                 //UnityEngine.Profiling.Profiler.BeginSample(instruction.instructionName);
 #endif
 
@@ -2831,7 +2832,9 @@ namespace dotnow.Runtime.CIL
 #endregion
                 } // End Switch (opCode)
 
-#if UNITY && PROFILE
+
+                /// ### WARNING - Only enable this for small snippets of non-looping (Or very shallow looping) code otherwise the performance and memory allocations will be horrific and likley cause an editor crash
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS
                 //UnityEngine.Profiling.Profiler.EndSample();
 #endif
 
