@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using Mono.Cecil;
-using TrivialCLR.Runtime;
 using ParameterAttributes = System.Reflection.ParameterAttributes;
 
 namespace dotnow.Reflection

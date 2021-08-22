@@ -1,6 +1,4 @@
-﻿using System;
-using System.Reflection;
-using Mono.Cecil.Cil;
+﻿using Mono.Cecil.Cil;
 
 namespace dotnow.Runtime.CIL
 {

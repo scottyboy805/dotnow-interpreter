@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using dotnow.Reflection;
 
 namespace dotnow.Runtime.CIL

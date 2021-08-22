@@ -1,5 +1,4 @@
-﻿using System;
-using dotnow.Runtime;
+﻿using dotnow.Runtime;
 
 namespace dotnow.Debugging
 {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using Mono.Cecil;
 using dotnow.Runtime;
 using dotnow.Runtime.CIL;

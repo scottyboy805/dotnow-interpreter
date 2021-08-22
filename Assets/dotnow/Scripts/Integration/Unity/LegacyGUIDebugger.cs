@@ -1,5 +1,4 @@
-﻿using System;
-using dotnow.Debugging;
+﻿using dotnow.Debugging;
 using dotnow.Runtime;
 using UnityEditor;
 using UnityEngine;
