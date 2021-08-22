@@ -91,7 +91,6 @@ namespace dotnow
                 Type fieldType = instanceFields[i].FieldType;
 
                 StackData.AllocTypedSlow(ref fields[i + fieldPtr], fieldType, fieldType.GetDefaultValue(domain));
-                //fields[i] =  instanceFields[i].FieldType.GetDefaultValue(domain);
             }
 
             // Setup proxy

@@ -31,7 +31,6 @@ namespace dotnow.Runtime
             // Public
             public AppDomain domain;
             public ExecutionFrame frame;
-            //public Instruction[] methodInstructions;
             public CILOperation[] instructions;
             public CLRExceptionHandler[] exceptionHandlers;
         }
@@ -91,8 +90,6 @@ namespace dotnow.Runtime
             if (isDebuggerPaused == false && debugger != null)
             {
                 debugFlags |= DebugFlags.DebugPause;
-
-                //shouldPauseDebugger = true;
             }
         }
 
@@ -103,7 +100,6 @@ namespace dotnow.Runtime
                 // Remove pause flag
                 debugFlags &= ~DebugFlags.DebugPause;
 
-                //shouldPauseDebugger = false;
                 isDebuggerPaused = false;
 
                 if (debuggerPauseState != null)
@@ -205,14 +201,7 @@ namespace dotnow.Runtime
             // Check for valid handler
             if (handler == null || handler.ExceptionType == null)
             {
-                // Execute the frame
-                //Execute(frame, instructions, exceptionHandlers);
-
-                //if (instructions[frame.instructionPtr] is Throw) //frame.instructionPtr == rethrowOnReturn)
                 return ExceptionHandlingResult.Rethrow;
-
-                // Return from method
-                //return ExceptionHandlingResult.Return;
             }
 
             while (true)
@@ -246,14 +235,7 @@ namespace dotnow.Runtime
         {
             // try to get best matching exception handler
             handler = GetBestHandler(frame.instructionPtr, exceptionHandlers, exception.GetType());
-
-            // Check for handler
-            //if(handler == null)
-            //{
-            //    return 
-            //}
-
-            return 1;// frame.go
+            return 1;
         }
 
         internal CLRExceptionHandler GetBestHandler(int instructionIndex, CLRExceptionHandler[] exceptionHandlers, Type exceptionType)

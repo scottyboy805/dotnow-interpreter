@@ -89,21 +89,6 @@ namespace dotnow.Runtime
             return refValue;
         }
 
-        //public object UnboxAsType(Type asType)
-        //{
-        //    TypeCode code;
-
-        //    // Try and get type code quickly
-        //    if (typeCodeLookup.TryGetValue(asType, out code) == false)
-        //        code = TypeCode.Object;
-
-        //    // Check for enum
-        //    if (code == TypeCode.Object && asType.IsEnum == true && asType.IsArray == false)
-        //        return UnboxAsType(asType.GetEnumUnderlyingType());
-
-        //    return UnboxAsType(code);
-        //}
-
         public object UnboxAsTypeSlow(Type asType)
         {
             // Get type code

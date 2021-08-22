@@ -35,54 +35,6 @@ namespace dotnow.Runtime
         public ExecutionFrame(AppDomain domain, ExecutionEngine engine, ExecutionFrame parent, MethodBase method, int maxStackDepth, int paramCount, StackLocal[] locals)
         {
             SetupFrame(domain, engine, parent, method, maxStackDepth, paramCount, locals);
-
-            //int localCount = 0;
-
-            //// Get number of locals
-            //if (locals != null)
-            //    localCount = locals.Length;
-
-            
-            //this.parent = parent;
-            //this.method = method;
-            //this.stack = engine.stack; //new StackData[stackIndex + maxStackDepth];
-
-            //int localAllocSize = 0;
-            //int localAllocPtr = (parent == null) ? 0 : parent.stackMax;
-
-            //if (locals != null)
-            //{
-            //    // Calcualte stack size required for value types
-            //    for (int i = 0; i < locals.Length; i++)
-            //        localAllocSize += locals[i].clrValueTypeSize;
-
-            //    // Allocate locals
-            //    for (int i = 0; i < locals.Length; i++)
-            //    {
-            //        if (locals[i].isCLRValueType == true)
-            //        {
-            //            __internal.__stack_alloc_inst(ref stack[i + localAllocPtr + localAllocSize], ref domain, locals[i].localType, ref localAllocPtr);
-            //        }
-            //        else
-            //        {
-            //            stack[i + localAllocPtr + localAllocSize] = locals[i].defaultValue;
-            //        }
-            //    }
-            //}
-
-
-            //this.stackIndex = localAllocPtr + localCount;
-            //this.stackArgIndex = localAllocPtr + localCount;
-            //this.stackBaseIndex = stackArgIndex + paramCount + ((method.IsStatic == true) ? 0 : 1);
-            //this.stackMin = localAllocPtr;// + ((parent == null) ? 0 : parent.stackMax);
-            //this.stackMax = stackBaseIndex + maxStackDepth;
-            
-            
-            // Copy locals
-            //if (locals != null)
-            //{
-            //    Array.Copy(locals, stack, localCount);
-            //}
         }
 
         // Methods
@@ -103,7 +55,7 @@ namespace dotnow.Runtime
 
             this.parent = parent;
             this.method = method;
-            this.stack = engine.stack; //new StackData[stackIndex + maxStackDepth];
+            this.stack = engine.stack;
 
             int localAllocSize = 0;
             int localAllocPtr = (parent == null) ? 0 : parent.stackMax;
@@ -132,7 +84,7 @@ namespace dotnow.Runtime
             this.stackIndex = localAllocPtr + localCount;
             this.stackArgIndex = localAllocPtr + localCount;
             this.stackBaseIndex = stackArgIndex + paramCount + ((method.IsStatic == true) ? 0 : 1);
-            this.stackMin = localAllocPtr;// + ((parent == null) ? 0 : parent.stackMax);
+            this.stackMin = localAllocPtr;
             this.stackMax = stackBaseIndex + maxStackDepth;
         }
     }

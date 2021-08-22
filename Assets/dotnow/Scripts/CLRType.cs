@@ -100,7 +100,7 @@ namespace dotnow
 
         public override Type UnderlyingSystemType
         {
-            get { return typeof(CLRType); }// throw new NotSupportedException("Cannot get underlying system type of a CLRType"); }
+            get { return typeof(CLRType); }
         }
 
         public override Type[] GenericTypeArguments
@@ -323,7 +323,6 @@ namespace dotnow
         public override bool IsAssignableFrom(Type c)
         {
             return TypeExtensions.AreAssignable(this, c);
-            //return base.IsAssignableFrom(c);
         }
 
         public override bool IsSubclassOf(Type c)
@@ -705,18 +704,7 @@ namespace dotnow
 
                 return null;
             }
-
-            //if(name == "Get" && baseType.Value == typeof(Enum))
-            //{
-            //    Array.Resize(ref matchedMethods, matchedMethods.Length + 1);
-            //    matchedMethods[matchedMethods.Length - 1] = typeof(CLRType).GetMethod("Get", BindingFlags.Static | BindingFlags.NonPublic);
-            //}
-
-            //if (name == "Set" && baseType.Value == typeof(Enum))
-            //{
-            //    Array.Resize(ref matchedMethods, matchedMethods.Length + 1);
-            //    matchedMethods[matchedMethods.Length - 1] = typeof(CLRType).GetMethod("Set", BindingFlags.Static | BindingFlags.NonPublic);
-            //}
+                        
             // Check for special methods
             MethodInfo specialMethod = CLRSpecialMethods.GetSpecialMethod(domain, this, name, bindingAttr, binder, callConvention, types, modifiers);
 

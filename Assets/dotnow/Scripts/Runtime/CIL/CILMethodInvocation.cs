@@ -39,8 +39,6 @@ namespace dotnow.Runtime.CIL
             // Check for non-ctor method
             if (targetMethod is MethodInfo)
             {
-                //MethodInfo current = (targetMethod as MethodInfo).GetBaseDefinition();
-
                 // Get direct call
                 this.directCallDelegate = domain.GetDirectCallDelegate(targetMethod);
 
