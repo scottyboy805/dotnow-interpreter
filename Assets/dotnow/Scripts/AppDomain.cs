@@ -756,7 +756,7 @@ namespace dotnow
             }
 
 #if (UNITY_EDITOR || UNITY_STANDALONE)
-            if(UnityEngine.Application.isPlayer == true)
+            if(UnityEngine.Application.isEditor == false)
                 UnityEngine.Debug.Log("This method may have been stripped from the build if you are using IL2CPP!");
 #endif
 
