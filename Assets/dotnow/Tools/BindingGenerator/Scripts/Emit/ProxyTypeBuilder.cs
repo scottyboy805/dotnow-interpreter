@@ -3,7 +3,7 @@ using System.CodeDom;
 using System.Reflection;
 using dotnow.Interop;
 
-namespace dotnow.ProxyTool.Emit
+namespace dotnow.BindingGenerator.Emit
 {
     internal sealed class ProxyTypeBuilder
     {

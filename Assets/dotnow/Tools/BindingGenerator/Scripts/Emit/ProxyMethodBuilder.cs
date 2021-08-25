@@ -2,7 +2,7 @@
 using System.CodeDom;
 using System.Runtime.InteropServices;
 
-namespace dotnow.ProxyTool.Emit
+namespace dotnow.BindingGenerator.Emit
 {
     public class ProxyMethodBuilder
     {

@@ -1,14 +1,22 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 
-namespace dotnow.ProxyTool
+namespace dotnow.BindingGenerator
 {
-    public sealed class ProxyGeneratorResult
+    public sealed class BindingsGeneratorResult
     {
         // Private
         private string generateInFolder = "";
         private List<string> generatedSourceFiles = new List<string>();
         private string errorMessage = "";
+
+        // Public
+        public CodeGeneratorOptions codeOptions = new CodeGeneratorOptions
+        {
+            BracingStyle = "C",
+            BlankLinesBetweenMembers = false,
+        };
 
         // Properties
         public string GenerateInFolder
@@ -32,7 +40,7 @@ namespace dotnow.ProxyTool
         }
 
         // Constructor
-        public ProxyGeneratorResult(string generateInFolder)
+        public BindingsGeneratorResult(string generateInFolder)
         {
             this.generateInFolder = generateInFolder;
         }
