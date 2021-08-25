@@ -54,21 +54,42 @@ namespace dotnow.BindingGenerator.Emit
             }
             else
             {
+                int memberIndex = 0;
+
+                // Process all methods
                 foreach(MethodInfo method in type.GetMethods())
                 {
                     // Skip object methods
                     if (method.DeclaringType == typeof(object))
                         continue;
 
+                    // Check for property - these will be handled by ProxyPropertyBuilder
+                    if (method.Name.StartsWith("get_") == true || method.Name.StartsWith("set_") == true)
+                        continue;
+
                     if(method.IsVirtual == true || method.IsAbstract == true)
                     {
-                        ProxyMethodBuilder methodBuilder = new ProxyMethodBuilder(method, false);
+                        ProxyMethodBuilder methodBuilder = new ProxyMethodBuilder(method, false, memberIndex++);
 
                         // Build field
                         codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(MethodBase)), methodBuilder.VariableName));
 
                         codeType.Members.Add(methodBuilder.BuildMethodProxy());
                     }
+                }
+
+                // Process all properties
+                foreach(PropertyInfo property in type.GetProperties())
+                {
+                    // Skip object methods
+                    if (property.DeclaringType == typeof(object))
+                        continue;
+
+                    // TODO - check if property is virtual or abstract
+                    ProxyPropertyBuilder propertyBuilder = new ProxyPropertyBuilder(property, false, memberIndex++);
+
+                    // Build property
+                    codeType.Members.Add(propertyBuilder.BuildPropertyProxy());
                 }
             }
 

@@ -18,11 +18,11 @@ namespace dotnow.BindingGenerator.Emit
         }
 
         // Constructor
-        public ProxyMethodBuilder(MethodInfo method, bool interfaceType)
+        public ProxyMethodBuilder(MethodInfo method, bool interfaceType, int memberIndex)
         {
             this.method = method;
             this.interfaceType = interfaceType;
-            this.variableName = string.Concat("clrTarget_", method.Name);
+            this.variableName = string.Concat("clrTarget_", method.Name + memberIndex + 1);
         }
 
         // Methods
