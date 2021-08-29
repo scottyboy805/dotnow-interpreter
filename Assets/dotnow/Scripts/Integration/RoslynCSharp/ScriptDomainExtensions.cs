@@ -31,7 +31,7 @@ namespace RoslynCSharp
             CLRModule module = appDomain.LoadModuleStream(stream, false);
 
             // Register assembly
-            return domain.RegisterAssemblyPath<TrivialCLRScriptAssembly>(module, securityMode, filePath);
+            return domain.RegisterAssemblyPath<InterpretedScriptAssembly>(module, securityMode, filePath);
         }
 
         public static ScriptAssembly LoadAssemblyInterpreted(this ScriptDomain domain, byte[] assemblyImage, ScriptSecurityMode securityMode = ScriptSecurityMode.UseSettings)
@@ -50,7 +50,7 @@ namespace RoslynCSharp
             CLRModule module = appDomain.LoadModuleStream(stream, false);
 
             // Register assembly
-            return domain.RegisterAssemblyImage<TrivialCLRScriptAssembly>(module, securityMode, assemblyImage);
+            return domain.RegisterAssemblyImage<InterpretedScriptAssembly>(module, securityMode, assemblyImage);
         }
 #endregion
 
@@ -102,7 +102,7 @@ namespace RoslynCSharp
             }
 
             // Register assembly
-            return domain.RegisterAssembly<TrivialCLRScriptCompiledAssembly>(module, securityMode, domain.CompileResult);
+            return domain.RegisterAssembly<InterpretedScriptCompiledAssembly>(module, securityMode, domain.CompileResult);
         }
 #endregion
 
