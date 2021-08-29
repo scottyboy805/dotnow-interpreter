@@ -29,12 +29,12 @@ namespace RoslynCSharp
 
         public override object Instance
         {
-            get { return instance.Unwrap(); }
+            get { return instance; }//.Unwrap(); }
         }
 
         public override bool IsDisposed
         {
-            get { return instance != null; }
+            get { return instance == null; }
         }
 
         public override IScriptDataProxy Fields
