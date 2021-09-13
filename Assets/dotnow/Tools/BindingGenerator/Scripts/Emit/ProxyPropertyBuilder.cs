@@ -1,10 +1,5 @@
-﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.CodeDom;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace dotnow.BindingGenerator.Emit
 {
@@ -14,6 +9,19 @@ namespace dotnow.BindingGenerator.Emit
         private PropertyInfo property = null;
         private bool interfaceType = false;
         private int memberIndex = 0;
+        private string variableNameGetter = "";
+        private string variableNameSetter = "";
+
+        // Properties
+        public string VariableNameGetter
+        {
+            get { return variableNameGetter; }
+        }
+
+        public string VariableNameSetter
+        {
+            get { return variableNameSetter; }
+        }
 
         // Constructor
         public ProxyPropertyBuilder(PropertyInfo property, bool interfaceType, int memberIndex)
@@ -21,6 +29,8 @@ namespace dotnow.BindingGenerator.Emit
             this.property = property;
             this.interfaceType = interfaceType;
             this.memberIndex = memberIndex;
+            this.variableNameGetter = string.Concat("clrTarget_get_", property.Name + memberIndex + 1);
+            this.variableNameSetter = string.Concat("clrTarget_set_", property.Name + memberIndex + 1);
         }
 
         // Methods
@@ -37,7 +47,14 @@ namespace dotnow.BindingGenerator.Emit
             {
                 MemberAttributes attributes = 0;
 
+                attributes |= MemberAttributes.Public;
+                attributes |= MemberAttributes.Override;
+
+                codeProperty.Attributes = attributes;
             }
+
+            // Property type
+            codeProperty.Type = new CodeTypeReference(property.PropertyType);
 
             // Emit getter
             MethodInfo getter = property.GetMethod;

@@ -60,11 +60,11 @@ namespace dotnow.BindingGenerator.Emit
                 foreach(MethodInfo method in type.GetMethods())
                 {
                     // Skip object methods
-                    if (method.DeclaringType == typeof(object))
+                    if (method.DeclaringType == typeof(object) || method.DeclaringType == typeof(MarshalByRefObject))
                         continue;
 
                     // Check for property - these will be handled by ProxyPropertyBuilder
-                    if (method.Name.StartsWith("get_") == true || method.Name.StartsWith("set_") == true)
+                    if (method.IsSpecialName == true)
                         continue;
 
                     if(method.IsVirtual == true || method.IsAbstract == true)
@@ -74,6 +74,7 @@ namespace dotnow.BindingGenerator.Emit
                         // Build field
                         codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(MethodBase)), methodBuilder.VariableName));
 
+                        // Build method
                         codeType.Members.Add(methodBuilder.BuildMethodProxy());
                     }
                 }
@@ -82,11 +83,18 @@ namespace dotnow.BindingGenerator.Emit
                 foreach(PropertyInfo property in type.GetProperties())
                 {
                     // Skip object methods
-                    if (property.DeclaringType == typeof(object))
+                    if (property.DeclaringType == typeof(object) || property.DeclaringType == typeof(MarshalByRefObject))
                         continue;
 
                     // TODO - check if property is virtual or abstract
                     ProxyPropertyBuilder propertyBuilder = new ProxyPropertyBuilder(property, false, memberIndex++);
+
+                    // Build fields
+                    if(property.GetGetMethod() != null)
+                        codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(MethodBase)), propertyBuilder.VariableNameGetter));
+
+                    if (property.GetSetMethod() != null)
+                        codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(MethodBase)), propertyBuilder.VariableNameSetter));
 
                     // Build property
                     codeType.Members.Add(propertyBuilder.BuildPropertyProxy());
