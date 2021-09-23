@@ -6,7 +6,24 @@ namespace dotnow.Runtime
     public class CLRTypeInfo
     {
         // Private
-        private static Dictionary<Type, CLRTypeInfo> clrTypeInfos = new Dictionary<Type, CLRTypeInfo>();
+        private static Dictionary<Type, CLRTypeInfo> clrTypeInfos = new Dictionary<Type, CLRTypeInfo>()
+        {
+            // Pre-cache system types to save on lazy loading performance of common used types
+            { typeof(byte), new CLRTypeInfo(typeof(byte)) },
+            { typeof(ushort), new CLRTypeInfo(typeof(ushort)) },
+            { typeof(uint), new CLRTypeInfo(typeof(uint)) },
+            { typeof(ulong), new CLRTypeInfo(typeof(ulong)) },
+            { typeof(char), new CLRTypeInfo(typeof(char)) },
+            { typeof(sbyte), new CLRTypeInfo(typeof(sbyte)) },
+            { typeof(short), new CLRTypeInfo(typeof(short)) },
+            { typeof(int), new CLRTypeInfo(typeof(int)) },
+            { typeof(long), new CLRTypeInfo(typeof(long)) },
+            { typeof(float), new CLRTypeInfo(typeof(float)) },
+            { typeof(double), new CLRTypeInfo(typeof(double)) },
+            { typeof(decimal), new CLRTypeInfo(typeof(decimal)) },
+            { typeof(string), new CLRTypeInfo(typeof(string)) },
+            { typeof(object), new CLRTypeInfo(typeof(object)) },
+        };
 
         // Public
         public Type type;
