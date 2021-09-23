@@ -85,7 +85,14 @@ namespace dotnow
 
         public override Guid GUID
         {
-            get { return guid; }
+            get
+            {
+                // Create new on demand
+                if (guid == Guid.Empty)
+                    guid = Guid.NewGuid();
+
+                return guid;
+            }
         }
 
         public override Module Module
@@ -177,8 +184,6 @@ namespace dotnow
 
                 return iTypes;
             });
-            
-            this.guid = Guid.NewGuid();
 
             // Nested types
             this.nestedTypes = new CLRType[typeDef.NestedTypes.Count];
