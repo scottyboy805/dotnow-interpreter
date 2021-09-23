@@ -12,6 +12,7 @@ using dotnow.Interop;
 using dotnow.Reflection;
 using dotnow.Runtime;
 using dotnow.Runtime.CIL;
+using System.Runtime.CompilerServices;
 
 namespace dotnow
 {
@@ -64,6 +65,12 @@ namespace dotnow
             this.engine = new ExecutionEngine(mainThread);
 
             InitializeDomain();
+
+            // Run jit on interpreter method - This is a big method that takes a long time to JIT on demand - we don't want to see that time in the host application so we should do it at initialize time.
+#if DISABLE_JIT_PREWARM == false
+            MethodInfo method = typeof(CILInterpreter).GetMethod(nameof(CILInterpreter.ExecuteInterpreted), BindingFlags.Static | BindingFlags.NonPublic);
+            RuntimeHelpers.PrepareMethod(method.MethodHandle);
+#endif
         }
 
         // Methods
