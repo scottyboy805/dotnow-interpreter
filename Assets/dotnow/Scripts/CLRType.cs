@@ -124,6 +124,11 @@ namespace dotnow
             get { return type.Name; }
         }
 
+        public override bool IsEnum
+        {
+            get { return type.IsEnum; }
+        }
+
         internal IEnumerable<MemberInfo> AllMembers
         {
             get
@@ -835,6 +840,11 @@ namespace dotnow
         public override Type GetGenericTypeDefinition()
         {
             return genericDefinition;
+        }
+
+        protected override bool IsValueTypeImpl()
+        {
+            return type.IsValueType;
         }
 
         private bool MatchTypeNameAndAttributes(Type type, BindingFlags bindingAttr, string name)
