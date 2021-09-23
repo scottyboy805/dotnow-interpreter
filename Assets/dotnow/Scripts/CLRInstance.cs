@@ -90,7 +90,8 @@ namespace dotnow
             {
                 Type fieldType = instanceFields[i].FieldType;
 
-                StackData.AllocTypedSlow(ref fields[i + fieldPtr], fieldType, fieldType.GetDefaultValue(domain));
+                //StackData.AllocTypedSlow(ref fields[i + fieldPtr], fieldType, fieldType.GetDefaultValue(domain));
+                StackData.AllocTyped(ref fields[i + fieldPtr], instanceFields[i].FieldTypeInfo, fieldType.GetDefaultValue(domain));
             }
 
             // Setup proxy

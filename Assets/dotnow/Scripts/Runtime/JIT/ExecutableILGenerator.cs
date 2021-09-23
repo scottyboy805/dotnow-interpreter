@@ -91,7 +91,7 @@ namespace dotnow.Runtime.JIT
         public void Emit(Code opCode, Type type)
         {
             CILOperation op = new CILOperation(opCode, default, null);
-            op.typeOperand = new CLRTypeInfo(type);
+            op.typeOperand = CLRTypeInfo.GetTypeInfo(type);
 
             EmitOperation(op);
         }
@@ -112,7 +112,7 @@ namespace dotnow.Runtime.JIT
 
             // Set type value
             if(specialType != null)
-                op.typeOperand = new CLRTypeInfo(specialType);
+                op.typeOperand = CLRTypeInfo.GetTypeInfo(specialType);
 
             // Check for field access
             if(member is FieldInfo)
@@ -139,7 +139,7 @@ namespace dotnow.Runtime.JIT
             // Check for type
             if(member is Type)
             {
-                op.typeOperand = new CLRTypeInfo((Type)member);
+                op.typeOperand = CLRTypeInfo.GetTypeInfo((Type)member);
             }
 
             EmitOperation(op);

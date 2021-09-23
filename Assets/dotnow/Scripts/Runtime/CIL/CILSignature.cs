@@ -6,7 +6,7 @@ namespace dotnow.Runtime.CIL
     internal sealed class CILSignature
     {
         // Private
-        private static readonly CLRTypeInfo voidType = new CLRTypeInfo(typeof(void));
+        private static readonly CLRTypeInfo voidType = CLRTypeInfo.GetTypeInfo(typeof(void));
 
         // Internal
         internal CLRTypeInfo returnType;
@@ -26,14 +26,14 @@ namespace dotnow.Runtime.CIL
             for(int i = 0; i < parameters.Length; i++)
             {
                 parameterTypes[i] = parameters[i].ParameterType;
-                parameterTypeInfos[i] = new CLRTypeInfo(parameterTypes[i]);
+                parameterTypeInfos[i] = CLRTypeInfo.GetTypeInfo(parameterTypes[i]);
             }
 
             this.argumentCount = parameters.Length;            
 
             if (returnType != null)
             {
-                this.returnType = new CLRTypeInfo(returnType);
+                this.returnType = CLRTypeInfo.GetTypeInfo(returnType);
                 this.returnsValue = returnType != typeof(void);
             }
             else

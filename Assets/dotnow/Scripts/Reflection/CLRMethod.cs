@@ -262,11 +262,11 @@ namespace dotnow.Reflection
 
                 if(parameter != null)
                 {
-                    return new CLRTypeInfo(declaringType.GenericTypeArguments[parameter.Position]);
+                    return CLRTypeInfo.GetTypeInfo(declaringType.GenericTypeArguments[parameter.Position]);
                 }
             }
 
-            return new CLRTypeInfo(domain.ResolveType(method.ReturnType));
+            return CLRTypeInfo.GetTypeInfo(domain.ResolveType(method.ReturnType));
         }
 
         private CILSignature InitSignature()

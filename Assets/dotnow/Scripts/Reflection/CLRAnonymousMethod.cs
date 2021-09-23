@@ -58,7 +58,7 @@ namespace dotnow.Reflection
         {
             this.domain = domain;
             this.body = new CLRAnonymousMethodBody(domain, this, instructions, initLocals, maxStack, localTypes);
-            this.returnType = new CLRTypeInfo(returnType);
+            this.returnType = CLRTypeInfo.GetTypeInfo(returnType);
             this.parameters = new CLRAnonymousParameter[parameterTypes.Length];
 
             for (int i = 0; i < parameterTypes.Length; i++)

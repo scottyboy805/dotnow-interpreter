@@ -17,6 +17,8 @@ namespace dotnow.Reflection
         private Lazy<CLRAttributeBuilder> attributeProvider = null;
         private object staticValue = null;
 
+        private CLRTypeInfo fieldTypeInfo = null;
+
         // Properties
         public FieldDefinition Definition
         {
@@ -66,6 +68,17 @@ namespace dotnow.Reflection
         public bool HasGenericType
         {
             get { return field.FieldType.IsGenericParameter; }
+        }
+
+        internal CLRTypeInfo FieldTypeInfo
+        {
+            get
+            {
+                if (fieldTypeInfo == null)
+                    fieldTypeInfo = CLRTypeInfo.GetTypeInfo(FieldType);
+
+                return fieldTypeInfo;
+            }
         }
 
         // Constructor

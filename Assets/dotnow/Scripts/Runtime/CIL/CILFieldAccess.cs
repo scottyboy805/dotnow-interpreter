@@ -20,7 +20,7 @@ namespace dotnow.Runtime.CIL
         public void SetupFieldAccess(AppDomain domain)
         {
             // Get type
-            this.fieldTypeInfo = new CLRTypeInfo(targetField.FieldType);
+            this.fieldTypeInfo = CLRTypeInfo.GetTypeInfo(targetField.FieldType);
 
             // Get direct access delegate
             this.directReadAccessDelegate = domain.GetDirectAccessDelegate(targetField, CLRFieldAccessMode.Read);
