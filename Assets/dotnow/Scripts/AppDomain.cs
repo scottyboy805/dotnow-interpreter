@@ -147,7 +147,7 @@ namespace dotnow
         public CLRModule LoadModuleStream(Stream input, bool keepOpen)
         {
             // Try to load the definition
-            AssemblyDefinition definition = AssemblyDefinition.ReadAssembly(input);
+            AssemblyDefinition definition = AssemblyDefinition.ReadAssembly(input, new ReaderParameters(ReadingMode.Immediate));
             CLRModule module = null;
 
             // Check for success
