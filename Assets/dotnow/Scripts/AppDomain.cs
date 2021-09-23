@@ -1401,6 +1401,7 @@ namespace dotnow
         {
             Assembly thisAssembly = typeof(AppDomain).Assembly;
             AssemblyName thisAssemblyName = thisAssembly.GetName();
+            string thisAssemblyFullName = thisAssemblyName.FullName;
 
             foreach (Assembly asm in System.AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -1414,7 +1415,7 @@ namespace dotnow
 
                     for(int i = 0; i < references.Length; i++)
                     {
-                        if(references[i].FullName == thisAssemblyName.FullName)
+                        if(references[i].FullName == thisAssemblyFullName)
                         {
                             found = true;
                             break;
