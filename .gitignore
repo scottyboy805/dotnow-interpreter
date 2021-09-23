@@ -12,6 +12,9 @@
 /Assets/Exclude/
 /UnitTest/TrivialCLR.Tests/TestResults
 
+#Progress tracking files
+Todo.txt
+
 # Output folders for test and example projects
 */**/bin/Debug
 */**/bin/Release
