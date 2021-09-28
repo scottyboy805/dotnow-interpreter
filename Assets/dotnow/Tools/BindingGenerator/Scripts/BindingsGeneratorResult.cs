@@ -1,4 +1,6 @@
-﻿using System;
+﻿
+#if UNITY_EDITOR
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 
@@ -61,3 +63,4 @@ namespace dotnow.BindingGenerator
         }
     }
 }
+#endif

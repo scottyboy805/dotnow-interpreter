@@ -1,4 +1,6 @@
-﻿using System;
+﻿
+#if UNITY_EDITOR
+using System;
 using System.Reflection;
 using dotnow.BindingGenerator.Emit;
 
@@ -48,3 +50,4 @@ namespace dotnow.BindingGenerator
         }        
     }
 }
+#endif

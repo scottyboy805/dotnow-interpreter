@@ -1,4 +1,6 @@
-﻿using System;
+﻿
+#if UNITY_EDITOR
+using System;
 using System.CodeDom;
 using System.Reflection;
 using dotnow.Interop;
@@ -138,3 +140,4 @@ namespace dotnow.BindingGenerator.Emit
         }
     }
 }
+#endif

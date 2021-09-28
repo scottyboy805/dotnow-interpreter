@@ -1,4 +1,6 @@
-﻿using System.CodeDom;
+﻿
+#if UNITY_EDITOR
+using System.CodeDom;
 using System.Reflection;
 
 namespace dotnow.BindingGenerator.Emit
@@ -90,3 +92,4 @@ namespace dotnow.BindingGenerator.Emit
         }
     }
 }
+#endif
