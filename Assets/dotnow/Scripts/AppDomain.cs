@@ -23,6 +23,8 @@ namespace dotnow
         public delegate void FieldDirectAccessDelegate(StackData[] stack, int offset);
 
         // Internal
+        internal static event Action<AppDomain> OnDomainCreated;
+
         internal Thread mainThread = null;
 
         // Private
@@ -71,6 +73,9 @@ namespace dotnow
             MethodInfo method = typeof(CILInterpreter).GetMethod(nameof(CILInterpreter.ExecuteInterpreted), BindingFlags.Static | BindingFlags.NonPublic);
             RuntimeHelpers.PrepareMethod(method.MethodHandle);
 #endif
+
+            // Trigger domain create
+            OnDomainCreated?.Invoke(this);
         }
 
         // Methods
