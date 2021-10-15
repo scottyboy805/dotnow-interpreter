@@ -2840,22 +2840,17 @@ namespace dotnow.Runtime.CIL
 
                 // Next instruction
                 instructionPtr++;
-                //frame.instructionPtr++;
-
 
                 // Check for debugger attached
                 if ((debugFlags & DebugFlags.DebuggerAttached) == 0)
                     continue;
 
-
-                // Debugger step once - return from execution
-                //if ((debugFlags & DebugFlags.DebugStepOnce) != 0)
-                //    break;
-
                 // Check for paused
                 if ((debugFlags & DebugFlags.DebugPause) != 0 || (debugFlags & DebugFlags.DebugStepOnce) != 0)
                 {
+                    // Save execution state
                     engine.SaveExecutionState(domain, frame, instructions, exceptionHandlers);
+
                     frame.instructionPtr = instructionPtr;
                     frame.stackIndex = stackPtr;
                     return;
