@@ -18,7 +18,7 @@ namespace dotnow.Runtime
             this.localType = localType;
 
             // Check for clr type
-            if(localType.IsCLRType() == true && localType.IsValueType == true)
+            if(localType.IsCLRType() == true && localType.IsValueType == true && localType.IsEnum == false)
             {
                 // Get the clr type
                 CLRType type = localType.GetCLRType();
