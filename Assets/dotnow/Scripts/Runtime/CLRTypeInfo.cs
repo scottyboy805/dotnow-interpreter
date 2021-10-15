@@ -57,6 +57,9 @@ namespace dotnow.Runtime
 
         public static CLRTypeInfo GetTypeInfo(Type type)
         {
+            // Important - Caching clr type info causes issues for reasons unknown (Demo games fail to work as expected), possibly due to Type.GetHashCode?? or Equals implementation
+            // Need further work as caching would reduce allocations during the Jit optimize stage and improve performance.
+            return new CLRTypeInfo(type);
             CLRTypeInfo result;
 
             // Try to get cached insatnce
