@@ -57,7 +57,7 @@ namespace dotnow.Runtime.CIL
 
 
                 /// ### WARNING - Only enable this for small snippets of non-looping (Or very shallow looping) code otherwise the performance and memory allocations will be horrific and likley cause an editor crash
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS && UNITY_DISABLE == false
                 //UnityEngine.Profiling.Profiler.BeginSample(instruction.instructionName);
 #endif
 
@@ -2834,7 +2834,7 @@ namespace dotnow.Runtime.CIL
 
 
                 /// ### WARNING - Only enable this for small snippets of non-looping (Or very shallow looping) code otherwise the performance and memory allocations will be horrific and likley cause an editor crash
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS && UNITY_DISABLE == false
                 //UnityEngine.Profiling.Profiler.EndSample();
 #endif
 

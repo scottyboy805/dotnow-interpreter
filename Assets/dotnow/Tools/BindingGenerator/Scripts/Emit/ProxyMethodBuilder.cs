@@ -1,5 +1,5 @@
 ﻿
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_DISABLE == false
 using System.Reflection;
 using System.CodeDom;
 using System.Runtime.InteropServices;

@@ -767,7 +767,7 @@ namespace dotnow
                     return GetOverrideMethodBinding(resolvedMethod);
             }
 
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
             if(UnityEngine.Application.isEditor == false)
                 UnityEngine.Debug.Log("This method may have been stripped from the build if you are using IL2CPP!");
 #endif
@@ -1459,7 +1459,7 @@ namespace dotnow
                     // Check for already exists
                     if (clrProxyBindings.ContainsKey(attribute.BaseProxyType) == true)
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("A proxy binding already exists for the target type '{0}'", attribute.BaseProxyType);
                         return;
 #else
@@ -1472,7 +1472,7 @@ namespace dotnow
                 }
                 else
                 {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                     UnityEngine.Debug.LogErrorFormat("Proxy binding {0} must implement the 'ICLRProxy' interface", type);
                     return;
 #else
@@ -1492,7 +1492,7 @@ namespace dotnow
                     // Check for static correct
                     if (method.IsStatic == false)
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Method binding {0} must be declared as static", method);
                         continue;
 #else
@@ -1509,7 +1509,7 @@ namespace dotnow
                         parameterTypes[2].ParameterType != typeof(object) ||
                         parameterTypes[3].ParameterType != typeof(object[]))
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Method binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
                             typeof(AppDomain),
                             typeof(MethodInfo),
@@ -1545,7 +1545,7 @@ namespace dotnow
                                 parameterString += ", ";
                         }
 
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Method binding {0} targets a method that could not be resolved: {1}.{2}(3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
                         continue;
 #else
@@ -1558,7 +1558,7 @@ namespace dotnow
                     {
                         if (((MethodInfo)rerouteMethod).ReturnType == typeof(void) && ((MethodInfo)method).ReturnType != typeof(void))
                         {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                             UnityEngine.Debug.LogErrorFormat("Method binding {0} must have a return type of '{1}'", method, typeof(void));
                             continue;
 #else
@@ -1567,7 +1567,7 @@ namespace dotnow
                         }
                         else if (((MethodInfo)rerouteMethod).ReturnType != typeof(void) && ((MethodInfo)method).ReturnType != typeof(object))
                         {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                             UnityEngine.Debug.LogErrorFormat("Method binding {0} must have a return type of '{1}'", method, typeof(object));
                             continue;
 #else
@@ -1579,7 +1579,7 @@ namespace dotnow
                     // Check for already added
                     if (clrMethodBindings.ContainsKey(rerouteMethod) == true)
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("An override method binding already exists for the taret method '{0}'", rerouteMethod);
                         continue;
 #else
@@ -1603,7 +1603,7 @@ namespace dotnow
                     // Check for static correct
                     if (method.IsStatic == false)
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Method direct call binding {0} must be declared as static", method);
                         continue;
 #else
@@ -1618,7 +1618,7 @@ namespace dotnow
                         parameterTypes[0].ParameterType != typeof(StackData[]) ||
                         parameterTypes[1].ParameterType != typeof(int))
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Method direct call binding {0} must have the following parameter signature ({1}, {2})", method,
                             typeof(StackData[]),
                             typeof(int));
@@ -1650,7 +1650,7 @@ namespace dotnow
                                 parameterString += ", ";
                         }
 
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Method direct call binding {0} targets a method that could not be resolved: {1}.{2}(3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
                         continue;
 #else
@@ -1664,7 +1664,7 @@ namespace dotnow
                     // Check for already added
                     if (clrMethodDirectCallBindings.ContainsKey(delegateMethod) == true)
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("A direct call method binding already exists for the target method '{0}'", delegateMethod);
                         continue;
 #else
@@ -1688,7 +1688,7 @@ namespace dotnow
                     // Check for static correct
                     if (method.IsStatic == false)
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Field direct access binding {0} must be declared as static", method);
                         continue;
 #else
@@ -1703,7 +1703,7 @@ namespace dotnow
                         parameterTypes[0].ParameterType != typeof(StackData[]) ||
                         parameterTypes[1].ParameterType != typeof(int))
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Field direct access binding {0} must have the following parameter signature ({1}, {2})", method,
                             typeof(StackData[]),
                             typeof(int));
@@ -1725,7 +1725,7 @@ namespace dotnow
                     // Check for missing method
                     if (fieldAccessor == null)
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Field direct access binding {0} targets a method that could not be resolved: {1}.{2}", method, attribute.DeclaringType, attribute.FieldName);
                         continue;
 #else
@@ -1738,7 +1738,7 @@ namespace dotnow
                     {
                         if (((MethodInfo)method).ReturnType != typeof(void))
                         {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                             UnityEngine.Debug.LogErrorFormat("Field direct access binding {0} must have a return type of '{1}'", method, typeof(void));
                             continue;
 #else
@@ -1756,7 +1756,7 @@ namespace dotnow
                         // Check for already exists
                         if (clrFieldDirectAccessReadBindings.ContainsKey(fieldAccessor) == true)
                         {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                             UnityEngine.Debug.LogErrorFormat("A direct access field binding (Read) already exists for the target field '{0}'", fieldAccessor);
                             continue;
 #else
@@ -1771,7 +1771,7 @@ namespace dotnow
                         // Check for already exists
                         if (clrFieldDirectAccessWriteBindings.ContainsKey(fieldAccessor) == true)
                         {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                             UnityEngine.Debug.LogErrorFormat("A direct access field binding (Write) already exists for the target field '{0}'", fieldAccessor);
                             continue;
 #else
@@ -1795,7 +1795,7 @@ namespace dotnow
                     // Check for static correct
                     if (method.IsStatic == false)
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Create instance binding {0} must be declared as static", method);
                         continue;
 #else
@@ -1812,7 +1812,7 @@ namespace dotnow
                         parameterTypes[2].ParameterType != typeof(ConstructorInfo) ||
                         parameterTypes[3].ParameterType != typeof(object[]))
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Create instance binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
                             typeof(AppDomain),
                             typeof(Type),
@@ -1834,7 +1834,7 @@ namespace dotnow
 
                     if(((MethodInfo)method).ReturnType != typeof(object))
                     {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                         UnityEngine.Debug.LogErrorFormat("Create instance binding {0} must have a return type of '{1}'", method, typeof(object));
                         continue;
 #else
@@ -1861,7 +1861,7 @@ namespace dotnow
                                     parameterString += ", ";
                             }
 
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                             UnityEngine.Debug.LogErrorFormat("Create instance constructor binding {0} targets a constructor that could not be resolved: {1}.ctor{2}", method, attribute.DeclaringType, parameterString);
                             continue;
 #else
@@ -1872,7 +1872,7 @@ namespace dotnow
                         // Check for already exists
                         if(clrCreateInstanceConstructorBindings.ContainsKey(rerouteCtor) == true)
                         {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                             UnityEngine.Debug.LogErrorFormat("An override create instance constructor binding already exists for the target constructor '{0}'", rerouteCtor);
                             continue;
 #else
@@ -1888,7 +1888,7 @@ namespace dotnow
                         // Check for already exists
                         if (clrCreateInstanceBindings.ContainsKey(attribute.DeclaringType) == true)
                         {
-#if (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                             UnityEngine.Debug.LogErrorFormat("An override create instance binding already exists for the target type '{0}'", attribute.DeclaringType);
                             continue;
 #else

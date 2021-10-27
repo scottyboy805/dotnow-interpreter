@@ -38,7 +38,7 @@ namespace dotnow
                 engine.PauseExecution();
         }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_DISABLE == false
         public void Start()
         {
             // Add listener
