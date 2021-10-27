@@ -66,7 +66,7 @@ namespace dotnow
                 {
                     GUILayout.BeginHorizontal();
                     {
-                        if (GUILayout.Button("Step Once (F10)") == true || Input.GetKeyDown(KeyCode.F10) == true)
+                        if (GUILayout.Button("Step Once (F10)") == true || (Event.current.type == EventType.KeyDown && Input.GetKeyDown(KeyCode.F10) == true))
                         {
                             engine.StepExecution();
                         }
