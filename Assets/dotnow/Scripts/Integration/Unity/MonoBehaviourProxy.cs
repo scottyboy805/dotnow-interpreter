@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
+using System;
 using System.Reflection;
 using dotnow;
 using dotnow.Interop;
@@ -169,3 +170,4 @@ namespace UnityEngine
         }
     }
 }
+#endif

@@ -1,4 +1,5 @@
-﻿using dotnow.Debugging;
+﻿#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
+using dotnow.Debugging;
 using dotnow.Runtime;
 using UnityEditor;
 using UnityEngine;
@@ -161,3 +162,4 @@ namespace dotnow
 #endif
     }
 }
+#endif

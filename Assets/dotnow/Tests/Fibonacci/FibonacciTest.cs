@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
+using System.Reflection;
 using UnityEngine;
 
 namespace dotnow.Tests
@@ -17,3 +18,4 @@ namespace dotnow.Tests
         }
     }
 }
+#endif

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
+using System.Collections;
 using System.Collections.Generic;
 using dotnow;
 using dotnow.Runtime;
@@ -58,3 +59,4 @@ namespace UnityEngine
         //}
     }
 }
+#endif

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -57,3 +58,4 @@ namespace dotnow.Examples
         }
     }
 }
+#endif

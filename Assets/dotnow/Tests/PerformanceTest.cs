@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -139,3 +140,4 @@ namespace dotnow.Tests
         }
     }
 }
+#endif

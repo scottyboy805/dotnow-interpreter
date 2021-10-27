@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
+using System.Collections.Generic;
 using UnityEngine;
 
 public class RuntimeConsole : MonoBehaviour
@@ -78,3 +79,4 @@ public class RuntimeConsole : MonoBehaviour
         AddMessage(condition, warningLevel);
     }
 }
+#endif
