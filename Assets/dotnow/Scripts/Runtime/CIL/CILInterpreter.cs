@@ -2329,7 +2329,15 @@ namespace dotnow.Runtime.CIL
 
                             right = stack[--stackPtr];      // val
                             temp = stack[--stackPtr];       // inst
-                            fieldAccess.targetField.SetValue(temp.Box(), right.UnboxAsType(fieldAccess.fieldTypeInfo));
+
+                            if (temp.refValue is IByRef)
+                            {
+                                fieldAccess.targetField.SetValue((((IByRef)temp.Box()).GetReferenceValue().refValue), right.UnboxAsType(fieldAccess.fieldTypeInfo));
+                            }
+                            else
+                            {
+                                fieldAccess.targetField.SetValue(temp.Box(), right.UnboxAsType(fieldAccess.fieldTypeInfo));
+                            }
                             break;
                         }
 #endregion
