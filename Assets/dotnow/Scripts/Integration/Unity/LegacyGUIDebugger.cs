@@ -125,7 +125,7 @@ namespace dotnow
 
                         GUILayout.Space(10);
                         GUILayout.Label("Index = " + debugFrame.ExecutingFrame.stackIndex);
-                        GUILayout.Label("Max Size = " + debugFrame.ExecutingFrame.stack.Length);
+                        GUILayout.Label("Max Size = " + debugFrame.ExecutingFrame._stack.Length);
 
 
                         // Stack elements
@@ -133,7 +133,7 @@ namespace dotnow
                         GUILayout.Label("Stack data");
 
                         Color old = GUI.contentColor;
-                        for (int i = 0; i < debugFrame.ExecutingFrame.stack.Length; i++)
+                        for (int i = 0; i < debugFrame.ExecutingFrame._stack.Length; i++)
                         {
                             // Check for stack max
                             if (i > debugFrame.ExecutingFrame.stackMax)
@@ -142,11 +142,11 @@ namespace dotnow
                             if (i == debugFrame.ExecutingFrame.stackIndex - 1)
                             {
                                 GUI.contentColor = Color.red;
-                                GUILayout.Box("[" + i + "]: " + debugFrame.ExecutingFrame.stack[i], labelStyle);
+                                GUILayout.Box("[" + i + "]: " + debugFrame.ExecutingFrame._stack[i], labelStyle);
                             }
                             else
                             {
-                                GUILayout.Label("[" + i + "]: " + debugFrame.ExecutingFrame.stack[i], labelStyle);
+                                GUILayout.Label("[" + i + "]: " + debugFrame.ExecutingFrame._stack[i], labelStyle);
                             }
                             GUI.contentColor = old;
                         }

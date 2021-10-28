@@ -70,6 +70,9 @@ namespace dotnow
             // Get instance fields
             List<CLRField> instanceFields = type.GetInstanceFields();
 
+            // Get engine 
+            ExecutionEngine engine = domain.GetExecutionEngine();
+
             // Allocate reference type
             if (type.IsValueType == false)
             {
@@ -79,9 +82,6 @@ namespace dotnow
             // Allocate value type
             else
             {
-                // Get engine 
-                ExecutionEngine engine = domain.GetExecutionEngine();
-
                 // Get current stack
                 fields = engine.stack;
             }
@@ -91,7 +91,7 @@ namespace dotnow
                 Type fieldType = instanceFields[i].FieldType;
 
                 //StackData.AllocTypedSlow(ref fields[i + fieldPtr], fieldType, fieldType.GetDefaultValue(domain));
-                StackData.AllocTyped(ref fields[i + fieldPtr], instanceFields[i].FieldTypeInfo, fieldType.GetDefaultValue(domain));
+                StackData.AllocTyped(engine._heap, ref fields[i + fieldPtr], instanceFields[i].FieldTypeInfo, fieldType.GetDefaultValue(domain));
             }
 
             // Setup proxy
@@ -159,18 +159,18 @@ namespace dotnow
             return null;
         }
 
-        public object GetFieldValue(CLRField field)
+        public object GetFieldValue(__heapallocator _heap, CLRField field)
         {
             int fieldOffset = field.GetFieldOffset();
 
             if (fieldOffset == -1)
                 throw new TargetException("The specified instance does not declare the field: " + field);
 
-            return fields[fieldOffset].UnboxAsTypeSlow(field.FieldType);
+            return fields[fieldOffset].UnboxAsTypeSlow(_heap, field.FieldType);
         }
 
 
-        public void SetFieldValue(CLRField field, object value)
+        public void SetFieldValue(__heapallocator _heap, CLRField field, object value)
         {
             int fieldOffset = field.GetFieldOffset();
 
@@ -178,7 +178,7 @@ namespace dotnow
                 throw new TargetException("The specified instance does not declare the field: " + field);
 
             // Set field value
-            StackData.AllocTypedSlow(ref fields[fieldOffset + fieldPtr], field.FieldType, value);
+            StackData.AllocTypedSlow(_heap, ref fields[fieldOffset + fieldPtr], field.FieldType, value);
         }
 
         public override string ToString()

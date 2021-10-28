@@ -30,7 +30,7 @@ namespace dotnow.Runtime
             else
             {
                 // Get default value
-                StackData.AllocTypedSlow(ref defaultValue, localType, localType.GetDefaultValue(domain));
+                StackData.AllocTypedSlow(__heapallocator.GetCurrent(), ref defaultValue, localType, localType.GetDefaultValue(domain));
             }
         }
     }

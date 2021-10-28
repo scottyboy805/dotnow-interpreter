@@ -42,38 +42,38 @@ namespace dotnow.Runtime
             ExecutionFrame frame;
             engine.AllocExecutionFrame(out frame, domain, engine, method, body.MaxStack, paramCount, locals);
 
-
             // Push instance
-            if(instanceCount > 0)
+            if (instanceCount > 0)
             {
-                frame.stack[frame.stackIndex].refValue = obj;
-                frame.stack[frame.stackIndex++].type = StackData.ObjectType.Ref;
+                StackData.AllocTypedSlow(frame._heap, ref frame._stack[frame.stackIndex++], obj.GetType(), obj);
             }
 
             // ### More work required to copy value types
             // Push parameters
             for (int i = 0; i < paramCount; i++)
-                StackData.AllocTyped(ref frame.stack[frame.stackIndex++], signature.parameterTypeInfos[i], parameters[i]);
+                StackData.AllocTyped(frame._heap, ref frame._stack[frame.stackIndex++], signature.parameterTypeInfos[i], parameters[i]);
 
 
+            // Set heap size
+            frame.heapSize = frame._heap.Size;
+            UnityEngine.Debug.Log("Heap Size = " + frame.heapSize);
             // Execute method body
             body.ExecuteMethodBody(engine, frame);
 
-
-
+            
             // Load return type
-            if(isCtor == false && signature.returnsValue == true)
+            if (isCtor == false && signature.returnsValue == true)
             {
                 // Get return value from stack
-                StackData returnVal = frame.stack[--frame.stackIndex];
+                StackData returnVal = frame._stack[--frame.stackIndex];
 
                 // Release the frame
                 engine.FreeExecutionFrame(frame);
 
                 // Get return object
-                return returnVal.UnboxAsType(signature.returnType);
+                object result = returnVal.UnboxAsType(frame._heap, signature.returnType);
+                return result;
             }
-
 
             // Release the frame
             engine.FreeExecutionFrame(frame);

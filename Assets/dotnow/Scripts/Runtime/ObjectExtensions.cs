@@ -1,5 +1,4 @@
 ﻿using System;
-using dotnow.Runtime;
 
 namespace dotnow
 {
@@ -8,14 +7,6 @@ namespace dotnow
         // Methods
         public static bool IsCLRInstance(this object instance)
         {
-            return instance is CLRInstance;
-        }
-
-        public static bool IsCLRInstanceOrByRefInstance(this object instance)
-        {
-            if (instance is IByRef)
-                return true;
-
             return instance is CLRInstance;
         }
 

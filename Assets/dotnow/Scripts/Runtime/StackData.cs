@@ -4,10 +4,10 @@ using System.Runtime.InteropServices;
 namespace dotnow.Runtime
 {
 #if UNSAFE
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit)]
     public unsafe struct StackData
 #else
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit)]
     public struct StackData
 #endif
     {
@@ -25,8 +25,9 @@ namespace dotnow.Runtime
             Single,
             Double,
             Ref,            // Object
-            RefBoxed,       // Boxed primitive
-            ByRef           // By ref local, argument, element or field
+            RefField,       // Addr of field
+            RefElement,     // Addr of array element
+            RefStack,       // Addr of stack element
         }
 
 #if UNSAFE
@@ -51,28 +52,50 @@ namespace dotnow.Runtime
             public float Single;
             [FieldOffset(0)]
             public double Double;
-
-            [FieldOffset(0)]
-            public GCHandle Handle;
         }
 
         // Public
         public static readonly StackData nullPtr = new StackData { type = ObjectType.Null };
 
+        [FieldOffset(0)]
         public ObjectType type;     // 4
+        [FieldOffset(4)]
         public Primitive value;     // 8
-        public object refValue;     // 4 = 16
+        [FieldOffset(4)]
+        public int address;         // union
 
         // Properties
-        public int Address
+        public bool IsObject
         {
-            get { return refValue == null ? 0 : 1; }
+            get
+            {
+                switch (type)
+                {
+                    case ObjectType.Ref:
+                    case ObjectType.RefField:
+                    case ObjectType.RefElement:
+                    case ObjectType.RefStack:
+                        return true;
+                }
+                return false;
+            }
         }
 
         // Methods
+        /// <summary>
+        /// Convert this stack data to its managed object representation.
+        /// This may require fetching the object from the heap.
+        /// Use <see cref="Box(__heapallocator)"/> where possible for slight performance improvement.
+        /// </summary>
+        /// <returns></returns>
         public object Box()
         {
-            switch(type)
+            return Box(__heapallocator.GetCurrent());
+        }
+
+        public object Box(__heapallocator _heap)
+        {
+            switch (type)
             {
                 case ObjectType.Null: return null;
                 case ObjectType.Int8: return (sbyte)value.Int8;
@@ -86,54 +109,42 @@ namespace dotnow.Runtime
                 case ObjectType.Single: return (float)value.Single;
                 case ObjectType.Double: return (double)value.Double;
             }
-            return refValue;
+            return _heap.FetchPinnedValue(this);
         }
 
-        public object UnboxAsTypeSlow(Type asType)
+        public object UnboxAsTypeSlow(__heapallocator _heap, Type asType)
         {
             // Get type code
             TypeCode code = Type.GetTypeCode(asType);
 
             // Check for enum type
             if (code == TypeCode.Object && asType.IsEnum == true && asType.IsArray == false)
-                return UnboxAsTypeSlow(asType.GetEnumUnderlyingType());
+                return UnboxAsTypeSlow(_heap, asType.GetEnumUnderlyingType());
 
-            return UnboxAsType(code);
+            return UnboxAsType(_heap, code);
         }
 
-        public object UnboxAsType(in CLRTypeInfo typeInfo)
+        public object UnboxAsType(__heapallocator _heap, in CLRTypeInfo typeInfo)
         {
             // Check for enum type
             if (typeInfo.typeCode == TypeCode.Object && typeInfo.isEnum == true && typeInfo.isArray == false)
-                return UnboxAsType(typeInfo.enumUnderlyingTypeCode);
+                return UnboxAsType(_heap, typeInfo.enumUnderlyingTypeCode);
 
             // Unbox by type code
-            return UnboxAsType(typeInfo.typeCode);
+            return UnboxAsType(_heap, typeInfo.typeCode);
         }
 
-        public object UnboxAsType(TypeCode typeCode)
+        public object UnboxAsType(__heapallocator _heap, TypeCode typeCode)
         {
             // Cannot box nullable
             if (type == ObjectType.Null)
                 return null;
+
             // Check for boxed type - need to unbox
-            if (type == ObjectType.RefBoxed)
+            if (IsObject == true)
             {
-                switch (typeCode)
-                {
-                    case TypeCode.Boolean: return (bool)refValue;
-                    case TypeCode.SByte: return (sbyte)refValue;
-                    case TypeCode.Byte: return (byte)refValue;
-                    case TypeCode.Char: return (char)refValue;
-                    case TypeCode.Int16: return (short)refValue;
-                    case TypeCode.Int32: return (int)refValue;
-                    case TypeCode.Int64: return (long)refValue;
-                    case TypeCode.UInt16: return (ushort)refValue;
-                    case TypeCode.UInt32: return (uint)refValue;
-                    case TypeCode.UInt64: return (ulong)refValue;
-                    case TypeCode.Single: return (float)refValue;
-                    case TypeCode.Double: return (double)refValue;
-                }
+                // Get the value from memory
+                return _heap.FetchPinnedValue(this);
             }
 
             switch(typeCode)
@@ -151,7 +162,7 @@ namespace dotnow.Runtime
                 case TypeCode.Single: return (float)value.Single;
                 case TypeCode.Double: return (double)value.Double;
             }
-            return refValue;
+            return null;
         }
 
         public override string ToString()
@@ -171,17 +182,19 @@ namespace dotnow.Runtime
                 case ObjectType.Single: return value.Single.ToString();
                 case ObjectType.Double: return value.Double.ToString();
                 case ObjectType.Ref:
-                case ObjectType.RefBoxed:
+                case ObjectType.RefField:
+                case ObjectType.RefElement:
+                case ObjectType.RefStack:
                     {
-                        if (refValue == null)
-                            return "nullptr";
-                        return refValue.ToString();
+                        if (address > 0)
+                            return string.Format("{0}({1}): {2}", type, address, __heapallocator.GetCurrent().FetchPinnedValue(this));
+
+                        return "nullptr";
                     }
-                case ObjectType.ByRef: return refValue.ToString();
             }
         }
 
-        public static void AllocTypedSlow(ref StackData obj, Type asType, object value)
+        public static void AllocTypedSlow(__heapallocator _heap, ref StackData obj, Type asType, object value)
         {
             // Get type code
             TypeCode code = Type.GetTypeCode(asType);
@@ -189,26 +202,26 @@ namespace dotnow.Runtime
             // Check for enum
             if (code == TypeCode.Object && asType.IsEnum == true && asType.IsArray == false)
             {
-                AllocTypedSlow(ref obj, asType.GetEnumUnderlyingType(), value);
+                AllocTypedSlow(_heap, ref obj, asType.GetEnumUnderlyingType(), value);
                 return;
             }
 
-            AllocTyped(ref obj, code, value);
+            AllocTyped(_heap, ref obj, code, value);
         }
 
-        public static void AllocTyped(ref StackData obj, in CLRTypeInfo typeInfo, object value)
+        public static void AllocTyped(__heapallocator _heap, ref StackData obj, in CLRTypeInfo typeInfo, object value)
         {
             // Check for enum
             if(typeInfo.typeCode == TypeCode.Object && typeInfo.isEnum == true && typeInfo.isArray == false)
             {
-                AllocTyped(ref obj, typeInfo.enumUnderlyingTypeCode, value);
+                AllocTyped(_heap, ref obj, typeInfo.enumUnderlyingTypeCode, value);
                 return;
             }
 
-            AllocTyped(ref obj, typeInfo.typeCode, value);
+            AllocTyped(_heap, ref obj, typeInfo.typeCode, value);
         }
 
-        public static void AllocTyped(ref StackData obj, TypeCode typeCode, object value)
+        public static void AllocTyped(__heapallocator _heap, ref StackData obj, TypeCode typeCode, object value)
         {
             switch (typeCode)
             {
@@ -290,19 +303,91 @@ namespace dotnow.Runtime
                 case TypeCode.String:
                 case TypeCode.Object:
                     {
-                        // Check for value types - probably a little expensive??
-                        if (value is ValueType)
-                        {
-                            obj.type = ObjectType.RefBoxed;
-                            obj.refValue = value;
-                            break;
-                        }
-
-                        obj.type = ObjectType.Ref;
-                        obj.refValue = value;
+                        _heap.PinManagedObject(ref obj, value);
                         break;
                     }
             }
+        }
+
+        public static void AllocTypedPrimitive(ref StackData obj, TypeCode typeCode, object primitiveValue)
+        {
+            switch (typeCode)
+            {
+                case TypeCode.Boolean:
+                    {
+                        obj.type = ObjectType.Int32;
+                        obj.value.Int32 = ((bool)primitiveValue) == true ? 1 : 0;
+                        break;
+                    }
+                case TypeCode.SByte:
+                    {
+                        obj.type = ObjectType.Int8;
+                        obj.value.Int8 = (sbyte)primitiveValue;
+                        break;
+                    }
+                case TypeCode.Char:
+                    {
+                        obj.type = ObjectType.UInt8;
+                        obj.value.Int8 = (sbyte)(char)primitiveValue;
+                        break;
+                    }
+                case TypeCode.Int16:
+                    {
+                        obj.type = ObjectType.Int16;
+                        obj.value.Int16 = (short)primitiveValue;
+                        break;
+                    }
+                case TypeCode.Int32:
+                    {
+                        obj.type = ObjectType.Int32;
+                        obj.value.Int32 = (int)primitiveValue;
+                        break;
+                    }
+                case TypeCode.Int64:
+                    {
+                        obj.type = ObjectType.Int64;
+                        obj.value.Int64 = (long)primitiveValue;
+                        break;
+                    }
+                case TypeCode.Byte:
+                    {
+                        obj.type = ObjectType.UInt8;
+                        obj.value.Int8 = (sbyte)(byte)primitiveValue;
+                        break;
+                    }
+                case TypeCode.UInt16:
+                    {
+                        obj.type = ObjectType.UInt16;
+                        obj.value.Int16 = (short)(ushort)primitiveValue;
+                        break;
+                    }
+                case TypeCode.UInt32:
+                    {
+                        obj.type = ObjectType.UInt32;
+                        obj.value.Int32 = (int)(uint)primitiveValue;
+                        break;
+                    }
+                case TypeCode.UInt64:
+                    {
+                        obj.type = ObjectType.UInt64;
+                        obj.value.Int64 = (long)(ulong)primitiveValue;
+                        break;
+                    }
+
+                case TypeCode.Single:
+                    {
+                        obj.type = ObjectType.Single;
+                        obj.value.Single = (float)primitiveValue;
+                        break;
+                    }
+                case TypeCode.Double:
+                    {
+                        obj.type = ObjectType.Double;
+                        obj.value.Double = (double)primitiveValue;
+                        break;
+                    }
+            }
+            throw new NotSupportedException("Cannot allocate a reference type. Use AllocTyped or AllocRef");
         }
 
         public static void Alloc(ref StackData obj, bool val)
@@ -371,16 +456,9 @@ namespace dotnow.Runtime
             obj.value.Double = val;
         }
 
-        public static void AllocRef(ref StackData obj, object val)
+        public static void AllocRef(__heapallocator _heap, ref StackData obj, object val)
         {
-            obj.type = ObjectType.Ref;
-            obj.refValue = val;
-        }
-
-        public static void AllocRefBoxed(ref StackData obj, object valueType)
-        {
-            obj.type = ObjectType.RefBoxed;
-            obj.refValue = valueType;
+            _heap.PinManagedObject(ref obj, val);
         }
     }
 }

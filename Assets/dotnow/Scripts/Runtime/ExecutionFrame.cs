@@ -17,8 +17,11 @@ namespace dotnow.Runtime
         internal int stackBaseIndex = 0;
         internal int stackMin = 0;
         internal int stackMax = 0;
-        internal StackData[] stack = null;
+        internal StackData[] _stack = null;
+        internal __heapallocator _heap = null;
         internal bool abort = false;
+
+        internal int heapSize = 0;
 
         // Properties
         public ExecutionFrame Parent
@@ -34,6 +37,7 @@ namespace dotnow.Runtime
         // Constructor
         public ExecutionFrame(AppDomain domain, ExecutionEngine engine, ExecutionFrame parent, MethodBase method, int maxStackDepth, int paramCount, StackLocal[] locals)
         {
+            this._heap = engine._heap;
             SetupFrame(domain, engine, parent, method, maxStackDepth, paramCount, locals);
         }
 
@@ -55,7 +59,7 @@ namespace dotnow.Runtime
 
             this.parent = parent;
             this.method = method;
-            this.stack = engine.stack;
+            this._stack = engine.stack;
 
             int localAllocSize = 0;
             int localAllocPtr = (parent == null) ? 0 : parent.stackMax;
@@ -71,11 +75,11 @@ namespace dotnow.Runtime
                 {
                     if (locals[i].isCLRValueType == true)
                     {
-                        __internal.__stack_alloc_inst(ref stack[i + localAllocPtr + localAllocSize], ref domain, locals[i].localType, ref localAllocPtr);
+                        __internal.__stack_alloc_inst(engine._heap, ref _stack[i + localAllocPtr + localAllocSize], ref domain, locals[i].localType, ref localAllocPtr);
                     }
                     else
                     {
-                        stack[i + localAllocPtr + localAllocSize] = locals[i].defaultValue;
+                        _stack[i + localAllocPtr + localAllocSize] = locals[i].defaultValue;
                     }
                 }
             }

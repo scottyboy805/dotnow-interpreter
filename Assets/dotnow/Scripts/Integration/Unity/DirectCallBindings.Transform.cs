@@ -13,7 +13,7 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(Transform), "Rotate", typeof(float), typeof(float), typeof(float))]
         public static void UnityEngine_Transform_Rotate_SingleSingleSingle(StackData[] stack, int offset)
         {
-            ((Transform)stack[offset].refValue).Rotate(stack[offset + 1].value.Single, 
+            ((Transform)stack[offset].Box()).Rotate(stack[offset + 1].value.Single, 
                 stack[offset + 2].value.Single, 
                 stack[offset + 3].value.Single);
         }
@@ -22,18 +22,18 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(List<Transform>.Enumerator), "MoveNext")]
         public static void IEnumerator_MoveNext(StackData[] stack, int offset)
         {
-            IEnumerator enumerator = (IEnumerator)((IByRef)stack[offset].refValue).GetReferenceValue().refValue;
+            IEnumerator enumerator = (IEnumerator)(stack[offset].Box());
 
-            StackData.AllocTyped(ref stack[offset], System.TypeCode.Boolean, enumerator.MoveNext());
+            StackData.AllocTypedPrimitive(ref stack[offset], System.TypeCode.Boolean, enumerator.MoveNext());
         }
 
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(List<Transform>.Enumerator), "get_Current")]
         public static void IEnumerator_getCurrent(StackData[] stack, int offset)
         {
-            IEnumerator enumerator = (IEnumerator)((IByRef)stack[offset].refValue).GetReferenceValue().refValue;
+            IEnumerator enumerator = (IEnumerator)(stack[offset].Box());
 
-            StackData.AllocTyped(ref stack[offset], System.TypeCode.Object, enumerator.Current);
+            StackData.AllocRef(__heapallocator.GetCurrent(), ref stack[offset], enumerator.Current);
         }
 
 

@@ -27,8 +27,6 @@ namespace dotnow.Runtime
 
                 case StackData.ObjectType.Single: obj.value.Int8 = (sbyte)obj.value.Single; break;
                 case StackData.ObjectType.Double: obj.value.Int8 = (sbyte)obj.value.Double; break;
-
-                case StackData.ObjectType.RefBoxed: obj.value.Int8 = (sbyte)obj.UnboxAsType(TypeCode.SByte); break;
             }
 
             obj.type = StackData.ObjectType.Int8;
@@ -58,8 +56,6 @@ namespace dotnow.Runtime
 
                     case StackData.ObjectType.Single: obj.value.Int8 = (sbyte)obj.value.Single; break;
                     case StackData.ObjectType.Double: obj.value.Int8 = (sbyte)obj.value.Double; break;
-
-                    case StackData.ObjectType.RefBoxed: obj.value.Int8 = (sbyte)obj.UnboxAsType(TypeCode.SByte); break;
                 }
             }
 
@@ -88,8 +84,6 @@ namespace dotnow.Runtime
 
                 case StackData.ObjectType.Single: obj.value.Int16 = (short)obj.value.Single; break;
                 case StackData.ObjectType.Double: obj.value.Int16 = (short)obj.value.Double; break;
-
-                case StackData.ObjectType.RefBoxed: obj.value.Int16 = (short)obj.UnboxAsType(TypeCode.Int16); break;
             }
 
             obj.type = StackData.ObjectType.Int16;
@@ -119,8 +113,6 @@ namespace dotnow.Runtime
 
                     case StackData.ObjectType.Single: obj.value.Int16 = (short)obj.value.Single; break;
                     case StackData.ObjectType.Double: obj.value.Int16 = (short)obj.value.Double; break;
-
-                    case StackData.ObjectType.RefBoxed: obj.value.Int16 = (short)obj.UnboxAsType(TypeCode.Int16); break;
                 }
             }
 
@@ -149,8 +141,6 @@ namespace dotnow.Runtime
 
                 case StackData.ObjectType.Single: obj.value.Int32 = (int)obj.value.Single; break;
                 case StackData.ObjectType.Double: obj.value.Int32 = (int)obj.value.Double; break;
-
-                case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)obj.UnboxAsType(TypeCode.Int32); break;
             }
 
             obj.type = StackData.ObjectType.Int32;
@@ -180,8 +170,6 @@ namespace dotnow.Runtime
 
                     case StackData.ObjectType.Single: obj.value.Int32 = (int)obj.value.Single; break;
                     case StackData.ObjectType.Double: obj.value.Int32 = (int)obj.value.Double; break;
-
-                    case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)obj.UnboxAsType(TypeCode.Int32); break;
                 }
             }
 
@@ -210,8 +198,6 @@ namespace dotnow.Runtime
 
                 case StackData.ObjectType.Single: obj.value.Int64 = (long)obj.value.Single; break;
                 case StackData.ObjectType.Double: obj.value.Int64 = (long)obj.value.Double; break;
-
-                case StackData.ObjectType.RefBoxed: obj.value.Int64 = (long)obj.UnboxAsType(TypeCode.Int64); break;
             }
 
             obj.type = StackData.ObjectType.Int64;
@@ -241,8 +227,6 @@ namespace dotnow.Runtime
 
                     case StackData.ObjectType.Single: obj.value.Int64 = (long)obj.value.Single; break;
                     case StackData.ObjectType.Double: obj.value.Int64 = (long)obj.value.Double; break;
-
-                    case StackData.ObjectType.RefBoxed: obj.value.Int64 = (long)obj.UnboxAsType(TypeCode.Int64); break;
                 }
             }
 
@@ -271,8 +255,6 @@ namespace dotnow.Runtime
 
                 case StackData.ObjectType.Single: obj.value.Int8 = (sbyte)(byte)obj.value.Single; break;
                 case StackData.ObjectType.Double: obj.value.Int8 = (sbyte)(byte)obj.value.Double; break;
-
-                case StackData.ObjectType.RefBoxed: obj.value.Int8 = (sbyte)(byte)obj.UnboxAsType(TypeCode.Byte); break;
             }
 
             obj.type = StackData.ObjectType.UInt8;
@@ -302,8 +284,6 @@ namespace dotnow.Runtime
 
                     case StackData.ObjectType.Single: obj.value.Int8 = (sbyte)(byte)obj.value.Single; break;
                     case StackData.ObjectType.Double: obj.value.Int8 = (sbyte)(byte)obj.value.Double; break;
-
-                    case StackData.ObjectType.RefBoxed: obj.value.Int8 = (sbyte)(byte)obj.UnboxAsType(TypeCode.Byte); break;
                 }
             }
 
@@ -332,8 +312,6 @@ namespace dotnow.Runtime
 
                 case StackData.ObjectType.Single: obj.value.Int16 = (short)(ushort)obj.value.Single; break;
                 case StackData.ObjectType.Double: obj.value.Int16 = (short)(ushort)obj.value.Double; break;
-
-                case StackData.ObjectType.RefBoxed: obj.value.Int16 = (short)(ushort)obj.UnboxAsType(TypeCode.UInt16); break;
             }
 
             obj.type = StackData.ObjectType.UInt16;
@@ -363,8 +341,6 @@ namespace dotnow.Runtime
 
                     case StackData.ObjectType.Single: obj.value.Int16 = (short)(ushort)obj.value.Single; break;
                     case StackData.ObjectType.Double: obj.value.Int16 = (short)(ushort)obj.value.Double; break;
-
-                    case StackData.ObjectType.RefBoxed: obj.value.Int16 = (short)(ushort)obj.UnboxAsType(TypeCode.UInt16); break;
                 }
             }
 
@@ -393,8 +369,6 @@ namespace dotnow.Runtime
 
                 case StackData.ObjectType.Single: obj.value.Int32 = (int)(uint)obj.value.Single; break;
                 case StackData.ObjectType.Double: obj.value.Int32 = (int)(uint)obj.value.Double; break;
-
-                case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)(uint)obj.UnboxAsType(TypeCode.UInt32); break;
             }
 
             obj.type = StackData.ObjectType.UInt32;
@@ -424,8 +398,6 @@ namespace dotnow.Runtime
 
                     case StackData.ObjectType.Single: obj.value.Int32 = (int)(uint)obj.value.Single; break;
                     case StackData.ObjectType.Double: obj.value.Int32 = (int)(uint)obj.value.Double; break;
-
-                    case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)(uint)obj.UnboxAsType(TypeCode.UInt32); break;
                 }
             }
 
@@ -454,8 +426,6 @@ namespace dotnow.Runtime
 
                 case StackData.ObjectType.Single: obj.value.Int64 = (long)(ulong)obj.value.Single; break;
                 case StackData.ObjectType.Double: obj.value.Int64 = (long)(ulong)obj.value.Double; break;
-
-                case StackData.ObjectType.RefBoxed: obj.value.Int64 = (long)(ulong)obj.UnboxAsType(TypeCode.UInt64); break;
             }
 
             obj.type = StackData.ObjectType.UInt64;
@@ -485,8 +455,6 @@ namespace dotnow.Runtime
 
                     case StackData.ObjectType.Single: obj.value.Int64 = (long)(ulong)obj.value.Single; break;
                     case StackData.ObjectType.Double: obj.value.Int64 = (long)(ulong)obj.value.Double; break;
-
-                    case StackData.ObjectType.RefBoxed: obj.value.Int64 = (long)(ulong)obj.UnboxAsType(TypeCode.UInt64); break;
                 }
             }
 
@@ -516,8 +484,6 @@ namespace dotnow.Runtime
                 case StackData.ObjectType.UInt64: obj.value.Single = (float)obj.value.Int64; break;
 
                 case StackData.ObjectType.Double: obj.value.Single = (float)obj.value.Double; break;
-
-                case StackData.ObjectType.RefBoxed: obj.value.Single = (float)obj.UnboxAsType(TypeCode.Single); break;
             }
 
             obj.type = StackData.ObjectType.Single;
@@ -548,8 +514,6 @@ namespace dotnow.Runtime
                     case StackData.ObjectType.UInt64: obj.value.Single = (float)obj.value.Int64; break;
 
                     case StackData.ObjectType.Double: obj.value.Single = (float)obj.value.Double; break;
-
-                    case StackData.ObjectType.RefBoxed: obj.value.Single = (float)obj.UnboxAsType(TypeCode.Single); break;
                 }
             }
 
@@ -579,8 +543,6 @@ namespace dotnow.Runtime
                 case StackData.ObjectType.UInt64: obj.value.Double = (double)obj.value.Int64; break;
 
                 case StackData.ObjectType.Single: obj.value.Double = (double)obj.value.Single; break;
-
-                case StackData.ObjectType.RefBoxed: obj.value.Double = (double)obj.UnboxAsType(TypeCode.Double); break;
             }
 
             obj.type = StackData.ObjectType.Double;
@@ -611,8 +573,6 @@ namespace dotnow.Runtime
                     case StackData.ObjectType.UInt64: obj.value.Double = (double)obj.value.Int64; break;
 
                     case StackData.ObjectType.Single: obj.value.Double = (double)obj.value.Single; break;
-
-                    case StackData.ObjectType.RefBoxed: obj.value.Double = (double)obj.UnboxAsType(TypeCode.Double); break;
                 }
             }
 

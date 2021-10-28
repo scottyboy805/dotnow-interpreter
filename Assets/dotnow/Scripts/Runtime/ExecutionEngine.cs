@@ -39,7 +39,8 @@ namespace dotnow.Runtime
         internal Dictionary<int, object[]> argumentCache = new Dictionary<int, object[]>();
 
         internal ExecutionFrame currentFrame = null;
-        internal StackData[] stack = null;        
+        internal StackData[] stack = null;
+        internal __heapallocator _heap = null;
 
         // Private        
         private Stack<ExecutionFrame> availableFrames = new Stack<ExecutionFrame>();
@@ -73,6 +74,7 @@ namespace dotnow.Runtime
 
             this.thread = thread;
             this.stack = new StackData[stackSize];
+            this._heap = new __heapallocator();
         }
 
         // Methods
@@ -177,7 +179,7 @@ namespace dotnow.Runtime
                 }
                 catch (Exception e)
                 {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
+#if false && (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
                     UnityEngine.Debug.LogError("At method body: " + ((frame.Method != null) ? frame.Method.ToString() : "<Unknown>"));
                     UnityEngine.Debug.LogError("At instruction: " + ((frame.instructionPtr < methodInstructions.Length) ? methodInstructions[frame.instructionPtr].ToString() : "<Unknown>"));
 #endif

@@ -117,18 +117,11 @@ namespace dotnow.Reflection
             if (IsStatic == false)
             {
                 // Check for instance
-                if (obj.IsCLRInstanceOrByRefInstance() == false)
+                if (obj.IsCLRInstance() == false)
                     throw new InvalidOperationException("Cannot access field value for non CLR instance");
 
-                if (obj is IByRef byRef)
-                {
-                    CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
-
-                    return inst.GetFieldValue(this);
-                }
-
                 // Get value from the instance
-                return (obj as CLRInstance).GetFieldValue(this);
+                return (obj as CLRInstance).GetFieldValue(__heapallocator.GetCurrent(), this);
             }
 
             // Get static value
@@ -147,22 +140,17 @@ namespace dotnow.Reflection
 
             // Check for static
             if (IsStatic == false)
-            {                
+            {
+                // Check for null
+                if (obj == null)
+                    throw new NullReferenceException();
+
                 // Check for instance
-                if (obj.IsCLRInstanceOrByRefInstance() == false)
+                if (obj.IsCLRInstance() == false)
                     throw new InvalidOperationException("Cannot assign field value for non CLR instance");
 
-                if (obj is IByRef byRef)
-                {
-                    CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
-
-                    inst.SetFieldValue(this, value);
-                }
-                else
-                {
-                    // Get value from the instance
-                    (obj as CLRInstance).SetFieldValue(this, value);
-                }                
+                // Get value from the instance
+                (obj as CLRInstance).SetFieldValue(__heapallocator.GetCurrent(), this, value);
             }
             else
             {

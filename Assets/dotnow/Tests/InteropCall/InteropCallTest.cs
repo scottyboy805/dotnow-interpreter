@@ -42,7 +42,7 @@ namespace dotnow.Tests
 
         private static void TransformTranslate_DirectCallBinding(StackData[] stack, int offset)
         {
-            ((Transform)stack[offset].refValue).Translate(
+            ((Transform)stack[offset].Box(__heapallocator.GetCurrent())).Translate(
                 stack[offset + 1].value.Single,
                 stack[offset + 2].value.Single,
                 stack[offset + 3].value.Single);
