@@ -27,22 +27,27 @@ namespace dotnow.Runtime
         private static readonly StackData[] directAccessTemp = new StackData[2];
 
         private static Dictionary<Thread, __heapallocator> threadHeaps = new Dictionary<Thread, __heapallocator>();
-        private List<TrackedMemory> trackedMemory = new List<TrackedMemory>();
+        private TrackedMemory[] trackedMemory = new TrackedMemory[heapInitialSize];
+        private Stack<int> trackedMemoryAddresses = new Stack<int>();
 
         // Properties
         public int Size
         {
-            get { return trackedMemory.Count; }
+            get { return trackedMemory.Length; }
         }
 
         // Constructor
         internal __heapallocator()
         {
             // Resize heap
-            trackedMemory.Capacity = heapInitialSize;
+            //trackedMemory.Capacity = heapInitialSize;
 
             // Add dummy
-            trackedMemory.Add(new TrackedMemory()); // Element 0 is equal to null
+            //trackedMemory.Add(new TrackedMemory()); // Element 0 is equal to null
+
+            // Push address
+            for (int i = heapInitialSize - 1; i > 0; i--)
+                trackedMemoryAddresses.Push(i);
 
             // Check for already added
             if(threadHeaps.ContainsKey(Thread.CurrentThread) == true)
@@ -56,6 +61,24 @@ namespace dotnow.Runtime
         }
 
         // Methods
+        private int GetFreeAddress()
+        {
+            // Get a new address
+            if (trackedMemoryAddresses.Count > 0)
+                return trackedMemoryAddresses.Pop();
+
+            int currentSize = trackedMemory.Length;
+
+            // Reallocate heap
+            Array.Resize(ref trackedMemory, trackedMemory.Length * 2);
+
+            // Push available addresses
+            for (int i = trackedMemory.Length - 1; i > currentSize; i--)
+                trackedMemoryAddresses.Push(i);
+
+            return currentSize;
+        }
+
         public void PinManagedObject(ref StackData obj, in object managedObject)
         {
             // Check for null
@@ -67,13 +90,13 @@ namespace dotnow.Runtime
             }
 
             // Get address for item
-            int pinnedAddr = trackedMemory.Count;
+            int pinnedAddr = GetFreeAddress();
 
             // Pin object in memory
-            trackedMemory.Add(new TrackedMemory
+            trackedMemory[pinnedAddr] = new TrackedMemory
             {
                 instance = managedObject,                
-            });
+            };
 
             // Update stack
             obj.type = StackData.ObjectType.Ref;
@@ -82,14 +105,14 @@ namespace dotnow.Runtime
 
         internal void PinFieldAddress(ref StackData obj, CILFieldAccess fieldAccess, in StackData instance)
         {
-            int pinnedAddr = trackedMemory.Count;
+            int pinnedAddr = GetFreeAddress();
 
             // Allocate field address
-            trackedMemory.Add(new TrackedMemory
+            trackedMemory[pinnedAddr] = new TrackedMemory
             {
                 field = fieldAccess,
                 instance = instance,
-            });
+            };
 
             // Update stack
             obj.type = StackData.ObjectType.RefField;
@@ -98,14 +121,14 @@ namespace dotnow.Runtime
 
         internal void PinElementAddress(ref StackData obj, Array arrayInstance, long index)
         {
-            int pinnedAddr = trackedMemory.Count;
+            int pinnedAddr = GetFreeAddress();
 
             // Allocate element address
-            trackedMemory.Add(new TrackedMemory
+            trackedMemory[pinnedAddr] = new TrackedMemory
             {
                 instance = arrayInstance,
                 index = index,
-            });
+            };
 
             // Update stack
             obj.type = StackData.ObjectType.RefElement;
@@ -114,14 +137,14 @@ namespace dotnow.Runtime
 
         internal void PinStackAddress(ref StackData obj, StackData[] stack, int stackPtr)
         {
-            int pinnedAddr = trackedMemory.Count;
+            int pinnedAddr = GetFreeAddress();
 
             // Allocate element address
-            trackedMemory.Add(new TrackedMemory
+            trackedMemory[pinnedAddr] = new TrackedMemory
             {
                 instance = stack,
                 index = stackPtr,
-            });
+            };
 
             obj.type = StackData.ObjectType.RefStack;
             obj.address = pinnedAddr;
@@ -136,7 +159,7 @@ namespace dotnow.Runtime
                 return null;
 
             // Check for memory access
-            if (pinnedAddr < 0 || pinnedAddr >= trackedMemory.Count)
+            if (pinnedAddr < 0)
                 throw new AccessViolationException("Address does not point to allocated memory");
 
             switch (addr.type)
@@ -171,7 +194,7 @@ namespace dotnow.Runtime
                 return default;
 
             // Check for memory access
-            if (pinnedAddr < 0 || pinnedAddr >= trackedMemory.Count)
+            if (pinnedAddr < 0 || pinnedAddr >= trackedMemory.Length)
                 throw new AccessViolationException("Address does not point to allocated memory");
 
             switch (addr.type)
@@ -221,7 +244,7 @@ namespace dotnow.Runtime
                 return;
 
             // Check for memory access
-            if (pinnedAddr < 0 || pinnedAddr >= trackedMemory.Count)
+            if (pinnedAddr < 0)
                 throw new AccessViolationException("Address does not point to allocated memory");
 
             switch (addr.type)
@@ -273,13 +296,41 @@ namespace dotnow.Runtime
 
         public void FreeMemory(int targetSize)
         {
-            if (targetSize == 0 || targetSize >= trackedMemory.Count)
-                return;
+            //if (targetSize == 0 || targetSize >= trackedMemory.Count)
+            //    return;
 
-            // Free memory
-            while(trackedMemory.Count > targetSize)
+            //// Free memory
+            //while(trackedMemory.Count > targetSize)
+            //{
+            //    trackedMemory.RemoveAt(trackedMemory.Count - 1);
+            //}
+
+
+        }
+
+        HashSet<int> addressesInUse = new HashSet<int>();
+        public void FreeMemory(StackData[] stack, int stackSize)
+        {
+            addressesInUse.Clear();
+
+            for (int i = 0; i < stackSize; i++)
             {
-                trackedMemory.RemoveAt(trackedMemory.Count - 1);
+                // Check for reference
+                if(stack[i].IsObject == true)
+                {
+                    // Get reference address
+                    addressesInUse.Add(stack[i].address);
+                }
+            }
+
+            // Free space on the heap
+            for(int i = 0; i < trackedMemory.Length; i++)
+            {
+                if(addressesInUse.Contains(i) == false && trackedMemoryAddresses.Contains(i) == false)
+                {
+                    trackedMemory[i] = default;
+                    trackedMemoryAddresses.Push(i);
+                }
             }
         }
 

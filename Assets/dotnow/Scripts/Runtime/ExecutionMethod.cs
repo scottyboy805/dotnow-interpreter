@@ -56,9 +56,11 @@ namespace dotnow.Runtime
 
             // Set heap size
             frame.heapSize = frame._heap.Size;
-            UnityEngine.Debug.Log("Heap Size = " + frame.heapSize);
+
             // Execute method body
             body.ExecuteMethodBody(engine, frame);
+
+            
 
             
             // Load return type
@@ -72,8 +74,14 @@ namespace dotnow.Runtime
 
                 // Get return object
                 object result = returnVal.UnboxAsType(frame._heap, signature.returnType);
+
+                // Free some memory
+                //frame._heap.FreeMemory(frame._stack, frame.stackIndex);
                 return result;
             }
+
+            // Free some memory
+            //frame._heap.FreeMemory(frame._stack, frame.stackIndex);
 
             // Release the frame
             engine.FreeExecutionFrame(frame);
