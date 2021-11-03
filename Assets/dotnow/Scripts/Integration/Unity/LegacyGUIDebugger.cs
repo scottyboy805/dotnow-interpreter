@@ -1,4 +1,4 @@
-﻿#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
+﻿#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_DISABLE == false
 using dotnow.Debugging;
 using dotnow.Runtime;
 using UnityEditor;
