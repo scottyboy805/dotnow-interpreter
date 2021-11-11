@@ -249,6 +249,54 @@ namespace dotnow.Reflection
             return attributeProvider.Value.IsDefined(attributeType);
         }
 
+        public override Delegate CreateDelegate(Type delegateType)
+        {
+            // Check for action
+            if (delegateType != typeof(Action))
+                throw new NotSupportedException("Can only support delegates of type 'System.Action' (Non-Generic)");
+
+            // Check for instance method
+            if (IsStatic == false)
+                throw new InvalidOperationException("Cannot create a static delegate for an instance method. Use 'CreateDelegate(Type, object)'");
+
+            // Create the action
+            Action methodDelegate = () =>
+            {
+                // Initialize executable method
+                if (executableMethod == null)
+                    executableMethod = new ExecutionMethod(domain, signature.Value, this, body, IsStatic, false);
+
+                // Invoke static method
+                executableMethod.DelegateInvoke(null);
+            };
+
+            return methodDelegate;
+        }
+
+        public override Delegate CreateDelegate(Type delegateType, object target)
+        {
+            // Check for action
+            if (delegateType != typeof(Action))
+                throw new NotSupportedException("Can only support delegates of type 'System.Action' (Non-Generic)");
+
+            // Check for instance method
+            if (IsStatic == true)
+                throw new InvalidOperationException("Cannot create an instance delegate for a static method. Use 'CreateDelegate(Type)'");
+
+            // Create the action
+            Action methodDelegate = () =>
+            {
+                // Initialize executable method
+                if (executableMethod == null)
+                    executableMethod = new ExecutionMethod(domain, signature.Value, this, body, IsStatic, false);
+
+                // Invoke method
+                executableMethod.DelegateInvoke(target);
+            };
+
+            return methodDelegate;
+        }
+
         public override string ToString()
         {
             return method.ToString();

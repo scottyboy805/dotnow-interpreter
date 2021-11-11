@@ -79,5 +79,34 @@ namespace dotnow.Runtime
             engine.FreeExecutionFrame(frame);
             return null;
         }        
+
+        internal void DelegateInvoke(object obj)
+        {
+            // Get executing engine for current thread
+            ExecutionEngine engine = domain.GetExecutionEngine();
+
+            // Get locals
+            StackLocal[] locals = (body.InitLocals == true) ? body.Locals : null;
+
+            // Get input counts
+            int instanceCount = (isStatic == false) ? 1 : 0;
+
+            // Get method frame
+            ExecutionFrame frame;
+            engine.AllocExecutionFrame(out frame, domain, engine, method, body.MaxStack, 0, locals);
+
+            // Push instance
+            if (instanceCount > 0)
+            {
+                frame.stack[frame.stackIndex].refValue = obj;
+                frame.stack[frame.stackIndex++].type = StackData.ObjectType.Ref;
+            }
+
+            // Execute method body
+            body.ExecuteMethodBody(engine, frame);
+
+            // Release the frame
+            engine.FreeExecutionFrame(frame);
+        }
     }
 }
