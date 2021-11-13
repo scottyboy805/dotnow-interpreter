@@ -2259,7 +2259,14 @@ namespace dotnow.Runtime.CIL
                                 break;
                             }
 
-                            StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(null));
+                            if (fieldAccess.isClrField == true)
+                            {
+                                (fieldAccess.targetField as CLRField).GetValueStack(default, ref stack[stackPtr++]);
+                            }
+                            else
+                            {
+                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(null));
+                            }
                             break;
                         }
 
@@ -2276,13 +2283,26 @@ namespace dotnow.Runtime.CIL
 
                             temp = stack[--stackPtr];       // inst
 
-                            if(temp.type == StackData.ObjectType.ByRef)
+                            if (fieldAccess.isClrField == true)
                             {
-                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(((IByRef)temp.refValue).GetReferenceValue().Box()));
-                                break;
-                            }
+                                if (temp.type == StackData.ObjectType.ByRef)
+                                {
+                                    (fieldAccess.targetField as CLRField).GetValueStack(((IByRef)temp.refValue).GetReferenceValue(), ref stack[stackPtr++]);
+                                    break;
+                                }
 
-                            StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(temp.Box()));
+                                (fieldAccess.targetField as CLRField).GetValueStack(temp, ref stack[stackPtr++]);
+                            }
+                            else
+                            {
+                                if (temp.type == StackData.ObjectType.ByRef)
+                                {
+                                    StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(((IByRef)temp.refValue).GetReferenceValue().Box()));
+                                    break;
+                                }
+
+                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(temp.Box()));
+                            }
                             break;
                         }
 

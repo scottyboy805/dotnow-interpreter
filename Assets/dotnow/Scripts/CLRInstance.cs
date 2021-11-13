@@ -169,6 +169,17 @@ namespace dotnow
             return fields[fieldOffset].UnboxAsTypeSlow(field.FieldType);
         }
 
+        public void GetFieldValueStack(CLRField field, ref StackData value)
+        {
+            int fieldOffset = field.GetFieldOffset();
+
+            if (fieldOffset == -1)
+                throw new TargetException("The specified instance does not declare the field: " + field);
+
+            // Copy stack value
+            value = fields[fieldOffset];
+        }
+
 
         public void SetFieldValue(CLRField field, object value)
         {
