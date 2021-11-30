@@ -13,6 +13,7 @@ using dotnow.Reflection;
 using dotnow.Runtime;
 using dotnow.Runtime.CIL;
 using System.Runtime.CompilerServices;
+using dotnow.Runtime.JIT;
 
 namespace dotnow
 {
@@ -141,7 +142,7 @@ namespace dotnow
         }        
 
         #region LoadModule
-        public CLRModule LoadModuleStream(Stream input, bool keepOpen)
+        public CLRModule LoadModuleStream(Stream input, bool keepOpen, bool optimizeOnLoad = true)
         {
             // Try to load the definition
             AssemblyDefinition definition = AssemblyDefinition.ReadAssembly(input, new ReaderParameters(ReadingMode.Deferred));
@@ -172,6 +173,10 @@ namespace dotnow
 
                     // Register all module types and memebrs
                     DefineModule(module);
+
+                    // Optimize mode at this stage so that exection can run as fast as possible
+                    if(optimizeOnLoad == true)
+                        JITOptimize.EnsureJITOptimized(module);
                 }
             }
 
