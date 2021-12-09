@@ -18,6 +18,7 @@ namespace dotnow
 
         // Internal
         internal int fieldPtr;
+        internal object[] fieldObjects;
 
         // Properties
         public CLRType Type
@@ -86,12 +87,18 @@ namespace dotnow
                 fields = engine.stack;
             }
 
+            fieldObjects = new object[instanceFields.Count];
+
             for (int i = 0; i < instanceFields.Count; i++)
             {
                 Type fieldType = instanceFields[i].FieldType;
 
+                object defaultValue = fieldType.GetDefaultValue(domain);
+
                 //StackData.AllocTypedSlow(ref fields[i + fieldPtr], fieldType, fieldType.GetDefaultValue(domain));
-                StackData.AllocTyped(engine._heap, ref fields[i + fieldPtr], instanceFields[i].FieldTypeInfo, fieldType.GetDefaultValue(domain));
+                StackData.AllocTyped(engine._heap, ref fields[i + fieldPtr], instanceFields[i].FieldTypeInfo, defaultValue);
+
+                fieldObjects[i + fieldPtr] = defaultValue;
             }
 
             // Setup proxy
@@ -166,6 +173,12 @@ namespace dotnow
             if (fieldOffset == -1)
                 throw new TargetException("The specified instance does not declare the field: " + field);
 
+            // Check for reference
+            if(fields[fieldOffset].IsObject == true)
+            {
+                return fieldObjects[fieldOffset];
+            }
+
             return fields[fieldOffset].UnboxAsTypeSlow(_heap, field.FieldType);
         }
 
@@ -175,6 +188,13 @@ namespace dotnow
 
             if (fieldOffset == -1)
                 throw new TargetException("The specified instance does not declare the field: " + field);
+
+            // Check for reference
+            if (fields[fieldOffset].IsObject == true)
+            {
+                StackData.AllocRef(__heapallocator.GetCurrent(), ref value, fieldObjects[fieldOffset]);
+                return;
+            }
 
             // Copy stack value
             value = fields[fieldOffset];
@@ -190,6 +210,9 @@ namespace dotnow
 
             // Set field value
             StackData.AllocTypedSlow(_heap, ref fields[fieldOffset + fieldPtr], field.FieldType, value);
+
+            // Check for object
+            fieldObjects[fieldOffset + fieldPtr] = value;
         }
 
         public override string ToString()

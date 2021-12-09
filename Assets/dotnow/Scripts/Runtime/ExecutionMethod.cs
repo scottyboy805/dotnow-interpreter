@@ -38,10 +38,12 @@ namespace dotnow.Runtime
             int instanceCount = (isStatic == false) ? 1 : 0;
             int paramCount = (parameters != null) ? parameters.Length : 0;
 
+            int heapSize = engine._heap.Size;
+
             // Get method frame
             ExecutionFrame frame;
             engine.AllocExecutionFrame(out frame, domain, engine, method, body.MaxStack, paramCount, locals);
-
+            
             // Push instance
             if (instanceCount > 0)
             {
@@ -60,6 +62,8 @@ namespace dotnow.Runtime
             // Execute method body
             body.ExecuteMethodBody(engine, frame);
 
+            
+
             // Load return type
             if (isCtor == false && signature.returnsValue == true)
             {
@@ -71,7 +75,7 @@ namespace dotnow.Runtime
 
                 // Get return object
                 object result = returnVal.UnboxAsType(frame._heap, signature.returnType);
-
+                //frame._heap.FreeMemory(heapSize + 1);
                 // Free some memory
                 //frame._heap.FreeMemory(frame._stack, frame.stackIndex);
                 return result;
@@ -79,7 +83,7 @@ namespace dotnow.Runtime
 
             // Free some memory
             //frame._heap.FreeMemory(frame._stack, frame.stackIndex);
-
+            //frame._heap.FreeMemory(heapSize + 1);
             // Release the frame
             engine.FreeExecutionFrame(frame);
             return null;
@@ -96,6 +100,8 @@ namespace dotnow.Runtime
             // Get input counts
             int instanceCount = (isStatic == false) ? 1 : 0;
 
+            int heapSize = engine._heap.Size;
+
             // Get method frame
             ExecutionFrame frame;
             engine.AllocExecutionFrame(out frame, domain, engine, method, body.MaxStack, 0, locals);
@@ -111,14 +117,19 @@ namespace dotnow.Runtime
 
             // Set heap size
             frame.heapSize = frame._heap.Size;
+            
 
             // Execute method body
             body.ExecuteMethodBody(engine, frame);
 
+            
+
             // Release the frame
             engine.FreeExecutionFrame(frame);
 
-            UnityEngine.Debug.Log("Heap Size: " + frame.heapSize);
+            //frame._heap.FreeMemory(heapSize + 1);
+
+            //UnityEngine.Debug.Log("Heap Size: " + frame.heapSize);
         }
     }
 }

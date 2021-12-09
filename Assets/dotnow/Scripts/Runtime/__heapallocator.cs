@@ -27,13 +27,14 @@ namespace dotnow.Runtime
         private static readonly StackData[] directAccessTemp = new StackData[2];
 
         private static Dictionary<Thread, __heapallocator> threadHeaps = new Dictionary<Thread, __heapallocator>();
-        private TrackedMemory[] trackedMemory = new TrackedMemory[heapInitialSize];
-        private Stack<int> trackedMemoryAddresses = new Stack<int>();
+        //private TrackedMemory[] trackedMemory = new TrackedMemory[heapInitialSize];
+        private List<TrackedMemory> trackedMemory = new List<TrackedMemory>(heapInitialSize);
+        //private Stack<int> trackedMemoryAddresses = new Stack<int>();
 
         // Properties
         public int Size
         {
-            get { return trackedMemory.Length; }
+            get { return trackedMemory.Count; }
         }
 
         // Constructor
@@ -43,14 +44,14 @@ namespace dotnow.Runtime
             //trackedMemory.Capacity = heapInitialSize;
 
             // Add dummy
-            //trackedMemory.Add(new TrackedMemory()); // Element 0 is equal to null
+            trackedMemory.Add(new TrackedMemory()); // Element 0 is equal to null
 
             // Push address
-            for (int i = heapInitialSize - 1; i > 0; i--)
-                trackedMemoryAddresses.Push(i);
+            //for (int i = heapInitialSize - 1; i > 0; i--)
+            //    trackedMemoryAddresses.Push(i);
 
             // Check for already added
-            if(threadHeaps.ContainsKey(Thread.CurrentThread) == true)
+            if (threadHeaps.ContainsKey(Thread.CurrentThread) == true)
                 throw new InvalidOperationException("Cannot create a heap for the current thread because it has already been allocated");
 
             lock (threadHeaps)
@@ -63,20 +64,26 @@ namespace dotnow.Runtime
         // Methods
         private int GetFreeAddress()
         {
-            // Get a new address
-            if (trackedMemoryAddresses.Count > 0)
-                return trackedMemoryAddresses.Pop();
+            int addr = trackedMemory.Count;
 
-            int currentSize = trackedMemory.Length;
+            trackedMemory.Add(default);
 
-            // Reallocate heap
-            Array.Resize(ref trackedMemory, trackedMemory.Length * 2);
+            return addr;
 
-            // Push available addresses
-            for (int i = trackedMemory.Length - 1; i > currentSize; i--)
-                trackedMemoryAddresses.Push(i);
+            //// Get a new address
+            //if (trackedMemoryAddresses.Count > 0)
+            //    return trackedMemoryAddresses.Pop();
 
-            return currentSize;
+            //int currentSize = trackedMemory.Length;
+
+            //// Reallocate heap
+            //Array.Resize(ref trackedMemory, trackedMemory.Length * 2);
+
+            //// Push available addresses
+            //for (int i = trackedMemory.Length - 1; i > currentSize; i--)
+            //    trackedMemoryAddresses.Push(i);
+
+            //return currentSize;
         }
 
         public void PinManagedObject(ref StackData obj, in object managedObject)
@@ -95,7 +102,7 @@ namespace dotnow.Runtime
             // Pin object in memory
             trackedMemory[pinnedAddr] = new TrackedMemory
             {
-                instance = managedObject,                
+                instance = managedObject,
             };
 
             // Update stack
@@ -159,8 +166,8 @@ namespace dotnow.Runtime
                 return null;
 
             // Check for memory access
-            if (pinnedAddr < 0)
-                throw new AccessViolationException("Address does not point to allocated memory");
+            if (pinnedAddr < 0 || pinnedAddr >= trackedMemory.Count)
+                throw new AccessViolationException("Address does not point to allocated memory: " + pinnedAddr);
 
             switch (addr.type)
             {
@@ -194,7 +201,7 @@ namespace dotnow.Runtime
                 return default;
 
             // Check for memory access
-            if (pinnedAddr < 0 || pinnedAddr >= trackedMemory.Length)
+            if (pinnedAddr < 0 || pinnedAddr >= trackedMemory.Count)
                 throw new AccessViolationException("Address does not point to allocated memory");
 
             switch (addr.type)
@@ -296,43 +303,43 @@ namespace dotnow.Runtime
 
         public void FreeMemory(int targetSize)
         {
-            //if (targetSize == 0 || targetSize >= trackedMemory.Count)
-            //    return;
+            if (targetSize == 0 || targetSize >= trackedMemory.Count)
+                return;
 
-            //// Free memory
-            //while(trackedMemory.Count > targetSize)
-            //{
-            //    trackedMemory.RemoveAt(trackedMemory.Count - 1);
-            //}
+            // Free memory
+            while (trackedMemory.Count > targetSize)
+            {
+                trackedMemory.RemoveAt(trackedMemory.Count - 1);
+            }
 
 
         }
 
-        HashSet<int> addressesInUse = new HashSet<int>();
-        public void FreeMemory(StackData[] stack, int stackSize)
-        {
-            addressesInUse.Clear();
+        //    HashSet<int> addressesInUse = new HashSet<int>();
+        //    public void FreeMemory(StackData[] stack, int stackSize)
+        //    {
+        //        addressesInUse.Clear();
 
-            for (int i = 0; i < stackSize; i++)
-            {
-                // Check for reference
-                if(stack[i].IsObject == true)
-                {
-                    // Get reference address
-                    addressesInUse.Add(stack[i].address);
-                }
-            }
+        //        for (int i = 0; i < stackSize; i++)
+        //        {
+        //            // Check for reference
+        //            if(stack[i].IsObject == true)
+        //            {
+        //                // Get reference address
+        //                addressesInUse.Add(stack[i].address);
+        //            }
+        //        }
 
-            // Free space on the heap
-            for(int i = 0; i < trackedMemory.Length; i++)
-            {
-                if(addressesInUse.Contains(i) == false && trackedMemoryAddresses.Contains(i) == false)
-                {
-                    trackedMemory[i] = default;
-                    trackedMemoryAddresses.Push(i);
-                }
-            }
-        }
+        //        // Free space on the heap
+        //        for(int i = 0; i < trackedMemory.Length; i++)
+        //        {
+        //            if(addressesInUse.Contains(i) == false && trackedMemoryAddresses.Contains(i) == false)
+        //            {
+        //                trackedMemory[i] = default;
+        //                trackedMemoryAddresses.Push(i);
+        //            }
+        //        }
+        //    }
 
         public static __heapallocator GetCurrent()
         {
