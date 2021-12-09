@@ -13,6 +13,7 @@ using dotnow.Reflection;
 using dotnow.Runtime;
 using dotnow.Runtime.CIL;
 using System.Runtime.CompilerServices;
+using dotnow.Runtime.JIT;
 
 namespace dotnow
 {
@@ -28,15 +29,7 @@ namespace dotnow
         internal Thread mainThread = null;
 
         // Private
-        private Dictionary<Type, Type> clrProxyBindings = new Dictionary<Type, Type>();                              // System type, Proxy type (MonoBehaviour, MonoBehaviourProxy)
-        private Dictionary<MethodBase, MethodBase> clrMethodBindings = new Dictionary<MethodBase, MethodBase>();     // Method to reroute, New taregt method (AddComponent(Type), AddComponentOverride(AppDomain, object, object[]))
-        private Dictionary<Type, MethodBase> clrCreateInstanceBindings = new Dictionary<Type, MethodBase>();         // Constructor to reroute, New target method to handle construction of object
-        private Dictionary<ConstructorInfo, MethodBase> clrCreateInstanceConstructorBindings = new Dictionary<ConstructorInfo, MethodBase>();
-        private Dictionary<MethodBase, MethodDirectCallDelegate> clrMethodDirectCallBindings = new Dictionary<MethodBase, MethodDirectCallDelegate>();
-        private Dictionary<FieldInfo, FieldDirectAccessDelegate> clrFieldDirectAccessReadBindings = new Dictionary<FieldInfo, FieldDirectAccessDelegate>();
-        private Dictionary<FieldInfo, FieldDirectAccessDelegate> clrFieldDirectAccessWriteBindings = new Dictionary<FieldInfo, FieldDirectAccessDelegate>();
-        
-
+        private Bindings bindings = null;
         private ExecutionEngine engine = null;
         private Dictionary<Thread, CLRThreadContext> threadEngines = new Dictionary<Thread, CLRThreadContext>();
         private HashSet<CLRModule> moduleCache = new HashSet<CLRModule>();
@@ -66,7 +59,8 @@ namespace dotnow
             this.mainThread = Thread.CurrentThread;
             this.engine = new ExecutionEngine(mainThread);
 
-            InitializeDomain();
+            // Initialize bindings
+            bindings = new Bindings(this);
 
             // Run jit on interpreter method - This is a big method that takes a long time to JIT on demand - we don't want to see that time in the host application so we should do it at initialize time.
 #if DISABLE_JIT_PREWARM == false
@@ -93,14 +87,6 @@ namespace dotnow
                 DestroyThreadExecutionContext(context);
 
             // Release memory
-            clrProxyBindings = null;
-            clrMethodBindings = null;
-            clrMethodDirectCallBindings = null;
-            clrFieldDirectAccessReadBindings = null;
-            clrFieldDirectAccessWriteBindings = null;
-            clrCreateInstanceBindings = null;
-            clrCreateInstanceConstructorBindings = null;
-
             threadEngines = null;
             moduleCache = null;
             typeCache = null;
@@ -156,10 +142,10 @@ namespace dotnow
         }        
 
         #region LoadModule
-        public CLRModule LoadModuleStream(Stream input, bool keepOpen)
+        public CLRModule LoadModuleStream(Stream input, bool keepOpen, bool optimizeOnLoad = true)
         {
             // Try to load the definition
-            AssemblyDefinition definition = AssemblyDefinition.ReadAssembly(input, new ReaderParameters(ReadingMode.Immediate));
+            AssemblyDefinition definition = AssemblyDefinition.ReadAssembly(input, new ReaderParameters(ReadingMode.Deferred));
             CLRModule module = null;
 
             // Check for success
@@ -187,6 +173,10 @@ namespace dotnow
 
                     // Register all module types and memebrs
                     DefineModule(module);
+
+                    // Optimize mode at this stage so that exection can run as fast as possible
+                    if(optimizeOnLoad == true)
+                        JITOptimize.EnsureJITOptimized(module);
                 }
             }
 
@@ -767,8 +757,8 @@ namespace dotnow
                     return GetOverrideMethodBinding(resolvedMethod);
             }
 
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-            if(UnityEngine.Application.isEditor == false)
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_DISABLE == false
+            if (UnityEngine.Application.isEditor == false)
                 UnityEngine.Debug.Log("This method may have been stripped from the build if you are using IL2CPP!");
 #endif
 
@@ -1063,7 +1053,7 @@ namespace dotnow
             Type bindingProxy;
 
             // Create instance
-            if (clrProxyBindings.TryGetValue(type, out bindingProxy) == true)
+            if (bindings.clrProxyBindings.TryGetValue(type, out bindingProxy) == true)
             {
                 // Create instance of proxy
                 object proxyInstance = Activator.CreateInstance(bindingProxy);
@@ -1081,7 +1071,7 @@ namespace dotnow
             Type bindingProxy;
 
             // Try to find type
-            if (clrProxyBindings.TryGetValue(type, out bindingProxy) == true)
+            if (bindings.clrProxyBindings.TryGetValue(type, out bindingProxy) == true)
                 return bindingProxy;
 
             // Check for throw
@@ -1099,11 +1089,11 @@ namespace dotnow
             if (typeof(ICLRProxy).IsAssignableFrom(proxyBindingType) == true)
             {
                 // Check for already added
-                if (clrProxyBindings.ContainsKey(targetType) == true)
+                if (bindings.clrProxyBindings.ContainsKey(targetType) == true)
                     throw new CLRBindingException("A proxy binding already exists for the target type '{0}'", targetType);
 
                 // Add type
-                clrProxyBindings.Add(targetType, proxyBindingType);
+                bindings.clrProxyBindings.Add(targetType, proxyBindingType);
             }
             else
             {
@@ -1116,7 +1106,7 @@ namespace dotnow
             MethodBase target;
 
             // Check for cached method redirect
-            if (clrMethodBindings.TryGetValue(targetMethod, out target) == true)
+            if (bindings.clrMethodBindings.TryGetValue(targetMethod, out target) == true)
                 return target;
 
             return targetMethod;
@@ -1163,11 +1153,11 @@ namespace dotnow
             }
 
             // Check for already added
-            if (clrMethodBindings.ContainsKey(overrideMethod) == true)
+            if (bindings.clrMethodBindings.ContainsKey(overrideMethod) == true)
                 throw new CLRBindingException(string.Format("A method override already exists for the target method '{0}'", overrideMethod));
 
             // Register the method
-            clrMethodBindings.Add(overrideMethod, new CLRMethodBindingCallSite(this, overrideMethod, rerouteMethod));
+            bindings.clrMethodBindings.Add(overrideMethod, new CLRMethodBindingCallSite(this, overrideMethod, rerouteMethod));
         }
 
         public MethodDirectCallDelegate GetDirectCallDelegate(MethodBase targetMethod)
@@ -1175,7 +1165,7 @@ namespace dotnow
             MethodDirectCallDelegate target;
 
             // Check for cached delegate
-            if (clrMethodDirectCallBindings.TryGetValue(targetMethod, out target) == true)
+            if (bindings.clrMethodDirectCallBindings.TryGetValue(targetMethod, out target) == true)
                 return target;
 
             return null;
@@ -1187,11 +1177,11 @@ namespace dotnow
             if (directCallDelegate == null) throw new ArgumentNullException(nameof(directCallDelegate));
 
             // Check for already added
-            if (clrMethodDirectCallBindings.ContainsKey(targetMethod) == true)
+            if (bindings.clrMethodDirectCallBindings.ContainsKey(targetMethod) == true)
                 throw new CLRBindingException("A direct call method binding already exists for the target method '{0}'", targetMethod);
 
             // Add direct call
-            clrMethodDirectCallBindings.Add(targetMethod, directCallDelegate);
+            bindings.clrMethodDirectCallBindings.Add(targetMethod, directCallDelegate);
         }
 
         public FieldDirectAccessDelegate GetDirectAccessDelegate(FieldInfo targetField, CLRFieldAccessMode accessMode)
@@ -1201,12 +1191,12 @@ namespace dotnow
             // Check for cached delegate
             if(accessMode == CLRFieldAccessMode.Read)
             {
-                if (clrFieldDirectAccessReadBindings.TryGetValue(targetField, out target) == true)
+                if (bindings.clrFieldDirectAccessReadBindings.TryGetValue(targetField, out target) == true)
                     return target;
             }
             else if(accessMode == CLRFieldAccessMode.Write)
             {
-                if (clrFieldDirectAccessWriteBindings.TryGetValue(targetField, out target) == true)
+                if (bindings.clrFieldDirectAccessWriteBindings.TryGetValue(targetField, out target) == true)
                     return target;
             }
             return null;
@@ -1221,16 +1211,16 @@ namespace dotnow
             if(accessMode == CLRFieldAccessMode.Read)
             {
                 // Check for already added
-                if (clrFieldDirectAccessReadBindings.ContainsKey(targetField) == true)
+                if (bindings.clrFieldDirectAccessReadBindings.ContainsKey(targetField) == true)
                     throw new CLRBindingException("A direct access field binding (Read) already exists for the target field '{0}'", targetField);
 
                 // Add binding
-                clrFieldDirectAccessReadBindings.Add(targetField, directAccessDelegate);
+                bindings.clrFieldDirectAccessReadBindings.Add(targetField, directAccessDelegate);
             }
             else if(accessMode == CLRFieldAccessMode.Write)
             {
                 // Check for already added
-                if (clrFieldDirectAccessWriteBindings.ContainsKey(targetField) == true)
+                if (bindings.clrFieldDirectAccessWriteBindings.ContainsKey(targetField) == true)
                     throw new CLRBindingException("A direct access field binding (Write) already exists for the target field '{0}", targetField);
             }
         }
@@ -1243,16 +1233,16 @@ namespace dotnow
 
             MethodBase target;
 
-            lock (clrCreateInstanceConstructorBindings)
+            lock (bindings.clrCreateInstanceConstructorBindings)
             {
-                if (ctor != null && clrCreateInstanceConstructorBindings.TryGetValue(ctor, out target) == true)
+                if (ctor != null && bindings.clrCreateInstanceConstructorBindings.TryGetValue(ctor, out target) == true)
                     return target;
             }
 
-            lock (clrCreateInstanceBindings)
+            lock (bindings.clrCreateInstanceBindings)
             {
                 // Check for cached method redirect
-                if (clrCreateInstanceBindings.TryGetValue(createInstanceType, out target) == true)
+                if (bindings.clrCreateInstanceBindings.TryGetValue(createInstanceType, out target) == true)
                     return target;
             }
 
@@ -1269,11 +1259,11 @@ namespace dotnow
             if (createInstanceMethod == null) throw new ArgumentNullException(nameof(createInstanceMethod));
 
             // Check for already added
-            if (clrCreateInstanceBindings.ContainsKey(createInstanceType) == true)
+            if (bindings.clrCreateInstanceBindings.ContainsKey(createInstanceType) == true)
                 throw new CLRBindingException("A create instance override binding already exists for the target type '{0}'", createInstanceType);
 
             // Add type
-            clrCreateInstanceBindings.Add(createInstanceType, createInstanceMethod);
+            bindings.clrCreateInstanceBindings.Add(createInstanceType, createInstanceMethod);
 
         }
 
@@ -1283,11 +1273,11 @@ namespace dotnow
             if (createInstanceMethod == null) throw new ArgumentNullException(nameof(createInstanceMethod));
 
             // Check for already added
-            if (clrCreateInstanceConstructorBindings.ContainsKey(createInstanceCtor) == true)
+            if (bindings.clrCreateInstanceConstructorBindings.ContainsKey(createInstanceCtor) == true)
                 throw new CLRBindingException("A create instance override binding already exists for the target constructor '{0}'", createInstanceCtor);
 
             // Add ctor
-            clrCreateInstanceConstructorBindings.Add(createInstanceCtor, createInstanceMethod);
+            bindings.clrCreateInstanceConstructorBindings.Add(createInstanceCtor, createInstanceMethod);
         }
 #endregion
 
@@ -1400,509 +1390,6 @@ namespace dotnow
             methodSignatureCache.Add(method, signature);
             return signature;
         }
-
-#region InitializeDomain
-        private void InitializeDomain()
-        {
-            Assembly thisAssembly = typeof(AppDomain).Assembly;
-            AssemblyName thisAssemblyName = thisAssembly.GetName();
-            string thisAssemblyFullName = thisAssemblyName.FullName;
-
-            foreach (Assembly asm in System.AppDomain.CurrentDomain.GetAssemblies())
-            {
-                // Check if assembly references this assembly (Proxy types can only be defined in an assembly which reference 'this' assembly)
-                if(asm != thisAssembly)
-                {
-                    // Check references
-                    AssemblyName[] references = asm.GetReferencedAssemblies();
-
-                    bool found = false;
-
-                    for(int i = 0; i < references.Length; i++)
-                    {
-                        if(references[i].FullName == thisAssemblyFullName)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    // Check for found 
-                    if (found == false)
-                        continue;
-                }
-                else
-                {
-                    //continue;
-                }
-
-                foreach (Type type in asm.GetTypes())
-                {
-                    InitializeProxyBindings(type);
-                    InitializeMethodBindings(type);
-                    InitializeMethodDirectCallBindings(type);
-                    InitializeFieldDirectAccessBindings(type);
-                    InitializeCreateInstanceBindings(type);
-                }
-            }
-        }
-
-        private void InitializeProxyBindings(Type type)
-        {
-            // Check for proxy types
-            if (type.IsDefined(typeof(CLRProxyBindingAttribute), false) == true)
-            {
-                if (typeof(ICLRProxy).IsAssignableFrom(type) == true)
-                {
-                    CLRProxyBindingAttribute attribute = type.GetCustomAttribute<CLRProxyBindingAttribute>();
-
-                    // Check for already exists
-                    if (clrProxyBindings.ContainsKey(attribute.BaseProxyType) == true)
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("A proxy binding already exists for the target type '{0}'", attribute.BaseProxyType);
-                        return;
-#else
-                        throw new CLRBindingException("A proxy binding already exists for the target type '{0}'", attribute.BaseProxyType);
-#endif
-                    }
-
-                    // Add type
-                    clrProxyBindings.Add(attribute.BaseProxyType, type);
-                }
-                else
-                {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                    UnityEngine.Debug.LogErrorFormat("Proxy binding {0} must implement the 'ICLRProxy' interface", type);
-                    return;
-#else
-                    throw new CLRBindingException("Proxy binding {0} must implement the 'ICLRProxy' interface", type);
-#endif
-                }
-            }
-        }
-
-        private void InitializeMethodBindings(Type type)
-        {           
-            // Check for proxy methods
-            foreach (MethodBase method in type.GetMethods())
-            {
-                if (method.IsDefined(typeof(CLRMethodBindingAttribute), false) == true)
-                {
-                    // Check for static correct
-                    if (method.IsStatic == false)
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Method binding {0} must be declared as static", method);
-                        continue;
-#else
-                        throw new CLRBindingException("Method binding {0} must be declared as static", method);
-#endif
-                    }
-
-                    // Check for correct parameters
-                    ParameterInfo[] parameterTypes = method.GetParameters();
-
-                    if (parameterTypes.Length < 4 ||
-                        parameterTypes[0].ParameterType != typeof(AppDomain) ||
-                        parameterTypes[1].ParameterType != typeof(MethodInfo) ||
-                        parameterTypes[2].ParameterType != typeof(object) ||
-                        parameterTypes[3].ParameterType != typeof(object[]))
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Method binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
-                            typeof(AppDomain),
-                            typeof(MethodInfo),
-                            typeof(object),
-                            typeof(object[]));
-                            
-                        continue;
-#else
-                        throw new CLRBindingException("Method binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
-                            typeof(AppDomain),
-                            typeof(MethodInfo),
-                            typeof(object),
-                            typeof(object[]));
-#endif
-                    }
-
-                    // Get the attribute
-                    CLRMethodBindingAttribute attribute = method.GetCustomAttribute<CLRMethodBindingAttribute>();
-
-                    // Resolve method
-                    MethodBase rerouteMethod = attribute.DeclaringType.GetMethod(attribute.MethodName, attribute.ParameterTypes);
-
-                    // Check for missing method
-                    if (rerouteMethod == null)
-                    {
-                        string parameterString = "";
-
-                        for (int i = 0; i < attribute.ParameterTypes.Length; i++)
-                        {
-                            parameterString += attribute.ParameterTypes[i];
-
-                            if (i < attribute.ParameterTypes.Length - 1)
-                                parameterString += ", ";
-                        }
-
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Method binding {0} targets a method that could not be resolved: {1}.{2}(3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
-                        continue;
-#else
-                        throw new CLRBindingException("Method binding {0} targets a method that could not be resolved: {1}.{2}(3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
-#endif
-                    }
-
-                    // Check return type
-                    if (rerouteMethod is MethodInfo)
-                    {
-                        if (((MethodInfo)rerouteMethod).ReturnType == typeof(void) && ((MethodInfo)method).ReturnType != typeof(void))
-                        {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                            UnityEngine.Debug.LogErrorFormat("Method binding {0} must have a return type of '{1}'", method, typeof(void));
-                            continue;
-#else
-                            throw new CLRBindingException("Method binding {0} must have a return type of '{1}'", method, typeof(void));
-#endif
-                        }
-                        else if (((MethodInfo)rerouteMethod).ReturnType != typeof(void) && ((MethodInfo)method).ReturnType != typeof(object))
-                        {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                            UnityEngine.Debug.LogErrorFormat("Method binding {0} must have a return type of '{1}'", method, typeof(object));
-                            continue;
-#else
-                            throw new CLRBindingException("Method binding {0} must have a return type of '{1}'", method, typeof(object));
-#endif
-                        }
-                    }
-
-                    // Check for already added
-                    if (clrMethodBindings.ContainsKey(rerouteMethod) == true)
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("An override method binding already exists for the taret method '{0}'", rerouteMethod);
-                        continue;
-#else
-                        throw new CLRBindingException("An override method binding already exists for the taret method '{0}'", rerouteMethod);
-#endif
-                    }
-
-                    // Register the method
-                    clrMethodBindings.Add(rerouteMethod, new CLRMethodBindingCallSite(this, rerouteMethod, method));
-                }
-            }
-        }
-
-        private void InitializeMethodDirectCallBindings(Type type)
-        {
-            // Check for proxy methods
-            foreach (MethodBase method in type.GetMethods())
-            {
-                if (method.IsDefined(typeof(CLRMethodDirectCallBindingAttribute), false) == true)
-                {
-                    // Check for static correct
-                    if (method.IsStatic == false)
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Method direct call binding {0} must be declared as static", method);
-                        continue;
-#else
-                        throw new CLRBindingException("Method direct call binding {0} must be declared as static", method);
-#endif
-                    }
-
-                    // Check for correct parameters
-                    ParameterInfo[] parameterTypes = method.GetParameters();
-
-                    if (parameterTypes.Length < 2 ||
-                        parameterTypes[0].ParameterType != typeof(StackData[]) ||
-                        parameterTypes[1].ParameterType != typeof(int))
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Method direct call binding {0} must have the following parameter signature ({1}, {2})", method,
-                            typeof(StackData[]),
-                            typeof(int));
-
-                        continue;
-#else
-                        throw new CLRBindingException("Method direct call binding {0} must have the following parameter signature ({1}, {2})", method,
-                            typeof(StackData[]),
-                            typeof(int));
-#endif
-                    }
-
-                    // Get the attribute
-                    CLRMethodDirectCallBindingAttribute attribute = method.GetCustomAttribute<CLRMethodDirectCallBindingAttribute>();
-
-                    // Resolve method
-                    MethodBase delegateMethod = attribute.DeclaringType.GetMethod(attribute.MethodName, attribute.ParameterTypes);
-
-                    // Check for missing method
-                    if (delegateMethod == null)
-                    {
-                        string parameterString = "";
-
-                        for (int i = 0; i < attribute.ParameterTypes.Length; i++)
-                        {
-                            parameterString += attribute.ParameterTypes[i];
-
-                            if (i < attribute.ParameterTypes.Length - 1)
-                                parameterString += ", ";
-                        }
-
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Method direct call binding {0} targets a method that could not be resolved: {1}.{2}(3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
-                        continue;
-#else
-                        throw new CLRBindingException("Method direct call binding {0} targets a method that could not be resolved: {1}.{2}(3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
-#endif
-                    }
-
-                    // Create delegate
-                    MethodDirectCallDelegate handler = (MethodDirectCallDelegate)((MethodInfo)method).CreateDelegate(typeof(MethodDirectCallDelegate), null);
-
-                    // Check for already added
-                    if (clrMethodDirectCallBindings.ContainsKey(delegateMethod) == true)
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("A direct call method binding already exists for the target method '{0}'", delegateMethod);
-                        continue;
-#else
-                        throw new CLRBindingException("A direct call method binding already exists for the target method '{0}'", delegateMethod);
-#endif
-                    }
-
-                    // Register the method
-                    clrMethodDirectCallBindings.Add(delegateMethod, handler);
-                }
-            }
-        }
-
-        private void InitializeFieldDirectAccessBindings(Type type)
-        {
-            // Check for proxy methods
-            foreach (MethodBase method in type.GetMethods())
-            {
-                if (method.IsDefined(typeof(CLRFieldDirectAccessBindingAttribute), false) == true)
-                {
-                    // Check for static correct
-                    if (method.IsStatic == false)
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Field direct access binding {0} must be declared as static", method);
-                        continue;
-#else
-                        throw new CLRBindingException("Field direct access binding {0} must be declared as static", method);
-#endif
-                    }
-
-                    // Check for correct parameters
-                    ParameterInfo[] parameterTypes = method.GetParameters();
-
-                    if (parameterTypes.Length < 2 ||
-                        parameterTypes[0].ParameterType != typeof(StackData[]) ||
-                        parameterTypes[1].ParameterType != typeof(int))
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Field direct access binding {0} must have the following parameter signature ({1}, {2})", method,
-                            typeof(StackData[]),
-                            typeof(int));
-
-                        continue;
-#else
-                        throw new CLRBindingException("Field direct access binding {0} must have the following parameter signature ({1}, {2})", method,
-                            typeof(StackData[]),
-                            typeof(int));
-#endif
-                    }
-
-                    // Get the attribute
-                    CLRFieldDirectAccessBindingAttribute attribute = method.GetCustomAttribute<CLRFieldDirectAccessBindingAttribute>();
-
-                    // Resolve field
-                    FieldInfo fieldAccessor = attribute.DeclaringType.GetField(attribute.FieldName);
-
-                    // Check for missing method
-                    if (fieldAccessor == null)
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Field direct access binding {0} targets a method that could not be resolved: {1}.{2}", method, attribute.DeclaringType, attribute.FieldName);
-                        continue;
-#else
-                        throw new CLRBindingException("Field direct access binding {0} targets a method that could not be resolved: {1}.{2}", method, attribute.DeclaringType, attribute.FieldName);
-#endif
-                    }
-
-                    // Check return type
-                    if (method is MethodInfo)
-                    {
-                        if (((MethodInfo)method).ReturnType != typeof(void))
-                        {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                            UnityEngine.Debug.LogErrorFormat("Field direct access binding {0} must have a return type of '{1}'", method, typeof(void));
-                            continue;
-#else
-                            throw new CLRBindingException("Field direct access binding {0} must have a return type of '{1}'", method, typeof(void));
-#endif
-                        }
-                    }
-
-                    // Create delegate
-                    FieldDirectAccessDelegate handler = (FieldDirectAccessDelegate)((MethodInfo)method).CreateDelegate(typeof(FieldDirectAccessDelegate), null);
-
-                    // Register the accessor
-                    if(attribute.FieldAccessMode == CLRFieldAccessMode.Read)
-                    {
-                        // Check for already exists
-                        if (clrFieldDirectAccessReadBindings.ContainsKey(fieldAccessor) == true)
-                        {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                            UnityEngine.Debug.LogErrorFormat("A direct access field binding (Read) already exists for the target field '{0}'", fieldAccessor);
-                            continue;
-#else
-                            throw new CLRBindingException("A direct access field binding (Read) already exists for the target field '{0}'", fieldAccessor);
-#endif
-                        }
-
-                        clrFieldDirectAccessReadBindings.Add(fieldAccessor, handler);
-                    }
-                    else if(attribute.FieldAccessMode == CLRFieldAccessMode.Write)
-                    {
-                        // Check for already exists
-                        if (clrFieldDirectAccessWriteBindings.ContainsKey(fieldAccessor) == true)
-                        {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                            UnityEngine.Debug.LogErrorFormat("A direct access field binding (Write) already exists for the target field '{0}'", fieldAccessor);
-                            continue;
-#else
-                            throw new CLRBindingException("A direct access field binding (Write) already exists for the target field '{0}'", fieldAccessor);
-#endif
-                        }
-
-                        clrFieldDirectAccessWriteBindings.Add(fieldAccessor, handler);
-                    }
-                }
-            }
-        }
-
-        private void InitializeCreateInstanceBindings(Type type)
-        {
-            // Check for proxy methods
-            foreach (MethodBase method in type.GetMethods())
-            {
-                if (method.IsDefined(typeof(CLRCreateInstanceBindingAttribute), false) == true)
-                {
-                    // Check for static correct
-                    if (method.IsStatic == false)
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Create instance binding {0} must be declared as static", method);
-                        continue;
-#else
-                        throw new CLRBindingException("Create instance binding {0} must be declared as static", method);
-#endif
-                    }
-
-                    // Check for correct parameters
-                    ParameterInfo[] parameterTypes = method.GetParameters();
-
-                    if (parameterTypes.Length == 0 ||
-                        parameterTypes[0].ParameterType != typeof(AppDomain) ||
-                        parameterTypes[1].ParameterType != typeof(Type) ||
-                        parameterTypes[2].ParameterType != typeof(ConstructorInfo) ||
-                        parameterTypes[3].ParameterType != typeof(object[]))
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Create instance binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
-                            typeof(AppDomain),
-                            typeof(Type),
-                            typeof(ConstructorInfo),
-                            typeof(object[]));
-
-                        continue;
-#else
-                        throw new CLRBindingException("Create instance binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
-                            typeof(AppDomain),
-                            typeof(Type),
-                            typeof(ConstructorInfo),
-                            typeof(object[]));
-#endif
-                    }
-
-                    // Get the attribute
-                    CLRCreateInstanceBindingAttribute attribute = method.GetCustomAttribute<CLRCreateInstanceBindingAttribute>();
-
-                    if(((MethodInfo)method).ReturnType != typeof(object))
-                    {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Create instance binding {0} must have a return type of '{1}'", method, typeof(object));
-                        continue;
-#else
-                        throw new CLRBindingException("Create instance binding {0} must have a return type of '{1}'", method, typeof(object));
-#endif
-                    }
-
-                    // Check for parameter types specified
-                    if (attribute.ParameterTypes != null)
-                    {
-                        // Try to find constructor
-                        ConstructorInfo rerouteCtor = attribute.DeclaringType.GetConstructor(attribute.ParameterTypes);
-
-                        // Check for missing method
-                        if (rerouteCtor == null)
-                        {
-                            string parameterString = "";
-
-                            for (int i = 0; i < attribute.ParameterTypes.Length; i++)
-                            {
-                                parameterString += attribute.ParameterTypes[i];
-
-                                if (i < attribute.ParameterTypes.Length - 1)
-                                    parameterString += ", ";
-                            }
-
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                            UnityEngine.Debug.LogErrorFormat("Create instance constructor binding {0} targets a constructor that could not be resolved: {1}.ctor{2}", method, attribute.DeclaringType, parameterString);
-                            continue;
-#else
-                            throw new CLRBindingException("Create instance constructor binding {0} targets a constructor that could not be resolved: {1}.ctor{2}", method, attribute.DeclaringType, parameterString);
-#endif
-                        }
-
-                        // Check for already exists
-                        if(clrCreateInstanceConstructorBindings.ContainsKey(rerouteCtor) == true)
-                        {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                            UnityEngine.Debug.LogErrorFormat("An override create instance constructor binding already exists for the target constructor '{0}'", rerouteCtor);
-                            continue;
-#else
-                            throw new CLRBindingException("An override create instance constructor binding already exists for the target constructor '{0}'", rerouteCtor);
-#endif
-                        }
-
-                        // Register method
-                        clrCreateInstanceConstructorBindings.Add(rerouteCtor, new CLRCreateInstanceBindingCallSite(this, attribute.DeclaringType, rerouteCtor, method));
-                    }
-                    else
-                    {
-                        // Check for already exists
-                        if (clrCreateInstanceBindings.ContainsKey(attribute.DeclaringType) == true)
-                        {
-#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
-                            UnityEngine.Debug.LogErrorFormat("An override create instance binding already exists for the target type '{0}'", attribute.DeclaringType);
-                            continue;
-#else
-                            throw new CLRBindingException("An override create instance binding already exists for the target type '{0}'", attribute.DeclaringType);
-#endif
-                        }
-
-                        // Register the method
-                        clrCreateInstanceBindings.Add(attribute.DeclaringType, new CLRCreateInstanceBindingCallSite(this, attribute.DeclaringType, null, method));
-                    }
-                }
-            }
-        }
-#endregion
 
 #region Debugger
         public void AttachDebugger(IDebugger debugger)

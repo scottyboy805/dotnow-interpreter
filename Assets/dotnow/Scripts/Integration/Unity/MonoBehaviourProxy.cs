@@ -1,4 +1,4 @@
-﻿#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_DISABLE == false
+﻿#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_DISABLE == false
 using System;
 using System.Reflection;
 using dotnow;
@@ -10,20 +10,32 @@ namespace UnityEngine
     [CLRProxyBinding(typeof(MonoBehaviour))]
     public class MonoBehaviourProxy : MonoBehaviour, ICLRProxy
     {
+        // Type
+        private enum MethodImplementedFlags : byte
+        {
+            Update = 1,
+            LateUpdate = 2,
+            FixedUpdate = 4,
+        }
+
         // Private
         private AppDomain domain = null;
         private CLRType instanceType = null;
         private CLRInstance instance = null;
 
         private BindingFlags bindings = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-        private MethodBase awakeHook = null;
-        private MethodBase startHook = null;
-        private MethodBase onDestroyHook = null;
-        private MethodBase onEnableHook = null;
-        private MethodBase onDisableHook = null;
-        private MethodBase updateHook = null;
-        private MethodBase lateUpdateHook = null;
-        private MethodBase fixedUpdateHook = null;
+
+        private Action awakeHook = null;
+        private Action startHook = null;
+        private Action onDestroyHook = null;
+        private Action onEnableHook = null;
+        private Action onDisableHook = null;
+
+        private MethodImplementedFlags checkedMethods = 0;
+        private Action updateHook = null;
+        private Action lateUpdateHook = null;
+        private Action fixedUpdateHook = null;
+
         private MethodBase onCollisionEnterHook = null;
         private MethodBase onCollisionStayHook = null;
         private MethodBase onCollisionExitHook = null;
@@ -35,63 +47,83 @@ namespace UnityEngine
             this.instanceType = instance.Type;
             this.instance = instance;
 
-            // Manually call awake and OnEnable since they will do nother when called by Unity
+            // Manually call awake and OnEnable since they will do nothing when called by Unity
             Awake();
             OnEnable();
         }
 
         public void Awake()
         {
+            // When Unity calls this method, we have not yet had chance to 'InitializeProxy'. This method will be called manually when ready.
             if (domain == null)
                 return;
 
-            if (awakeHook == null) awakeHook = instanceType.GetMethod(nameof(Awake), bindings);
-            if (awakeHook != null) awakeHook.Invoke(instance, null);
+            if(awakeHook == null) awakeHook = instanceType.GetMethod(nameof(Awake))?.CreateDelegate(typeof(Action), instance) as Action;
+            if (awakeHook != null) awakeHook();
         }
 
         public void Start()
         {
-            if (startHook == null) startHook = instanceType.GetMethod(nameof(Start), bindings);
-            if (startHook != null) startHook.Invoke(instance, null);
+            if (startHook == null) startHook = instanceType.GetMethod(nameof(Start))?.CreateDelegate(typeof(Action), instance) as Action;
+            if (startHook != null) startHook();
         }
 
         public void OnDestroy()
         {
-            if (onDestroyHook == null) onDestroyHook = instanceType.GetMethod(nameof(OnDestroy), bindings);
-            if (onDestroyHook != null) onDestroyHook.Invoke(instance, null);
+            if (onDestroyHook == null) onDestroyHook = instanceType.GetMethod(nameof(OnDestroy))?.CreateDelegate(typeof(Action), instance) as Action;
+            if (onDestroyHook != null) onDestroyHook();
         }
 
         public void OnEnable()
         {
+            // When Unity calls this method, we have not yet had chance to 'InitializeProxy'. This method will be called manually when ready.
             if (domain == null)
                 return;
 
-            if (onEnableHook == null) onEnableHook = instanceType.GetMethod(nameof(OnEnable), bindings);
-            if (onEnableHook != null) onEnableHook.Invoke(instance, null);
+            if (onEnableHook == null) onEnableHook = instanceType.GetMethod(nameof(OnEnable))?.CreateDelegate(typeof(Action), instance) as Action;
+            if (onEnableHook != null) onEnableHook();
         }
 
         public void OnDisable()
         {
-            if (onDisableHook == null) onDisableHook = instanceType.GetMethod(nameof(OnDisable), bindings);
-            if (onDisableHook != null) onDisableHook.Invoke(instance, null);
+            if (onDisableHook == null) onDisableHook = instanceType.GetMethod(nameof(OnDisable))?.CreateDelegate(typeof(Action), instance) as Action;
+            if (onDisableHook != null) onDisableHook();
         }
 
         public void Update()
         {
-            if (updateHook == null) updateHook = instanceType.GetMethod(nameof(Update), bindings);
-            if (updateHook != null) updateHook.Invoke(instance, null);
+            // Check for method implemented - Update is called alot so there is extra logic here to make sure 'GetMethod' is only called once and the reuslt is cached
+            if((checkedMethods & MethodImplementedFlags.Update) == 0)
+            {
+                checkedMethods |= MethodImplementedFlags.Update;
+                updateHook = instanceType.GetMethod(nameof(Update))?.CreateDelegate(typeof(Action), instance) as Action;
+            }
+
+            if (updateHook != null) updateHook();
         }
 
         public void LateUpdate()
         {
-            if (lateUpdateHook == null) lateUpdateHook = instanceType.GetMethod(nameof(LateUpdate), bindings);
-            if (lateUpdateHook != null) lateUpdateHook.Invoke(instance, null);
+            // Check for method implemented - Late update is called alot so there is extra logic here to make sure 'GetMethod' is only called once and the reuslt is cached
+            if ((checkedMethods & MethodImplementedFlags.LateUpdate) == 0)
+            {
+                checkedMethods |= MethodImplementedFlags.LateUpdate;
+                lateUpdateHook = instanceType.GetMethod(nameof(LateUpdate))?.CreateDelegate(typeof(Action), instance) as Action;
+            }
+
+            if (lateUpdateHook != null) lateUpdateHook();
         }
 
         public void FixedUpdate()
         {
-            if (fixedUpdateHook == null) fixedUpdateHook = instanceType.GetMethod(nameof(FixedUpdate), bindings);
-            if (fixedUpdateHook != null) fixedUpdateHook.Invoke(instance, null);
+            // Check for method implemented - Late update is called alot so there is extra logic here to make sure 'GetMethod' is only called once and the reuslt is cached
+            if ((checkedMethods & MethodImplementedFlags.FixedUpdate) == 0)
+            {
+                checkedMethods |= MethodImplementedFlags.FixedUpdate;
+                fixedUpdateHook = instanceType.GetMethod(nameof(FixedUpdate))?.CreateDelegate(typeof(Action), instance) as Action;
+            }
+
+            if (fixedUpdateHook != null) fixedUpdateHook();
         }
 
         public void OnCollisionEnter(Collision collision)

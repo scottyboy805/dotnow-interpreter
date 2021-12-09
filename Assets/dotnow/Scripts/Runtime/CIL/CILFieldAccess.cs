@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using dotnow.Reflection;
+using System.Reflection;
 
 namespace dotnow.Runtime.CIL
 {
@@ -9,11 +10,13 @@ namespace dotnow.Runtime.CIL
         internal AppDomain.FieldDirectAccessDelegate directReadAccessDelegate;
         internal AppDomain.FieldDirectAccessDelegate directWriteAccessDelegate;
         internal CLRTypeInfo fieldTypeInfo;
+        internal bool isClrField;
 
         // Constructor
         public CILFieldAccess(FieldInfo targetField)
         {
             this.targetField = targetField;
+            this.isClrField = targetField is CLRField;
         }
 
         // Methods
