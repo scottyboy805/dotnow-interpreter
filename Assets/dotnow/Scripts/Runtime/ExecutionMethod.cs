@@ -60,9 +60,6 @@ namespace dotnow.Runtime
             // Execute method body
             body.ExecuteMethodBody(engine, frame);
 
-            
-
-            
             // Load return type
             if (isCtor == false && signature.returnsValue == true)
             {
@@ -106,15 +103,22 @@ namespace dotnow.Runtime
             // Push instance
             if (instanceCount > 0)
             {
-                frame.stack[frame.stackIndex].refValue = obj;
-                frame.stack[frame.stackIndex++].type = StackData.ObjectType.Ref;
+                StackData.AllocRef(__heapallocator.GetCurrent(), ref frame._stack[frame.stackIndex++], obj);
+
+                //frame._stack[frame.stackIndex].refValue = obj;
+                //frame._stack[frame.stackIndex++].type = StackData.ObjectType.Ref;
             }
+
+            // Set heap size
+            frame.heapSize = frame._heap.Size;
 
             // Execute method body
             body.ExecuteMethodBody(engine, frame);
 
             // Release the frame
             engine.FreeExecutionFrame(frame);
+
+            UnityEngine.Debug.Log("Heap Size: " + frame.heapSize);
         }
     }
 }

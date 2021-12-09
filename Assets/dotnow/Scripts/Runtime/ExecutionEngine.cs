@@ -39,7 +39,8 @@ namespace dotnow.Runtime
         internal Dictionary<int, object[]> argumentCache = new Dictionary<int, object[]>();
 
         internal ExecutionFrame currentFrame = null;
-        internal StackData[] stack = null;        
+        internal StackData[] stack = null;
+        internal __heapallocator _heap = new __heapallocator();
 
         // Private        
         private Stack<ExecutionFrame> availableFrames = new Stack<ExecutionFrame>();

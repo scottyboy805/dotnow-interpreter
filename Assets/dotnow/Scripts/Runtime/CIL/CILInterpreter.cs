@@ -19,11 +19,12 @@ namespace dotnow.Runtime.CIL
             // Locals
             // Locals are predefined so that they can be shared between instructions to heavily reduce the locals required in compiled code (previous versions could require over 150 locals, most of which are of identical type)
             // Stack locals
-            StackData[] stack = frame.stack;        // ldloc.0
-            int stackPtr = frame.stackIndex;        // ldloc.1
+            StackData[] stack = frame._stack;       // ldloc.0
+            __heapallocator _heap = frame._heap;    // ldloc.1
+            int stackPtr = frame.stackIndex;        // ldloc.2
 
             // Shared locals
-            StackData left, right, temp;            // ldloc.2.3/ldloc.s (4)
+            StackData left, right, temp;            // ldloc.3/ldloc.s (4)
             bool flag;
             CILFieldAccess fieldAccess;
             CILMethodInvocation methodInvoke;
@@ -44,7 +45,7 @@ namespace dotnow.Runtime.CIL
 
             int instructionLength = instructions.Length;            
 
-            // Use local variables in instruction loop           
+            // Use local variables in instruction loop          
             
             int instructionPtr = frame.instructionPtr;
             int stackArgOffset = frame.Method.IsStatic == false ? 1 : 0;
@@ -566,7 +567,6 @@ namespace dotnow.Runtime.CIL
 
                                 case StackData.ObjectType.Null:
                                 case StackData.ObjectType.Ref:
-                                case StackData.ObjectType.RefBoxed:
                                     {
                                         if (left.type == StackData.ObjectType.Null)
                                         {
@@ -575,16 +575,8 @@ namespace dotnow.Runtime.CIL
                                             break;
                                         }
 
-                                        if (left.type == StackData.ObjectType.RefBoxed)
-                                        {
-                                            stack[stackPtr].value.Int32 = (left.refValue.Equals(right.refValue) == true) ? 1 : 0;
-                                            stack[stackPtr++].type = StackData.ObjectType.Int32;
-                                        }
-                                        else
-                                        {
-                                            stack[stackPtr].value.Int32 = (left.refValue == right.refValue) ? 1 : 0;
-                                            stack[stackPtr++].type = StackData.ObjectType.Int32;
-                                        }
+                                        stack[stackPtr].value.Int32 = (left.Box(_heap) == right.Box(_heap)) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
@@ -634,7 +626,7 @@ namespace dotnow.Runtime.CIL
 
                                 case StackData.ObjectType.Ref:
                                     {
-                                        stack[stackPtr].value.Int32 = (left.Address < right.Address) ? 1 : 0;
+                                        stack[stackPtr].value.Int32 = (left.address < right.address) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
@@ -684,7 +676,7 @@ namespace dotnow.Runtime.CIL
 
                                 case StackData.ObjectType.Ref:
                                     {
-                                        stack[stackPtr].value.Int32 = (left.Address > right.Address) ? 1 : 0;
+                                        stack[stackPtr].value.Int32 = (left.address > right.address) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
@@ -701,8 +693,12 @@ namespace dotnow.Runtime.CIL
 #region Convert
                     case Code.Box:
                         {
-                            stack[stackPtr - 1].refValue = stack[--stackPtr].Box();
-                            stack[stackPtr++].type = StackData.ObjectType.RefBoxed;
+                            temp = stack[--stackPtr];
+
+                            _heap.PinManagedObject(ref stack[stackPtr++], temp.Box(_heap));
+
+                            //stack[stackPtr - 1].refValue = stack[--stackPtr].Box();
+                            //stack[stackPtr++].type = StackData.ObjectType.RefBoxed;
                             break;
                         }
 
@@ -971,7 +967,6 @@ namespace dotnow.Runtime.CIL
 
                                 case StackData.ObjectType.Null:
                                 case StackData.ObjectType.Ref:
-                                case StackData.ObjectType.RefBoxed:
                                     {
                                         if (left.type == StackData.ObjectType.Null)
                                         {
@@ -979,7 +974,7 @@ namespace dotnow.Runtime.CIL
                                             break;
                                         }
 
-                                        flag = (left.refValue == right.refValue);
+                                        flag = (left.Box(_heap) == right.Box(_heap));
                                         break;
                                     }
 
@@ -1031,7 +1026,6 @@ namespace dotnow.Runtime.CIL
 
                                 case StackData.ObjectType.Null:
                                 case StackData.ObjectType.Ref:
-                                case StackData.ObjectType.RefBoxed:
                                     {
                                         if (left.type == StackData.ObjectType.Null)
                                         {
@@ -1039,7 +1033,7 @@ namespace dotnow.Runtime.CIL
                                             break;
                                         }
 
-                                        flag = (left.refValue.Equals(right.refValue) == false);
+                                        flag = (left.Box(_heap).Equals(right.Box(_heap)) == false);
                                         break;
                                     }
 
@@ -1093,7 +1087,7 @@ namespace dotnow.Runtime.CIL
 
                                 case StackData.ObjectType.Ref:
                                     {
-                                        flag = (left.Address < right.value.Int32);
+                                        flag = (left.address < right.value.Int32);
                                         break;
                                     }
 
@@ -1146,7 +1140,7 @@ namespace dotnow.Runtime.CIL
 
                                 case StackData.ObjectType.Ref:
                                     {
-                                        flag = (left.Address <= right.value.Int32);
+                                        flag = (left.address <= right.value.Int32);
                                         break;
                                     }
 
@@ -1199,7 +1193,7 @@ namespace dotnow.Runtime.CIL
 
                                 case StackData.ObjectType.Ref:
                                     {
-                                        flag = (left.Address > right.value.Int32);
+                                        flag = (left.address > right.value.Int32);
                                         break;
                                     }
 
@@ -1253,7 +1247,7 @@ namespace dotnow.Runtime.CIL
 
                                 case StackData.ObjectType.Ref:
                                     {
-                                        flag = (left.Address >= right.value.Int32);
+                                        flag = (left.address >= right.value.Int32);
                                         break;
                                     }
 
@@ -1292,7 +1286,7 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Ldstr:
                         {
-                            StackData.AllocRef(ref stack[stackPtr++], (string)instruction.objectOperand);
+                            StackData.AllocRef(_heap, ref stack[stackPtr++], (string)instruction.objectOperand);
                             break;
                         }
 
@@ -1431,7 +1425,9 @@ namespace dotnow.Runtime.CIL
                     case Code.Ldarga:
                     case Code.Ldarga_S:
                         {
-                            __internal.__gc_alloc_addr_stack(ref stack[stackPtr++], stack, frame.stackArgIndex + instruction.operand.Int32 + stackArgOffset);
+                            //__internal.__gc_alloc_addr_stack(ref stack[stackPtr++], stack, frame.stackArgIndex + instruction.operand.Int32 + stackArgOffset);
+
+                            _heap.PinStackAddress(ref stack[stackPtr++], stack, frame.stackArgIndex + instruction.operand.Int32 + stackArgOffset);
 
                             //stack[stackPtr].refValue = new ByRefVariable(stack, frame.stackArgIndex + instruction.operand.Int32 + stackArgOffset);
                             //stack[stackPtr++].type = StackData.ObjectType.ByRef;
@@ -1481,7 +1477,9 @@ namespace dotnow.Runtime.CIL
                     case Code.Ldloca:
                     case Code.Ldloca_S:
                         {
-                            __internal.__gc_alloc_addr_stack(ref stack[stackPtr++], stack, frame.stackMin + instruction.operand.Int32);
+                            _heap.PinStackAddress(ref stack[stackPtr++], stack, frame.stackMin + instruction.operand.Int32);
+
+                            //__internal.__gc_alloc_addr_stack(ref stack[stackPtr++], stack, frame.stackMin + instruction.operand.Int32);
 
                             //stack[stackPtr].refValue = new ByRefVariable(stack, instruction.operand.Int32);
                             //stack[stackPtr++].type = StackData.ObjectType.ByRef;
@@ -1523,78 +1521,112 @@ namespace dotnow.Runtime.CIL
 #region Indirect
                     case Code.Ldind_I:
                         {
-                            stack[stackPtr - 1].value.Int32 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI4();
+                            stack[stackPtr - 1].value.Int32 = _heap.FetchPinnedValue<int>(stack[--stackPtr]);
                             stack[stackPtr++].type = StackData.ObjectType.Int32;
+
+                            //stack[stackPtr - 1].value.Int32 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI4();
+                            //stack[stackPtr++].type = StackData.ObjectType.Int32;
                             break;
                         }
 
                     case Code.Ldind_I1:
                         {
-                            stack[stackPtr - 1].value.Int8 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI1();
+                            stack[stackPtr - 1].value.Int8 = _heap.FetchPinnedValue<sbyte>(stack[--stackPtr]);
                             stack[stackPtr++].type = StackData.ObjectType.Int8;
+
+                            //stack[stackPtr - 1].value.Int8 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI1();
+                            //stack[stackPtr++].type = StackData.ObjectType.Int8;
                             break;
                         }
 
                     case Code.Ldind_I2:
                         {
-                            stack[stackPtr - 1].value.Int16 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI2();
+                            stack[stackPtr - 1].value.Int16 = _heap.FetchPinnedValue<short>(stack[--stackPtr]);
                             stack[stackPtr++].type = StackData.ObjectType.Int16;
+
+                            //stack[stackPtr - 1].value.Int16 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI2();
+                            //stack[stackPtr++].type = StackData.ObjectType.Int16;
                             break;
                         }
 
                     case Code.Ldind_I4:
                         {
-                            stack[stackPtr - 1].value.Int32 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI4();
+                            stack[stackPtr - 1].value.Int32 = _heap.FetchPinnedValue<int>(stack[--stackPtr]);
                             stack[stackPtr++].type = StackData.ObjectType.Int32;
+
+                            //stack[stackPtr - 1].value.Int32 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI4();
+                            //stack[stackPtr++].type = StackData.ObjectType.Int32;
                             break;
                         }
 
                     case Code.Ldind_I8:
                         {
-                            stack[stackPtr - 1].value.Int64 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI8();
+                            stack[stackPtr - 1].value.Int64 = _heap.FetchPinnedValue<long>(stack[--stackPtr]);
                             stack[stackPtr++].type = StackData.ObjectType.Int64;
+
+                            //stack[stackPtr - 1].value.Int64 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI8();
+                            //stack[stackPtr++].type = StackData.ObjectType.Int64;
                             break;
                         }
 
                     case Code.Ldind_R4:
                         {
-                            stack[stackPtr - 1].value.Single = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueR4();
+                            stack[stackPtr - 1].value.Single = _heap.FetchPinnedValue<float>(stack[--stackPtr]);
                             stack[stackPtr++].type = StackData.ObjectType.Single;
+
+                            //stack[stackPtr - 1].value.Single = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueR4();
+                            //stack[stackPtr++].type = StackData.ObjectType.Single;
                             break;
                         }
 
                     case Code.Ldind_R8:
                         {
-                            stack[stackPtr - 1].value.Double = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueR8();
+                            stack[stackPtr - 1].value.Double = _heap.FetchPinnedValue<double>(stack[--stackPtr]);
                             stack[stackPtr++].type = StackData.ObjectType.Double;
+
+                            //stack[stackPtr - 1].value.Double = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueR8();
+                            //stack[stackPtr++].type = StackData.ObjectType.Double;
                             break;
                         }
 
                     case Code.Ldind_U1:
                         {
-                            stack[stackPtr - 1].value.Int8 = (sbyte)((IByRef)stack[--stackPtr].refValue).GetReferenceValueU1();
+                            stack[stackPtr - 1].value.Int8 = (sbyte)_heap.FetchPinnedValue<byte>(stack[--stackPtr]);
                             stack[stackPtr++].type = StackData.ObjectType.UInt8;
+
+                            //stack[stackPtr - 1].value.Int8 = (sbyte)((IByRef)stack[--stackPtr].refValue).GetReferenceValueU1();
+                            //stack[stackPtr++].type = StackData.ObjectType.UInt8;
                             break;
                         }
 
                     case Code.Ldind_U2:
                         {
-                            stack[stackPtr - 1].value.Int16 = (short)((IByRef)stack[--stackPtr].refValue).GetReferenceValueU2();
+                            stack[stackPtr - 1].value.Int16 = (short)_heap.FetchPinnedValue<ushort>(stack[--stackPtr]);
                             stack[stackPtr++].type = StackData.ObjectType.UInt16;
+
+                            //stack[stackPtr - 1].value.Int16 = (short)((IByRef)stack[--stackPtr].refValue).GetReferenceValueU2();
+                            //stack[stackPtr++].type = StackData.ObjectType.UInt16;
                             break;
                         }
 
                     case Code.Ldind_U4:
                         {
-                            stack[stackPtr - 1].value.Int32 = (int)((IByRef)stack[--stackPtr].refValue).GetReferenceValueU4();
+                            stack[stackPtr - 1].value.Int32 = (int)_heap.FetchPinnedValue<uint>(stack[--stackPtr]);
                             stack[stackPtr++].type = StackData.ObjectType.UInt32;
+
+                            //stack[stackPtr - 1].value.Int32 = (int)((IByRef)stack[--stackPtr].refValue).GetReferenceValueU4();
+                            //stack[stackPtr++].type = StackData.ObjectType.UInt32;
                             break;
                         }
 
                     case Code.Ldind_Ref:
                         {
-                            stack[stackPtr - 1].refValue = ((IByRef)stack[--stackPtr].refValue).GetReferenceValue();
-                            stack[stackPtr++].type = StackData.ObjectType.Ref;
+                            object value = _heap.FetchPinnedValue(stack[--stackPtr]);
+
+                            StackData.AllocRef(_heap, ref stack[stackPtr++], value);
+
+                            //stack[stackPtr - 1].refValue = ((IByRef)stack[--stackPtr].refValue).GetReferenceValue();
+                            //stack[stackPtr++].type = StackData.ObjectType.Ref;
                             break;
                         }
 
@@ -1603,7 +1635,9 @@ namespace dotnow.Runtime.CIL
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
 
-                            ((IByRef)left.refValue).SetReferenceValueI4((int)(IntPtr)right.value.Int32);
+                            //((IByRef)left.refValue).SetReferenceValueI4((int)(IntPtr)right.value.Int32);
+
+                            _heap.WritePinnedValue(left, right.value.Int32);
                             break;
                         }
 
@@ -1612,7 +1646,9 @@ namespace dotnow.Runtime.CIL
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
 
-                            ((IByRef)left.refValue).SetReferenceValueI1(right.value.Int8);
+                            //((IByRef)left.refValue).SetReferenceValueI1(right.value.Int8);
+
+                            _heap.WritePinnedValue(left, right.value.Int8);
                             break;
                         }
 
@@ -1621,7 +1657,9 @@ namespace dotnow.Runtime.CIL
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
 
-                            ((IByRef)left.refValue).SetReferenceValueI2(right.value.Int16);
+                            //((IByRef)left.refValue).SetReferenceValueI2(right.value.Int16);
+
+                            _heap.WritePinnedValue(left, right.value.Int16);
                             break;
                         }
 
@@ -1630,7 +1668,9 @@ namespace dotnow.Runtime.CIL
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
 
-                            ((IByRef)left.refValue).SetReferenceValueI4(right.value.Int32);
+                            //((IByRef)left.refValue).SetReferenceValueI4(right.value.Int32);
+
+                            _heap.WritePinnedValue(left, right.value.Int32);
                             break;
                         }
 
@@ -1639,7 +1679,9 @@ namespace dotnow.Runtime.CIL
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
 
-                            ((IByRef)left.refValue).SetReferenceValueI8(right.value.Int64);
+                            //((IByRef)left.refValue).SetReferenceValueI8(right.value.Int64);
+
+                            _heap.WritePinnedValue(left, right.value.Int64);
                             break;
                         }
 
@@ -1648,7 +1690,9 @@ namespace dotnow.Runtime.CIL
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
 
-                            ((IByRef)left.refValue).SetReferenceValueR4(right.value.Single);
+                            //((IByRef)left.refValue).SetReferenceValueR4(right.value.Single);
+
+                            _heap.WritePinnedValue(left, right.value.Single);
                             break;
                         }
 
@@ -1657,7 +1701,9 @@ namespace dotnow.Runtime.CIL
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
 
-                            ((IByRef)left.refValue).SetReferenceValueR8(right.value.Double);
+                            //((IByRef)left.refValue).SetReferenceValueR8(right.value.Double);
+
+                            _heap.WritePinnedValue(left, right.value.Double);
                             break;
                         }
 
@@ -1666,7 +1712,9 @@ namespace dotnow.Runtime.CIL
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
 
-                            ((IByRef)left.refValue).SetReferenceValue(right);
+                            _heap.WritePinnedValue(left, right.Box(_heap));
+
+                            //((IByRef)left.refValue).SetReferenceValue(right);
                             break;
                         }
 #endregion
@@ -1680,12 +1728,12 @@ namespace dotnow.Runtime.CIL
                             if ((int)temp.type <= 32)
                             {
                                 // Allocate array short size
-                                __internal.__gc_alloc_arrays(ref stack[stackPtr++], instruction.typeOperand.type, temp.value.Int32);
+                                __internal.__gc_alloc_arrays(_heap, ref stack[stackPtr++], instruction.typeOperand.type, temp.value.Int32);
                             }
                             else if ((int)temp.type <= 64)
                             {
                                 // Allocate array long size
-                                __internal.__gc_alloc_arrayl(ref stack[stackPtr++], instruction.typeOperand.type, temp.value.Int64);
+                                __internal.__gc_alloc_arrayl(_heap, ref stack[stackPtr++], instruction.typeOperand.type, temp.value.Int64);
                             }
                             else
                                 throw new NotSupportedException();
@@ -1700,7 +1748,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int32ArrImpl = (int[])left.refValue;    // arr impl
+                            int32ArrImpl = (int[])left.Box(_heap);    // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -1725,7 +1773,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int8ArrImpl = (sbyte[])left.refValue;       // arr impl
+                            int8ArrImpl = (sbyte[])left.Box(_heap);       // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -1750,7 +1798,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int16ArrImpl = (short[])left.refValue;    // arr impl
+                            int16ArrImpl = (short[])left.Box(_heap);    // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -1775,7 +1823,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int32ArrImpl = (int[])left.refValue;        // arr impl
+                            int32ArrImpl = (int[])left.Box(_heap);        // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -1800,7 +1848,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int64ArrImpl = (long[])left.refValue;   // arr impl
+                            int64ArrImpl = (long[])left.Box(_heap);   // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -1825,7 +1873,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            singleArrImpl = (float[])left.refValue;     // arr impl
+                            singleArrImpl = (float[])left.Box(_heap);     // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -1850,7 +1898,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            doubleArrImpl = (double[])left.refValue;    // arr impl
+                            doubleArrImpl = (double[])left.Box(_heap);    // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -1875,7 +1923,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            uint8ArrImpl = (byte[])left.refValue;   // arr impl
+                            uint8ArrImpl = (byte[])left.Box(_heap);   // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -1900,7 +1948,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            uint16ArrImpl = (ushort[])left.refValue;    // arr impl
+                            uint16ArrImpl = (ushort[])left.Box(_heap);    // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -1926,7 +1974,7 @@ namespace dotnow.Runtime.CIL
                                 throw new NullReferenceException();
 
                             // Get exact array type
-                            uint32ArrImpl = (uint[])left.refValue;  // arr impl
+                            uint32ArrImpl = (uint[])left.Box(_heap);  // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -1951,15 +1999,15 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            objArrImpl = (object[])left.refValue;   // arr impl
+                            objArrImpl = (object[])left.Box(_heap);   // arr impl
 
                             if ((int)temp.type <= 32)
                             {
-                                StackData.AllocTyped(ref stack[stackPtr++], instruction.typeOperand, objArrImpl[temp.value.Int32]);
+                                StackData.AllocTyped(_heap, ref stack[stackPtr++], instruction.typeOperand, objArrImpl[temp.value.Int32]);
                             }
                             else if ((int)temp.type <= 64)
                             {
-                                StackData.AllocTyped(ref stack[stackPtr++], instruction.typeOperand, objArrImpl[temp.value.Int64]);
+                                StackData.AllocTyped(_heap, ref stack[stackPtr++], instruction.typeOperand, objArrImpl[temp.value.Int64]);
                             }
                             else
                                 throw new NotSupportedException();
@@ -1974,17 +2022,21 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            objArrImpl = (object[])left.refValue;   // arr impl
+                            objArrImpl = (object[])left.Box(_heap);   // arr impl
 
                             if ((int)temp.type <= 32)
                             {
-                                stack[stackPtr].refValue = objArrImpl[temp.value.Int32];
-                                stack[stackPtr++].type = StackData.ObjectType.Ref;
+                                //stack[stackPtr].refValue = objArrImpl[temp.value.Int32];
+                                //stack[stackPtr++].type = StackData.ObjectType.Ref;
+
+                                StackData.AllocRef(_heap, ref stack[stackPtr++], objArrImpl[temp.value.Int32]);
                             }
                             else if ((int)temp.type <= 64)
                             {
-                                stack[stackPtr].refValue = objArrImpl[temp.value.Int64];
-                                stack[stackPtr++].type = StackData.ObjectType.Ref;
+                                //stack[stackPtr].refValue = objArrImpl[temp.value.Int64];
+                                //stack[stackPtr++].type = StackData.ObjectType.Ref;
+
+                                StackData.AllocRef(_heap, ref stack[stackPtr++], objArrImpl[temp.value.Int64]);
                             }
                             else
                                 throw new NotSupportedException();
@@ -2002,7 +2054,9 @@ namespace dotnow.Runtime.CIL
                             if ((int)temp.type <= 32)
                             {
                                 // Get array element address
-                                __internal.__gc_alloc_addr_elem(ref stack[stackPtr++], (Array)left.refValue, temp.value.Int32);
+                                _heap.PinElementAddress(ref stack[stackPtr++], (Array)temp.Box(_heap), temp.value.Int32);
+
+                                //__internal.__gc_alloc_addr_elem(ref stack[stackPtr++], (Array)left.refValue, temp.value.Int32);
 
                                 //stack[stackPtr].refValue = new ByRefElement((Array)left.refValue, temp.value.Int32);
                                 //stack[stackPtr++].type = StackData.ObjectType.ByRef;
@@ -2010,7 +2064,8 @@ namespace dotnow.Runtime.CIL
                             else if ((int)temp.type <= 64)
                             {
                                 // Get array element address
-                                __internal.__gc_alloc_addr_elem(ref stack[stackPtr++], (Array)left.refValue, temp.value.Int64);
+                                _heap.PinElementAddress(ref stack[stackPtr++], (Array)temp.Box(_heap), temp.value.Int64);
+                                //__internal.__gc_alloc_addr_elem(ref stack[stackPtr++], (Array)left.refValue, temp.value.Int64);
 
                                 //stack[stackPtr].refValue = new ByRefElement((Array)left.refValue, temp.value.Int64);
                                 //stack[stackPtr++].type = StackData.ObjectType.ByRef;
@@ -2029,7 +2084,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int32ArrImpl = (int[])left.refValue;    // arr impl
+                            int32ArrImpl = (int[])left.Box(_heap);    // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -2053,7 +2108,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int8ArrImpl = (sbyte[])left.refValue;   // arr impl
+                            int8ArrImpl = (sbyte[])left.Box(_heap);   // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -2077,7 +2132,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int16ArrImpl = (short[])left.refValue;  // arr impl
+                            int16ArrImpl = (short[])left.Box(_heap);  // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -2101,7 +2156,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int32ArrImpl = (int[])left.refValue;    // arr impl
+                            int32ArrImpl = (int[])left.Box(_heap);    // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -2125,7 +2180,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int64ArrImpl = (long[])left.refValue;   // arr impl
+                            int64ArrImpl = (long[])left.Box(_heap);   // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -2149,7 +2204,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            singleArrImpl = (float[])left.refValue; // arr impl
+                            singleArrImpl = (float[])left.Box(_heap); // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -2173,7 +2228,7 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            doubleArrImpl = (double[])left.refValue;    // arr impl
+                            doubleArrImpl = (double[])left.Box(_heap);    // arr impl
 
                             if ((int)temp.type <= 32)
                             {
@@ -2199,11 +2254,11 @@ namespace dotnow.Runtime.CIL
 
                             if ((int)temp.type <= 32)
                             {
-                                ((Array)left.refValue).SetValue(right.UnboxAsType(instruction.typeOperand), temp.value.Int32);
+                                ((Array)left.Box(_heap)).SetValue(right.UnboxAsType(_heap, instruction.typeOperand), temp.value.Int32);
                             }
                             else if ((int)temp.type <= 64)
                             {
-                                ((Array)left.refValue).SetValue(right.UnboxAsType(instruction.typeOperand), temp.value.Int64);
+                                ((Array)left.Box(_heap)).SetValue(right.UnboxAsType(_heap, instruction.typeOperand), temp.value.Int64);
                             }
                             else
                                 throw new NotSupportedException();
@@ -2221,11 +2276,11 @@ namespace dotnow.Runtime.CIL
 
                             if ((int)temp.type <= 32)
                             {
-                                ((Array)left.refValue).SetValue(right.Box(), temp.value.Int32);
+                                ((Array)left.Box(_heap)).SetValue(right.Box(), temp.value.Int32);
                             }
                             else if ((int)temp.type <= 64)
                             {
-                                ((Array)left.refValue).SetValue(right.Box(), temp.value.Int64);
+                                ((Array)left.Box(_heap)).SetValue(right.Box(), temp.value.Int64);
                             }
                             else
                                 throw new NotSupportedException();
@@ -2239,7 +2294,7 @@ namespace dotnow.Runtime.CIL
                             if (temp.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            stack[stackPtr].value.Int32 = ((Array)temp.refValue).Length;
+                            stack[stackPtr].value.Int32 = ((Array)temp.Box(_heap)).Length;
                             stack[stackPtr++].type = StackData.ObjectType.UInt32;
                             break;
                         }
@@ -2265,7 +2320,7 @@ namespace dotnow.Runtime.CIL
                             }
                             else
                             {
-                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(null));
+                                StackData.AllocTyped(_heap, ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(null));
                             }
                             break;
                         }
@@ -2285,23 +2340,11 @@ namespace dotnow.Runtime.CIL
 
                             if (fieldAccess.isClrField == true)
                             {
-                                if (temp.type == StackData.ObjectType.ByRef)
-                                {
-                                    (fieldAccess.targetField as CLRField).GetValueStack(((IByRef)temp.refValue).GetReferenceValue(), ref stack[stackPtr++]);
-                                    break;
-                                }
-
                                 (fieldAccess.targetField as CLRField).GetValueStack(temp, ref stack[stackPtr++]);
                             }
                             else
                             {
-                                if (temp.type == StackData.ObjectType.ByRef)
-                                {
-                                    StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(((IByRef)temp.refValue).GetReferenceValue().Box()));
-                                    break;
-                                }
-
-                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(temp.Box()));
+                                StackData.AllocTyped(_heap, ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(temp.Box(_heap)));
                             }
                             break;
                         }
@@ -2313,7 +2356,8 @@ namespace dotnow.Runtime.CIL
                             temp = stack[--stackPtr];       // inst
 
                             // Get address of field value
-                            __internal.__gc_alloc_addr_fld(ref stack[stackPtr++], fieldAccess, temp);
+                            _heap.PinFieldAddress(ref stack[stackPtr++], fieldAccess, temp);
+                            //__internal.__gc_alloc_addr_fld(ref stack[stackPtr++], fieldAccess, temp);
 
                             //stack[stackPtr].refValue = new ByRefField(fieldAccess, temp);
                             //stack[stackPtr++].type = StackData.ObjectType.ByRef;
@@ -2332,7 +2376,7 @@ namespace dotnow.Runtime.CIL
                             }
 
                             right = stack[--stackPtr];      // val
-                            fieldAccess.targetField.SetValue(null, right.UnboxAsType(fieldAccess.fieldTypeInfo));
+                            fieldAccess.targetField.SetValue(null, right.UnboxAsType(_heap, fieldAccess.fieldTypeInfo));
                             break;
                         }
 
@@ -2349,15 +2393,8 @@ namespace dotnow.Runtime.CIL
 
                             right = stack[--stackPtr];      // val
                             temp = stack[--stackPtr];       // inst
-
-                            if (temp.refValue is IByRef)
-                            {
-                                fieldAccess.targetField.SetValue((((IByRef)temp.Box()).GetReferenceValue().refValue), right.UnboxAsType(fieldAccess.fieldTypeInfo));
-                            }
-                            else
-                            {
-                                fieldAccess.targetField.SetValue(temp.Box(), right.UnboxAsType(fieldAccess.fieldTypeInfo));
-                            }
+                            
+                            fieldAccess.targetField.SetValue(temp.Box(), right.UnboxAsType(_heap, fieldAccess.fieldTypeInfo));
                             break;
                         }
 #endregion
@@ -2388,7 +2425,7 @@ namespace dotnow.Runtime.CIL
                             stackPtr = first;
 
                             // Allocate instance
-                            __internal.__gc_alloc_inst(ref stack[stackPtr++], ref domain, instanceType.type, ctor, args);
+                            __internal.__gc_alloc_inst(_heap, ref stack[stackPtr++], ref domain, instanceType.type, ctor, args);
                             break;
                         }
 
@@ -2405,18 +2442,24 @@ namespace dotnow.Runtime.CIL
                         {
                             if(instruction.objectOperand is CILFieldAccess access)
                             {
-                                stack[stackPtr].refValue = access.targetField;
-                                stack[stackPtr++].type = StackData.ObjectType.Ref;
+                                StackData.AllocRef(_heap, ref stack[stackPtr++], access.targetField);
+
+                                //stack[stackPtr].refValue = access.targetField;
+                                //stack[stackPtr++].type = StackData.ObjectType.Ref;
                             }
                             else if(instruction.objectOperand is CILMethodInvocation invocation)
                             {
-                                stack[stackPtr].refValue = invocation.targetMethod;
-                                stack[stackPtr++].type = StackData.ObjectType.Ref;
+                                StackData.AllocRef(_heap, ref stack[stackPtr++], invocation.targetMethod);
+
+                                //stack[stackPtr].refValue = invocation.targetMethod;
+                                //stack[stackPtr++].type = StackData.ObjectType.Ref;
                             }
                             else
                             {
-                                stack[stackPtr].refValue = (MemberInfo)instruction.objectOperand;
-                                stack[stackPtr++].type = StackData.ObjectType.Ref;
+                                StackData.AllocRef(_heap, ref stack[stackPtr++], (MemberInfo)instruction.objectOperand);
+
+                                //stack[stackPtr].refValue = (MemberInfo)instruction.objectOperand;
+                                //stack[stackPtr++].type = StackData.ObjectType.Ref;
                             }
                             break;
                         }
@@ -2430,13 +2473,13 @@ namespace dotnow.Runtime.CIL
                             {
                                 Type instanceType = null;
 
-                                if (temp.refValue.IsCLRInstance() == true)
+                                if (temp.Box(_heap).IsCLRInstance() == true)
                                 {
-                                    instanceType = ((CLRInstance)temp.refValue).Type;
+                                    instanceType = ((CLRInstance)temp.Box(_heap)).Type;
                                 }
                                 else
                                 {
-                                    instanceType = temp.refValue.GetType();
+                                    instanceType = temp.Box(_heap).GetType();
                                 }
 
                                 // Check for assignable
@@ -2453,7 +2496,7 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Throw:
                         {
-                            throw (Exception)stack[--stackPtr].refValue;
+                            throw (Exception)stack[--stackPtr].Box(_heap);
                         }
 
                     case Code.Sizeof:
@@ -2577,7 +2620,7 @@ namespace dotnow.Runtime.CIL
                                 int baseOffset = argSize + ((isStatic == true) ? 0 : 1);
 
                                 // Copy stack
-                                Array.Copy(stack, stackPtr - baseOffset, callFrame.stack, callFrame.stackArgIndex, baseOffset);
+                                Array.Copy(stack, stackPtr - baseOffset, callFrame._stack, callFrame.stackArgIndex, baseOffset);
 
                                 callFrame.stackIndex += baseOffset;
 
@@ -2590,7 +2633,7 @@ namespace dotnow.Runtime.CIL
                                 // Copy return value
                                 if(signature.returnsValue == true)
                                 {
-                                    stack[stackPtr - 1] = callFrame.stack[callFrame.stackBaseIndex];
+                                    stack[stackPtr - 1] = callFrame._stack[callFrame.stackBaseIndex];
                                 }
                                 break;
                             }
@@ -2634,7 +2677,7 @@ namespace dotnow.Runtime.CIL
                             for (int i = 0, j = offset; i < arguments.Length; i++, j++)
                             {
                                 // Try to unbox as type
-                                arguments[i] = stack[argOffset + j].UnboxAsType(signature.parameterTypeInfos[i]);
+                                arguments[i] = stack[argOffset + j].UnboxAsType(_heap, signature.parameterTypeInfos[i]);
 
                                 // Check for interop method
                                 if (methodInvoke.isCLRMethod == false)
@@ -2662,10 +2705,6 @@ namespace dotnow.Runtime.CIL
                                         instance = instance.Unwrap();
                                 }
 
-                                // Dereference by ref instance
-                                if (instance is IByRef @ref)
-                                    instance = @ref.GetReferenceValue().UnboxAsType(Type.GetTypeCode(targetMethod.DeclaringType));//.Box();
-
                                 // Now we can invoke the method safely
                                 invocationResult = targetMethod.Invoke(instance, arguments);
                             }
@@ -2675,7 +2714,7 @@ namespace dotnow.Runtime.CIL
                             // Load return value onto stack
                             if (signature.returnsValue == true)
                             {
-                                StackData.AllocTyped(ref stack[argOffset], signature.returnType, invocationResult);
+                                StackData.AllocTyped(_heap, ref stack[argOffset], signature.returnType, invocationResult);
                                 stackPtr = argOffset + 1;
                             }
                             else
@@ -2693,8 +2732,10 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Ldftn:
                         {
-                            stack[stackPtr].refValue = ((CILMethodInvocation)instruction.objectOperand).targetMethod;
-                            stack[stackPtr++].type = StackData.ObjectType.Ref;
+                            StackData.AllocRef(_heap, ref stack[stackPtr++], ((CILMethodInvocation)instruction.objectOperand).targetMethod);
+
+                            //stack[stackPtr].refValue = ((CILMethodInvocation)instruction.objectOperand).targetMethod;
+                            //stack[stackPtr++].type = StackData.ObjectType.Ref;
                             break;
                         }
 
