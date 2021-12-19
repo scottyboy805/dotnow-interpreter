@@ -706,6 +706,42 @@ namespace dotnow.Runtime.CIL
                             break;
                         }
 
+                    case Code.Castclass:
+                        {
+                            CLRTypeInfo castType = instruction.typeOperand;
+
+                            // Pop object
+                            temp = stack[--stackPtr];
+
+                            // Get ref
+                            object inst = temp.Box();
+
+                            // Chekc for null
+                            if(inst != null)
+                            {
+                                // Get interpreted type
+                                Type instType = inst.GetInterpretedType();
+
+                                // Check for equal or assignable (May need more work to support interfaces??)
+                                if(castType.type == instType || instType.IsSubclassOf(castType.type) == true)
+                                {
+                                    // Push object
+                                    stack[stackPtr++] = temp;
+                                }
+                                else
+                                {
+                                    // Invalid cast
+                                    throw new InvalidCastException();
+                                }
+                            }
+                            else
+                            {
+                                // Null reference can be pushed pack onto top of stack - should not fail
+                                stack[stackPtr++] = temp;
+                            }
+                            break;
+                        }
+
                     case Code.Conv_I:
                         {
                             RuntimeConvert.ToInt32(ref stack[stackPtr - 1]);
