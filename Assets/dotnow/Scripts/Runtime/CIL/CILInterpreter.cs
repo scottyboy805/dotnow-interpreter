@@ -2333,11 +2333,21 @@ namespace dotnow.Runtime.CIL
                             {
                                 if (temp.type == StackData.ObjectType.ByRef)
                                 {
-                                    StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(((IByRef)temp.refValue).GetReferenceValue().Box()));
+                                    object instByRef = ((IByRef)temp.refValue).GetReferenceValue().Box();
+
+                                    if (fieldAccess.isClrField == false)
+                                        instByRef = instByRef.Unwrap();
+
+                                    StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(instByRef));
                                     break;
                                 }
 
-                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(temp.Box()));
+                                object inst = temp.Box();
+
+                                if (fieldAccess.isClrField == false)
+                                    inst = inst.Unwrap();
+
+                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(inst));
                             }
                             break;
                         }
@@ -2388,11 +2398,23 @@ namespace dotnow.Runtime.CIL
 
                             if (temp.refValue is IByRef)
                             {
-                                fieldAccess.targetField.SetValue((((IByRef)temp.Box()).GetReferenceValue().refValue), right.UnboxAsType(fieldAccess.fieldTypeInfo));
+                                object inst = (((IByRef)temp.Box()).GetReferenceValue().refValue);
+
+                                // Check for non-clr field
+                                if (fieldAccess.isClrField == false)
+                                    inst = inst.Unwrap();
+
+                                fieldAccess.targetField.SetValue(inst, right.UnboxAsType(fieldAccess.fieldTypeInfo));
                             }
                             else
                             {
-                                fieldAccess.targetField.SetValue(temp.Box(), right.UnboxAsType(fieldAccess.fieldTypeInfo));
+                                object inst = temp.Box();
+
+                                // Check for non-clr field
+                                if (fieldAccess.isClrField == false)
+                                    inst = inst.Unwrap();
+
+                                fieldAccess.targetField.SetValue(inst, right.UnboxAsType(fieldAccess.fieldTypeInfo));
                             }
                             break;
                         }
