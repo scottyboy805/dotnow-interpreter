@@ -82,6 +82,17 @@ namespace dotnow
                 {
                     CLRProxyBindingAttribute attribute = type.GetCustomAttribute<CLRProxyBindingAttribute>();
 
+                    // Make sure type inehrits from base
+                    if(type.BaseType != attribute.BaseProxyType)
+                    {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_DISABLE == false
+                        UnityEngine.Debug.LogErrorFormat("Proxy binding '{0}' must derive from base class '{1}'", type, attribute.BaseProxyType);
+                        return;
+#else
+                        throw new CLRBindingException("Proxy binding '{0}' must derive from base class '{1}'", type, attribute.BaseProxyType));
+#endif
+                    }
+
                     // Check for already exists
                     if (clrProxyBindings.ContainsKey(attribute.BaseProxyType) == true)
                     {
