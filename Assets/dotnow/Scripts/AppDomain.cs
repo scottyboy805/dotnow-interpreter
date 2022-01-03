@@ -1383,8 +1383,19 @@ namespace dotnow
             if (method is MethodInfo)
                 returnType = ((MethodInfo)method).ReturnType;
 
+            ParameterInfo[] parameterTypes = null;
+
+            try
+            {
+                parameterTypes = method.GetParameters();
+            }
+            catch
+            {
+                parameterTypes = new ParameterInfo[0];
+            }
+
             // Create signature
-            signature = new CILSignature(method.GetParameters(), returnType);
+            signature = new CILSignature(parameterTypes, returnType);
 
             // Cache signature
             methodSignatureCache.Add(method, signature);

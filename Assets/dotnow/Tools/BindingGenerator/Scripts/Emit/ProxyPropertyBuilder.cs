@@ -50,7 +50,7 @@ namespace dotnow.BindingGenerator.Emit
                 MemberAttributes attributes = 0;
 
                 attributes |= MemberAttributes.Public;
-                attributes |= MemberAttributes.Override;
+                attributes |= MemberAttributes.Final;
 
                 codeProperty.Attributes = attributes;
             }

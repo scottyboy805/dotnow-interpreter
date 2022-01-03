@@ -2,8 +2,11 @@
 #if UNITY_EDITOR && NET_4_6 && UNITY_DISABLE == false
 using System;
 using System.CodeDom;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using dotnow.Interop;
+using UnityEngine;
 
 namespace dotnow.BindingGenerator.Emit
 {
@@ -45,8 +48,10 @@ namespace dotnow.BindingGenerator.Emit
             codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(CLRInstance)), instanceVar));
 
 
+            CodeMemberMethod initializeMethod = BuildCLRProxyImplementation();
+
             // Implement method
-            codeType.Members.Add(BuildCLRProxyImplementation());
+            codeType.Members.Add(initializeMethod);
 
 
             // Implement methods
@@ -57,6 +62,8 @@ namespace dotnow.BindingGenerator.Emit
             else
             {
                 int memberIndex = 0;
+
+                HashSet<string> definedMethodNames = new HashSet<string>();
 
                 // Process all methods
                 foreach(MethodInfo method in type.GetMethods())
@@ -69,9 +76,30 @@ namespace dotnow.BindingGenerator.Emit
                     if (method.IsSpecialName == true)
                         continue;
 
+                    // Check for already added
+                    if (definedMethodNames.Contains(method.ToString()) == true)
+                        continue;
+
                     if(method.IsVirtual == true || method.IsAbstract == true)
                     {
                         ProxyMethodBuilder methodBuilder = new ProxyMethodBuilder(method, false, memberIndex++);
+
+                        // Build field
+                        codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(MethodBase)), methodBuilder.VariableName));
+
+                        // Build method
+                        codeType.Members.Add(methodBuilder.BuildMethodProxy());
+
+                        definedMethodNames.Add(method.Name);
+                    }
+                }
+
+                // Process all monobehaviour events
+                if (typeof(MonoBehaviour).IsAssignableFrom(type) == true)
+                {
+                    foreach(MethodInfo monoBehaviourMethod in typeof(MagicMethod.MagicMonoBehaviour).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                    {
+                        ProxyMethodBuilder methodBuilder = new ProxyMethodBuilder(monoBehaviourMethod, false, memberIndex++);
 
                         // Build field
                         codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(MethodBase)), methodBuilder.VariableName));
@@ -82,7 +110,7 @@ namespace dotnow.BindingGenerator.Emit
                 }
 
                 // Process all properties
-                foreach(PropertyInfo property in type.GetProperties())
+                foreach (PropertyInfo property in type.GetProperties())
                 {
                     // Skip object methods
                     if (property.DeclaringType == typeof(object) || property.DeclaringType == typeof(MarshalByRefObject))

@@ -68,6 +68,17 @@ namespace dotnow.BindingGenerator.Emit
                 codeMethod.Parameters.Add(codeParameter);
             }
 
+            // Null check
+            if (method.ReturnType == typeof(void))
+            {
+                codeMethod.Statements.Add(new CodeConditionStatement(
+                    new CodeBinaryOperatorExpression(
+                        new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), "instance"),
+                        CodeBinaryOperatorType.ValueEquality,
+                        new CodePrimitiveExpression(null)),
+                            new CodeMethodReturnStatement()));
+            }
+
             // Method body
             codeMethod.Statements.Add(new CodeConditionStatement(
                 new CodeBinaryOperatorExpression(
@@ -95,6 +106,15 @@ namespace dotnow.BindingGenerator.Emit
             args[0] = new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), "instance");
             args[1] = new CodeArrayCreateExpression(
                 new CodeTypeReference(typeof(object)), argList);
+
+
+            // Null check before invoke
+            codeMethod.Statements.Add(new CodeConditionStatement(
+                    new CodeBinaryOperatorExpression(
+                        new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), variableName),
+                        CodeBinaryOperatorType.ValueEquality,
+                        new CodePrimitiveExpression(null)),
+                            method.ReturnType != typeof(void) ? new CodeMethodReturnStatement(new CodeDefaultValueExpression(new CodeTypeReference(method.ReturnType))) : new CodeMethodReturnStatement()));
 
             if (method.ReturnType != typeof(void))
             {
