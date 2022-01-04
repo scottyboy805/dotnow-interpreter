@@ -299,7 +299,7 @@ namespace dotnow
                     }
 
                     // Create delegate
-                    MethodDirectCallDelegate handler = (MethodDirectCallDelegate)((MethodInfo)method).CreateDelegate(typeof(MethodDirectCallDelegate), null);
+                    AppDomain.MethodDirectCallDelegate handler = (AppDomain.MethodDirectCallDelegate)((MethodInfo)method).CreateDelegate(typeof(AppDomain.MethodDirectCallDelegate), null);
 
                     // Check for already added
                     if (clrMethodDirectCallBindings.ContainsKey(delegateMethod) == true)
@@ -388,7 +388,7 @@ namespace dotnow
                     }
 
                     // Create delegate
-                    FieldDirectAccessDelegate handler = (FieldDirectAccessDelegate)((MethodInfo)method).CreateDelegate(typeof(FieldDirectAccessDelegate), null);
+                    AppDomain.FieldDirectAccessDelegate handler = (AppDomain.FieldDirectAccessDelegate)((MethodInfo)method).CreateDelegate(typeof(AppDomain.FieldDirectAccessDelegate), null);
 
                     // Register the accessor
                     if (attribute.FieldAccessMode == CLRFieldAccessMode.Read)
