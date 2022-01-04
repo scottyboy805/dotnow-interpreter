@@ -44,7 +44,7 @@ namespace dotnow.Reflection.Indirection
         public CLRIndirectFieldInvocation(FieldInfo indirectField)
         {
             if (indirectField == null)
-                throw new ArgumentNullException(nameof(indirectField));
+                throw new ArgumentNullException("indirectField");
 
             this.indirectField = indirectField;
         }

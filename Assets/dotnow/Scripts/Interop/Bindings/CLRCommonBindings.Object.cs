@@ -6,7 +6,7 @@ namespace dotnow.Interop
     internal static partial class CLRCommonBindings
     {
         // Methods
-        [CLRMethodBinding(typeof(object), nameof(Object.ToString))]
+        [CLRMethodBinding(typeof(object), "ToString")]
         public static object ToStringOverride(AppDomain domain, MethodInfo overrideMethod, object instance, object[] args)
         {
             // Use default to string for standard objects
@@ -24,7 +24,7 @@ namespace dotnow.Interop
             return instanceType.ToString();
         }
 
-        [CLRMethodBinding(typeof(object), nameof(Object.Equals), new Type[] { typeof(object) })]
+        [CLRMethodBinding(typeof(object), "Equals", new Type[] { typeof(object) })]
         public static object EqualsOverride(AppDomain domain, MethodInfo overrideMethod, object instance, object[] args)
         {
             // Use default equals for standard objects
@@ -42,7 +42,7 @@ namespace dotnow.Interop
             return (instance as CLRInstance).Equals(args[0]);
         }
 
-        [CLRMethodBinding(typeof(object), nameof(Object.GetHashCode))]
+        [CLRMethodBinding(typeof(object), "GetHashCode")]
         public static object GetHashCodeOverride(AppDomain domain, MethodInfo overrideMethod, object instance, object[] args)
         {
             // Use default gethashcode for standard objects

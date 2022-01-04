@@ -10,7 +10,11 @@ using dotnow.Runtime.JIT;
 
 namespace dotnow.Reflection
 {
+#if API_NET35
+    public sealed class CLRModule : IJITOptimizable
+#else
     public sealed class CLRModule : Assembly, IJITOptimizable
+#endif
     {
         // Private
         private AppDomain domain = null;
@@ -37,28 +41,45 @@ namespace dotnow.Reflection
             get { return assembly.Name; }
         }
 
+#if API_NET35
+        internal IList<CLRType> CLRTypes
+#else
         internal IReadOnlyList<CLRType> CLRTypes
+#endif
         {
             get { return types; }
         }
 
         // System.Reflection.Assembly
-        #region Inherit
+#region Inherit
+#if API_NET35
+        public string CodeBase
+#else
         public override string CodeBase
+#endif
         {
             get { return location; }
         }
 
+#if API_NET35
+        public string EscapedCodeBase
+#else
         public override string EscapedCodeBase
+#endif
         {
             get { return Uri.EscapeDataString(location); }
         }
 
+#if API_NET35
+        public string Location
+#else
         public override string Location
+#endif
         {
             get { return location; }
         }
 
+#if !API_NET35
         public override IEnumerable<TypeInfo> DefinedTypes
         {
             get { throw new NotSupportedException("Use GetTypes instead"); }
@@ -73,17 +94,27 @@ namespace dotnow.Reflection
         {
             get { throw new NotSupportedException("Custom attributes are not supported"); }
         }
+#endif
 
+#if API_NET35
+        public MethodInfo EntryPoint
+#else
         public override MethodInfo EntryPoint
+#endif
         {
             get { throw new NotSupportedException("Entry points are not supported"); }
         }
 
+#if API_NET35
+        public string FullName
+#else
         public override string FullName
+#endif
         {
             get { return assembly.FullName; }
         }
 
+#if !API_NET35
         public override Module ManifestModule
         {
             get { throw new NotSupportedException("Trivial CLR has no concept of modules"); }
@@ -93,7 +124,8 @@ namespace dotnow.Reflection
         {
             get { throw new NotSupportedException("Trivial CLR has no concept of modules"); }
         }
-        #endregion
+#endif
+#endregion
 
         // Constructor
         internal CLRModule(AppDomain domain, AssemblyDefinition assembly, string location)
@@ -150,13 +182,21 @@ namespace dotnow.Reflection
         }
 
         // System.Reflection.Assembly
-        #region Inherit
+#region Inherit
+#if API_NET35
+        public Type[] GetTypes()
+#else
         public override Type[] GetTypes()
+#endif
         {
             return types;
         }
 
+#if API_NET35
+        public Type GetType(string name)
+#else
         public override Type GetType(string name)
+#endif
         {
             foreach (CLRType type in types)
             {
@@ -172,7 +212,11 @@ namespace dotnow.Reflection
             return null;
         }
 
+#if API_NET35
+        public Type GetType(string name, bool throwOnError)
+#else
         public override Type GetType(string name, bool throwOnError)
+#endif
         {
             foreach (CLRType type in types)
             {
@@ -191,7 +235,11 @@ namespace dotnow.Reflection
             return null;
         }
 
+#if API_NET35
+        public Type GetType(string name, bool throwOnError, bool ignoreCase)
+#else
         public override Type GetType(string name, bool throwOnError, bool ignoreCase)
+#endif
         {
             foreach (CLRType type in types)
             {
@@ -210,11 +258,16 @@ namespace dotnow.Reflection
             return null;
         }
 
+#if API_NET35
+        public Type[] GetExportedTypes()
+#else
         public override Type[] GetExportedTypes()
+#endif
         {
             return exportedTypes;
         }
 
+#if !API_NET35
         public override object CreateInstance(string typeName, bool ignoreCase, BindingFlags bindingAttr, Binder binder, object[] args, CultureInfo culture, object[] activationAttributes)
         {
             throw new NotSupportedException("Use AppDomain.CreateInstance instead");
@@ -259,13 +312,22 @@ namespace dotnow.Reflection
         {
             throw new NotSupportedException("Trivial CLR has no concept of modules");
         }
+#endif
 
+#if API_NET35
+        public AssemblyName GetName()
+#else
         public override AssemblyName GetName()
+#endif
         {
             return assemblyName;
         }
 
+#if API_NET35
+        public AssemblyName GetName(bool copiedName)
+#else
         public override AssemblyName GetName(bool copiedName)
+#endif
         {
             if (copiedName == true)
                 return new AssemblyName(assembly.FullName);
@@ -273,11 +335,16 @@ namespace dotnow.Reflection
             return assemblyName;
         }
 
+#if API_NET35
+        public AssemblyName[] GetReferencedAssemblies()
+#else
         public override AssemblyName[] GetReferencedAssemblies()
+#endif
         {
             return referenceAssemblyNames;
         }
 
+#if !API_NET35
         public override FileStream GetFile(string name)
         {
             throw new NotSupportedException("Trivial CLR does not support encapsulated file storage");
@@ -327,7 +394,8 @@ namespace dotnow.Reflection
         {
             throw new NotSupportedException("Satellite assemblies are not supported");
         }
-        #endregion
+#endif
+#endregion
 
         public override string ToString()
         {

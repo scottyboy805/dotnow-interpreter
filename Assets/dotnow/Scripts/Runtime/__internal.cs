@@ -8,7 +8,9 @@ namespace dotnow.Runtime
     internal static class __internal
     {
         // Used to track allocations in profiling tools
+#if !API_NET35
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         internal static void __gc_alloc_arrays(ref StackData stack, Type arrType, int length)
         {
             // Create the new instance
@@ -19,7 +21,9 @@ namespace dotnow.Runtime
             stack.type = StackData.ObjectType.Ref;
         }
 
+#if !API_NET35
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         internal static void __gc_alloc_arrayl(ref StackData stack, Type arrType, long length)
         {
             // Create the new instance
@@ -30,7 +34,9 @@ namespace dotnow.Runtime
             stack.type = StackData.ObjectType.Ref;
         }
 
+#if !API_NET35
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         internal static void __gc_alloc_inst(ref StackData stack, ref AppDomain domain, Type instType, MethodBase ctor, object[] args)
         {
             // Create the new instance
@@ -41,7 +47,9 @@ namespace dotnow.Runtime
             stack.type = StackData.ObjectType.Ref;
         }
 
+#if !API_NET35
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         internal static void __stack_alloc_inst(ref StackData stack, ref AppDomain domain, Type valueType, ref int stackPtr)
         {
             // Get clr type
@@ -65,32 +73,42 @@ namespace dotnow.Runtime
             stackPtr += allocSize;
         }
 
+#if API_NET35
+        internal static void __gc_alloc_addr_fld(ref StackData stack, CILFieldAccess field, StackData inst)
+#else
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void __gc_alloc_addr_fld(ref StackData stack, in CILFieldAccess field, in StackData inst)
+        internal static void __gc_alloc_addr_fld(ref StackData stack, CILFieldAccess field, in StackData inst)
+#endif
         {
             // Push to stack
             stack.refValue = new ByRefField(field, inst);
             stack.type = StackData.ObjectType.ByRef;
         }
 
+#if !API_NET35
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void __gc_alloc_addr_elem(ref StackData stack, in Array arr, in int index)
+#endif
+        internal static void __gc_alloc_addr_elem(ref StackData stack, Array arr, int index)
         {
             // Push to stack
             stack.refValue = new ByRefElement(arr, index);
             stack.type = StackData.ObjectType.ByRef;
         }
 
+#if !API_NET35
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void __gc_alloc_addr_elem(ref StackData stack, in Array arr, in long index)
+#endif
+        internal static void __gc_alloc_addr_elem(ref StackData stack, Array arr, long index)
         {
             // Push to stack
             stack.refValue = new ByRefElement(arr, index);
             stack.type = StackData.ObjectType.ByRef;
         }
 
+#if !API_NET35
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void __gc_alloc_addr_stack(ref StackData stack, in StackData[] stackInst, in int index)
+#endif
+        internal static void __gc_alloc_addr_stack(ref StackData stack, StackData[] stackInst, int index)
         {
             // Push to stack
             stack.refValue = new ByRefVariable(stackInst, index);

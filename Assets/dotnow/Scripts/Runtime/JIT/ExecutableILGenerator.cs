@@ -80,17 +80,17 @@ namespace dotnow.Runtime.JIT
 
         public void Emit(Code opCode, string operand)
         {
-            EmitOperation(new CILOperation(opCode, default, operand));
+            EmitOperation(new CILOperation(opCode, default(StackData.Primitive), operand));
         }
 
         public void Emit(Code opCode, int[] operand)
         {
-            EmitOperation(new CILOperation(opCode, default, operand));
+            EmitOperation(new CILOperation(opCode, default(StackData.Primitive), operand));
         }
 
         public void Emit(Code opCode, Type type)
         {
-            CILOperation op = new CILOperation(opCode, default, null);
+            CILOperation op = new CILOperation(opCode, default(StackData.Primitive), null);
             op.typeOperand = CLRTypeInfo.GetTypeInfo(type);
 
             EmitOperation(op);
@@ -108,7 +108,7 @@ namespace dotnow.Runtime.JIT
 
         public void Emit(Code opCode, MemberInfo member, Type specialType = null)
         {
-            CILOperation op = new CILOperation(opCode, default, member);
+            CILOperation op = new CILOperation(opCode, default(StackData.Primitive), member);
 
             // Set type value
             if(specialType != null)
@@ -146,7 +146,11 @@ namespace dotnow.Runtime.JIT
         }
         #endregion
 
+#if API_NET35
+        private void EmitOperation(CILOperation op)
+#else
         private void EmitOperation(in CILOperation op)
+#endif
         {
             if(dynamic == true)
             {

@@ -9,7 +9,7 @@ namespace dotnow.Interop
         // Private
         private string methodName = "";
         private Type returnType = typeof(void);
-        private ParameterInfo[] parameters = Array.Empty<ParameterInfo>();
+        private ParameterInfo[] parameters = new ParameterInfo[0];
         private MethodAttributes attributes = 0;
 
         // Propertie
@@ -23,18 +23,30 @@ namespace dotnow.Interop
             get { return returnType; }
         }
 
-        public override Type ReflectedType => throw new NotImplementedException();
+        public override Type ReflectedType
+        {
+            get { throw new NotImplementedException(); }
+        }
 
-        public override ICustomAttributeProvider ReturnTypeCustomAttributes => throw new NotImplementedException();
+        public override ICustomAttributeProvider ReturnTypeCustomAttributes
+        {
+            get { throw new NotImplementedException(); }
+        }
 
         public override MethodAttributes Attributes
         {
             get { return attributes; }
         }
 
-        public override RuntimeMethodHandle MethodHandle => throw new NotImplementedException();
+        public override RuntimeMethodHandle MethodHandle
+        {
+            get { throw new NotImplementedException(); }
+        }
 
-        public override Type DeclaringType => throw new NotImplementedException();
+        public override Type DeclaringType
+        {
+            get { throw new NotImplementedException(); }
+        }
 
         // Constructor
         public CLRAbstractMethodInfo(string methodName, Type returnType, Type[] parameterTypes, MethodAttributes attributes)

@@ -64,12 +64,13 @@ namespace dotnow
 
             // Run jit on interpreter method - This is a big method that takes a long time to JIT on demand - we don't want to see that time in the host application so we should do it at initialize time.
 #if DISABLE_JIT_PREWARM == false
-            MethodInfo method = typeof(CILInterpreter).GetMethod(nameof(CILInterpreter.ExecuteInterpreted), BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo method = typeof(CILInterpreter).GetMethod("ExecuteInterpreted", BindingFlags.Static | BindingFlags.NonPublic);
             RuntimeHelpers.PrepareMethod(method.MethodHandle);
 #endif
 
             // Trigger domain create
-            OnDomainCreated?.Invoke(this);
+            if(OnDomainCreated != null)
+                OnDomainCreated.Invoke(this);
         }
 
         // Methods
@@ -796,7 +797,7 @@ namespace dotnow
         public object CreateUninitializedInstance(Type type)
         {
             // Check for null
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type == null) throw new ArgumentNullException("type");
 
             // Check for clr type
             if (type.IsCLRType() == true)
@@ -817,7 +818,7 @@ namespace dotnow
         public object CreateInstance(Type type)
         {
             // Check for null
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type == null) throw new ArgumentNullException("type");
 
             // Try to get create instance binding
             MethodBase createInstanceOverride = GetOverrideCreateInstanceBinding(type);
@@ -852,7 +853,7 @@ namespace dotnow
         public object CreateInstance(Type type, object[] args)
         {
             // Check for null
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type == null) throw new ArgumentNullException("type");
 
             // Try to get create instance binding
             MethodBase createInstanceOverride = GetOverrideCreateInstanceBinding(type);
@@ -891,7 +892,7 @@ namespace dotnow
         internal object CreateInstance(Type type, MethodBase ctor, params object[] args)
         {
             // Check for null
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type == null) throw new ArgumentNullException("type");
 
             // Try to get create instance binding
             MethodBase createInstanceOverride = GetOverrideCreateInstanceBinding(type, ctor as ConstructorInfo);
@@ -1083,8 +1084,8 @@ namespace dotnow
 
         public void AddDynamicCLRProxyBinding(Type targetType, Type proxyBindingType)
         {
-            if (targetType == null) throw new ArgumentNullException(nameof(targetType));
-            if (proxyBindingType == null) throw new ArgumentNullException(nameof(proxyBindingType));
+            if (targetType == null) throw new ArgumentNullException("targetType");
+            if (proxyBindingType == null) throw new ArgumentNullException("proxyBindingType");
 
             if (typeof(ICLRProxy).IsAssignableFrom(proxyBindingType) == true)
             {
@@ -1114,8 +1115,8 @@ namespace dotnow
 
         public void AddDynamicOverrideMethodBinding(MethodBase overrideMethod, MethodBase rerouteMethod)
         {
-            if (overrideMethod == null) throw new ArgumentNullException(nameof(overrideMethod));
-            if (rerouteMethod == null) throw new ArgumentNullException(nameof(rerouteMethod));
+            if (overrideMethod == null) throw new ArgumentNullException("overrideMethod");
+            if (rerouteMethod == null) throw new ArgumentNullException("RerouteMethod");
 
             // Check for static correct
             if (rerouteMethod.IsStatic == false)
@@ -1173,8 +1174,8 @@ namespace dotnow
 
         public void AddDynamicDirectCallDelegate(MethodBase targetMethod, MethodDirectCallDelegate directCallDelegate)
         {
-            if (targetMethod == null) throw new ArgumentNullException(nameof(targetMethod));
-            if (directCallDelegate == null) throw new ArgumentNullException(nameof(directCallDelegate));
+            if (targetMethod == null) throw new ArgumentNullException("targetMethod");
+            if (directCallDelegate == null) throw new ArgumentNullException("directCallDelegate");
 
             // Check for already added
             if (bindings.clrMethodDirectCallBindings.ContainsKey(targetMethod) == true)
@@ -1204,8 +1205,8 @@ namespace dotnow
 
         public void AddDynamicDirectAccessDelegate(FieldInfo targetField, FieldDirectAccessDelegate directAccessDelegate, CLRFieldAccessMode accessMode)
         {
-            if (targetField == null) throw new ArgumentNullException(nameof(targetField));
-            if (directAccessDelegate == null) throw new ArgumentNullException(nameof(directAccessDelegate));
+            if (targetField == null) throw new ArgumentNullException("targetField");
+            if (directAccessDelegate == null) throw new ArgumentNullException("directAccessDelegate");
 
             // Check for access type
             if(accessMode == CLRFieldAccessMode.Read)
@@ -1255,8 +1256,8 @@ namespace dotnow
 
         public void AddOverrideCreateInstanceBinding(Type createInstanceType, MethodBase createInstanceMethod)
         {
-            if (createInstanceType == null) throw new ArgumentNullException(nameof(createInstanceType));
-            if (createInstanceMethod == null) throw new ArgumentNullException(nameof(createInstanceMethod));
+            if (createInstanceType == null) throw new ArgumentNullException("createInstanceType");
+            if (createInstanceMethod == null) throw new ArgumentNullException("createInstanceMethod");
 
             // Check for already added
             if (bindings.clrCreateInstanceBindings.ContainsKey(createInstanceType) == true)
@@ -1269,8 +1270,8 @@ namespace dotnow
 
         public void AddOverrideCreateInstanceBinding(ConstructorInfo createInstanceCtor, MethodBase createInstanceMethod)
         {
-            if (createInstanceCtor == null) throw new ArgumentNullException(nameof(createInstanceCtor));
-            if (createInstanceMethod == null) throw new ArgumentNullException(nameof(createInstanceMethod));
+            if (createInstanceCtor == null) throw new ArgumentNullException("createInstanceCtor");
+            if (createInstanceMethod == null) throw new ArgumentNullException("createInstanceMethod");
 
             // Check for already added
             if (bindings.clrCreateInstanceConstructorBindings.ContainsKey(createInstanceCtor) == true)

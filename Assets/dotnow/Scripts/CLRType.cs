@@ -110,7 +110,11 @@ namespace dotnow
             get { return typeof(CLRType); }
         }
 
+#if API_NET35
+        public Type[] GenericTypeArguments
+#else
         public override Type[] GenericTypeArguments
+#endif
         {
             get
             {
@@ -131,7 +135,11 @@ namespace dotnow
             get { return type.Name; }
         }
 
+#if API_NET35
+        public new bool IsEnum
+#else
         public override bool IsEnum
+#endif
         {
             get { return type.IsEnum; }
         }
@@ -246,9 +254,9 @@ namespace dotnow
 
 
             // Cached methods
-            cachedToStringTarget = GetMethod(nameof(ToString), BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
-            cachedEqualsTarget = GetMethod(nameof(Equals), BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(object) }, null);
-            cachedGetHashCodeTarget = GetMethod(nameof(GetHashCode), BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
+            cachedToStringTarget = GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
+            cachedEqualsTarget = GetMethod("Equals", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(object) }, null);
+            cachedGetHashCodeTarget = GetMethod("GetHashCode", BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
         }
 
         // Methods
@@ -353,10 +361,12 @@ namespace dotnow
             return false;
         }
 
+#if !API_NET35
         public override bool IsEquivalentTo(Type other)
         {
             return base.IsEquivalentTo(other);
         }
+#endif
 
         public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr)
         {

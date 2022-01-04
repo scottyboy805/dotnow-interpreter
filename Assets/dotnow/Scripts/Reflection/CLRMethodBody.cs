@@ -103,7 +103,11 @@ namespace dotnow.Reflection
 
                     if (parameter != null)
                     {
+#if API_NET35
+                        localType = method.DeclaringType.GetGenericArguments()[parameter.Position];
+#else
                         localType = method.DeclaringType.GenericTypeArguments[parameter.Position];
+#endif
                     }
                 }
 

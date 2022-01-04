@@ -49,7 +49,7 @@ namespace dotnow.Reflection.Indirection
         public CLRIndirectPropertyInvocation(PropertyInfo indirectProperty)
         {
             if (indirectProperty == null)
-                throw new ArgumentNullException(nameof(indirectProperty));
+                throw new ArgumentNullException("indirectProperty");
 
             this.indirectProperty = indirectProperty;
         }

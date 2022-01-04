@@ -6,7 +6,7 @@ namespace dotnow.Runtime
     {
         // Public
         public Type localType = null;
-        public StackData defaultValue = default;
+        public StackData defaultValue = default(StackData);
 
         // Internal
         internal bool isCLRValueType = false;

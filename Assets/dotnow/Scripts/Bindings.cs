@@ -3,7 +3,6 @@ using dotnow.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using static dotnow.AppDomain;
 
 namespace dotnow
 {
@@ -15,9 +14,9 @@ namespace dotnow
         internal Dictionary<MethodBase, MethodBase> clrMethodBindings = new Dictionary<MethodBase, MethodBase>();     // Method to reroute, New taregt method (AddComponent(Type), AddComponentOverride(AppDomain, object, object[]))
         internal Dictionary<Type, MethodBase> clrCreateInstanceBindings = new Dictionary<Type, MethodBase>();         // Constructor to reroute, New target method to handle construction of object
         internal Dictionary<ConstructorInfo, MethodBase> clrCreateInstanceConstructorBindings = new Dictionary<ConstructorInfo, MethodBase>();
-        internal Dictionary<MethodBase, MethodDirectCallDelegate> clrMethodDirectCallBindings = new Dictionary<MethodBase, MethodDirectCallDelegate>();
-        internal Dictionary<FieldInfo, FieldDirectAccessDelegate> clrFieldDirectAccessReadBindings = new Dictionary<FieldInfo, FieldDirectAccessDelegate>();
-        internal Dictionary<FieldInfo, FieldDirectAccessDelegate> clrFieldDirectAccessWriteBindings = new Dictionary<FieldInfo, FieldDirectAccessDelegate>();
+        internal Dictionary<MethodBase, AppDomain.MethodDirectCallDelegate> clrMethodDirectCallBindings = new Dictionary<MethodBase, AppDomain.MethodDirectCallDelegate>();
+        internal Dictionary<FieldInfo, AppDomain.FieldDirectAccessDelegate> clrFieldDirectAccessReadBindings = new Dictionary<FieldInfo, AppDomain.FieldDirectAccessDelegate>();
+        internal Dictionary<FieldInfo, AppDomain.FieldDirectAccessDelegate> clrFieldDirectAccessWriteBindings = new Dictionary<FieldInfo, AppDomain.FieldDirectAccessDelegate>();
 
         // Constructor
         public Bindings(AppDomain domain)
@@ -66,8 +65,11 @@ namespace dotnow
                 {
                     InitializeProxyBindings(type);
                     InitializeMethodBindings(type);
+
+#if !API_NET35
                     InitializeMethodDirectCallBindings(type);
                     InitializeFieldDirectAccessBindings(type);
+#endif
                     InitializeCreateInstanceBindings(type);
                 }
             }
@@ -230,6 +232,7 @@ namespace dotnow
             }
         }
 
+#if !API_NET35
         private void InitializeMethodDirectCallBindings(Type type)
         {
             // Check for proxy methods
@@ -421,6 +424,7 @@ namespace dotnow
                 }
             }
         }
+#endif
 
         private void InitializeCreateInstanceBindings(Type type)
         {
@@ -539,6 +543,6 @@ namespace dotnow
                 }
             }
         }
-        #endregion
+#endregion
     }
 }

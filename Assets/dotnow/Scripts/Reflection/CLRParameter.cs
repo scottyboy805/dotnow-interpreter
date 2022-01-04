@@ -36,7 +36,10 @@ namespace dotnow.Reflection
             get { return parameterType.Value; }
         }
 
-        public override object DefaultValue => base.DefaultValue;
+        public override object DefaultValue
+        {
+            get { return base.DefaultValue; }
+        }
 
         // Constructor
         internal CLRParameter(AppDomain domain, CLRConstructor ctor, ParameterDefinition parameter)

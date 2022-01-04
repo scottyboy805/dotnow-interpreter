@@ -29,7 +29,11 @@ namespace dotnow
 
         public static bool IsNullableType(this Type type)
         {
+#if API_NET35
+            return type.IsGenericTypeDefinition == true && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+#else
             return type.IsConstructedGenericType == true && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+#endif
         }
 
         public static bool IsNumeric(this Type type)
@@ -99,7 +103,7 @@ namespace dotnow
         {
             // Check for null
             if (type == null)
-                throw new ArgumentNullException(nameof(type));
+                throw new ArgumentNullException("type");
 
             bool result = false;
 
@@ -115,9 +119,17 @@ namespace dotnow
                 {
                     PropertyInfo property = (PropertyInfo)member;
 
+#if API_NET35
+                    foreach(MethodInfo accessor in property.GetAccessors())
+                    {
+                        if (accessor.Name.StartsWith("get_") == true && accessor.IsVirtual == true) result = true;
+                        else if (accessor.Name.StartsWith("set_") == true && accessor.IsVirtual == true) result = true;
+                    }
+#else
                     // Check for virtual
                     if (property.GetMethod != null && property.GetMethod.IsVirtual == true) result = true;
                     if (property.SetMethod != null && property.SetMethod.IsVirtual == true) result = true;
+#endif
                 }
 
                 // Methods

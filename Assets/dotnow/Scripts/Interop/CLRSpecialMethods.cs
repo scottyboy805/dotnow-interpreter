@@ -19,7 +19,7 @@ namespace dotnow.Interop
                 {
                     _arrayRank_Initializer_Impl = new CLRConstructorBindingCallSite(domain,
                         new CLRAbstractMethodInfo(".ctor", typeof(void), types, MethodAttributes.Public),
-                        typeof(CLRSpecialMethods).GetMethod(nameof(_SpecialRuntime_ArrayRank_Initializer), BindingFlags.Static | BindingFlags.NonPublic));
+                        typeof(CLRSpecialMethods).GetMethod("_SpecialRuntime_ArrayRank_Initializer", BindingFlags.Static | BindingFlags.NonPublic));
                 }
                 return _arrayRank_Initializer_Impl;
             }
@@ -36,7 +36,7 @@ namespace dotnow.Interop
                     // Create the method redirect
                     _arrayRank_Get_Impl = new CLRMethodBindingCallSite(domain,
                         new CLRAbstractMethodInfo("Get", type.GetElementType(), types, MethodAttributes.Public),
-                        typeof(CLRSpecialMethods).GetMethod(nameof(_SpecialRuntime_ArrayRank_Get), BindingFlags.Static | BindingFlags.NonPublic));
+                        typeof(CLRSpecialMethods).GetMethod("_SpecialRuntime_ArrayRank_Get", BindingFlags.Static | BindingFlags.NonPublic));
                 }
                 return _arrayRank_Get_Impl;
             }
@@ -49,7 +49,7 @@ namespace dotnow.Interop
                     // Creaye the method redirect
                     _arrayRank_Set_Impl = new CLRMethodBindingCallSite(domain,
                         new CLRAbstractMethodInfo("Set", typeof(void), types, MethodAttributes.Public),
-                        typeof(CLRSpecialMethods).GetMethod(nameof(_SpecialRuntime_ArrayRank_Set), BindingFlags.Static | BindingFlags.NonPublic));
+                        typeof(CLRSpecialMethods).GetMethod("_SpecialRuntime_ArrayRank_Set", BindingFlags.Static | BindingFlags.NonPublic));
                 }
                 return _arrayRank_Set_Impl;
             }

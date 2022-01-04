@@ -13,7 +13,7 @@ namespace dotnow.Reflection
         private readonly AppDomain domain = null;
         private readonly CLRAnonymousMethodBody body = null;
         private ExecutionMethod executableMethod = null;
-        private CLRTypeInfo returnType = default;
+        private CLRTypeInfo returnType = default(CLRTypeInfo);
         private CLRAnonymousParameter[] parameters = null;
         private Lazy<CILSignature> signature = null;
 

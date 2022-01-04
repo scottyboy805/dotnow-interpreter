@@ -9,7 +9,7 @@ namespace dotnow.Runtime
         private static readonly StackData[] directAccessStack = new StackData[2];
 
         private CILFieldAccess fieldAccess = null;
-        private StackData instance = default;
+        private StackData instance = default(StackData);
 
         // Constructor
         internal ByRefField(CILFieldAccess fieldAccess, StackData instance)

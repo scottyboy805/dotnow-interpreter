@@ -249,6 +249,7 @@ namespace dotnow.Reflection
             return attributeProvider.Value.IsDefined(attributeType);
         }
 
+#if !API_NET35
         public override Delegate CreateDelegate(Type delegateType)
         {
             // Check for action
@@ -296,6 +297,7 @@ namespace dotnow.Reflection
 
             return methodDelegate;
         }
+#endif
 
         public override string ToString()
         {

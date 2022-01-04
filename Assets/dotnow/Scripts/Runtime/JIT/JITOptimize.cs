@@ -28,6 +28,20 @@ namespace dotnow.Runtime.JIT
         }
 
         /// <summary>
+        /// Ensure that the specified assembly has been optimized. The assembly must be a <see cref="CLRModule"/> otherwise this method will do nothing.
+        /// The optimize stage runs before the first invocation usually, but can be run ahead of time if needed.
+        /// It usually takes a little bit of time to optimize the method instructions into an structure that can be executed quickly.
+        /// Typically during this stage, member references will be resolved, and field access or method invocation instructions will be stored so that they can be executed as fast as possible. DirectAccessBindings and DirectCallBindings will be hooked up during this stage.
+        /// // This will cause all constructors and methods for all types declared in the module to be optimized.
+        /// </summary>
+        /// <param name="module">The module to optimize</param>
+        public static void EnsureJITOptimized(CLRModule module)
+        {
+            if (module is IJITOptimizable)
+                (module as IJITOptimizable).EnsureJITOptimized();
+        }
+
+        /// <summary>
         /// Ensure that the specified type has been optimized.
         /// The optimize stage runs before the first invocation usually, but can be run ahead of time if needed.
         /// It usually takes a little bit of time to optimize the method instructions into an structure that can be executed quickly.

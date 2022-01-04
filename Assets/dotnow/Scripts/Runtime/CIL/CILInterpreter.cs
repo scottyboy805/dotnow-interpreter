@@ -2,7 +2,6 @@
 using System.Reflection;
 using Mono.Cecil.Cil;
 using dotnow.Reflection;
-using static dotnow.Runtime.ExecutionEngine;
 
 namespace dotnow.Runtime.CIL
 {
@@ -10,10 +9,10 @@ namespace dotnow.Runtime.CIL
     {
         // Methods
 #if UNSAFE
-        internal unsafe static void ExecuteInterpreted(AppDomain domain, ExecutionEngine engine, ref ExecutionFrame frame, ref CILOperation[] instructions, ref CLRExceptionHandler[] exceptionHandlers, in DebugFlags debugFlags)
+        internal unsafe static void ExecuteInterpreted(AppDomain domain, ExecutionEngine engine, ref ExecutionFrame frame, ref CILOperation[] instructions, ref CLRExceptionHandler[] exceptionHandlers, DebugFlags debugFlags)
 #else
 
-        internal static void ExecuteInterpreted(AppDomain domain, ExecutionEngine engine, ref ExecutionFrame frame, ref CILOperation[] instructions, ref CLRExceptionHandler[] exceptionHandlers, in DebugFlags debugFlags)
+        internal static void ExecuteInterpreted(AppDomain domain, ExecutionEngine engine, ref ExecutionFrame frame, ref CILOperation[] instructions, ref CLRExceptionHandler[] exceptionHandlers, ExecutionEngine.DebugFlags debugFlags)
 #endif
         {
             // Locals
@@ -2297,7 +2296,7 @@ namespace dotnow.Runtime.CIL
 
                             if (fieldAccess.isClrField == true)
                             {
-                                (fieldAccess.targetField as CLRField).GetValueStack(default, ref stack[stackPtr++]);
+                                (fieldAccess.targetField as CLRField).GetValueStack(default(StackData), ref stack[stackPtr++]);
                             }
                             else
                             {
@@ -2461,12 +2460,14 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Ldtoken:
                         {
-                            if(instruction.objectOperand is CILFieldAccess access)
+                            CILFieldAccess access = instruction.objectOperand as CILFieldAccess;
+                            CILMethodInvocation invocation = instruction.objectOperand as CILMethodInvocation;
+                            if(access != null)
                             {
                                 stack[stackPtr].refValue = access.targetField;
                                 stack[stackPtr++].type = StackData.ObjectType.Ref;
                             }
-                            else if(instruction.objectOperand is CILMethodInvocation invocation)
+                            else if(invocation != null)
                             {
                                 stack[stackPtr].refValue = invocation.targetMethod;
                                 stack[stackPtr++].type = StackData.ObjectType.Ref;
@@ -2721,7 +2722,8 @@ namespace dotnow.Runtime.CIL
                                 }
 
                                 // Dereference by ref instance
-                                if (instance is IByRef @ref)
+                                IByRef @ref = instance as IByRef;
+                                if (@ref != null)
                                     instance = @ref.GetReferenceValue().UnboxAsType(Type.GetTypeCode(targetMethod.DeclaringType));//.Box();
 
                                 // Now we can invoke the method safely
@@ -2928,11 +2930,11 @@ namespace dotnow.Runtime.CIL
                 instructionPtr++;
 
                 // Check for debugger attached
-                if ((debugFlags & DebugFlags.DebuggerAttached) == 0)
+                if ((debugFlags & ExecutionEngine.DebugFlags.DebuggerAttached) == 0)
                     continue;
 
                 // Check for paused
-                if ((debugFlags & DebugFlags.DebugPause) != 0 || (debugFlags & DebugFlags.DebugStepOnce) != 0)
+                if ((debugFlags & ExecutionEngine.DebugFlags.DebugPause) != 0 || (debugFlags & ExecutionEngine.DebugFlags.DebugStepOnce) != 0)
                 {
                     // Save execution state
                     engine.SaveExecutionState(domain, frame, instructions, exceptionHandlers);

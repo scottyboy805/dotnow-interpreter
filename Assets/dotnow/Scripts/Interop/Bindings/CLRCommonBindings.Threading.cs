@@ -8,7 +8,7 @@ namespace dotnow.Interop
     internal static partial class CLRCommonBindings
     {
         // Methods
-        [CLRMethodBinding(typeof(Monitor), nameof(Monitor.Enter), typeof(object))]
+        [CLRMethodBinding(typeof(Monitor), "Enter", typeof(object))]
         public static void MonitorEnterOverride(AppDomain domain, MethodInfo overrideMethod, object instance, object[] args)
         {
             if (args[0].IsCLRInstance() == true)
@@ -21,7 +21,7 @@ namespace dotnow.Interop
             }
         }
 
-        [CLRMethodBinding(typeof(Monitor), nameof(Monitor.Exit), typeof(object))]
+        [CLRMethodBinding(typeof(Monitor), "Exit", typeof(object))]
         public static void MonitorExitOverride(AppDomain domain, MethodInfo overrideMethod, object instance, object[] args)
         {
             if (args[0].IsCLRInstance() == true)

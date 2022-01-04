@@ -196,7 +196,8 @@ namespace dotnow.Runtime
         private ExceptionHandlingResult HandleException(AppDomain domain, ExecutionFrame frame, CILOperation[] instructions, CLRExceptionHandler[] exceptionHandlers, Exception e)
         {
             // Goto exception handler body
-            frame.instructionPtr += GotoHandler(frame, e, exceptionHandlers, out CLRExceptionHandler handler);
+            CLRExceptionHandler handler;
+            frame.instructionPtr += GotoHandler(frame, e, exceptionHandlers, out handler);
 
             // Check for valid handler
             if (handler == null || handler.ExceptionType == null)

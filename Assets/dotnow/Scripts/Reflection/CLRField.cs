@@ -125,7 +125,8 @@ namespace dotnow.Reflection
                 if (obj.IsCLRInstanceOrByRefInstance() == false)
                     throw new InvalidOperationException("Cannot access field value for non CLR instance");
 
-                if (obj is IByRef byRef)
+                IByRef byRef = obj as IByRef;
+                if (byRef != null)
                 {
                     CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
 
@@ -140,7 +141,11 @@ namespace dotnow.Reflection
             return staticValue;
         }
 
+#if API_NET35
+        internal void GetValueStack(StackData obj, ref StackData value)
+#else
         internal void GetValueStack(in StackData obj, ref StackData value)
+#endif
         {
             // Make sure type is initialized
             declaringType.StaticInitializeType();
@@ -152,7 +157,8 @@ namespace dotnow.Reflection
                 if (obj.refValue.IsCLRInstanceOrByRefInstance() == false)
                     throw new InvalidOperationException("Cannot access field value for non CLR instance");
 
-                if (obj.refValue is IByRef byRef)
+                IByRef byRef = obj.refValue as IByRef;
+                if (byRef != null)
                 {
                     CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
 
@@ -181,7 +187,8 @@ namespace dotnow.Reflection
                 if (obj.IsCLRInstanceOrByRefInstance() == false)
                     throw new InvalidOperationException("Cannot assign field value for non CLR instance");
 
-                if (obj is IByRef byRef)
+                IByRef byRef = obj as IByRef;
+                if (byRef != null)
                 {
                     CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
 

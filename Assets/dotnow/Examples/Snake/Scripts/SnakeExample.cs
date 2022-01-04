@@ -50,7 +50,7 @@ namespace dotnow.Examples
             Instantiate<GameObject>(null);
             Instantiate<GameObject>(null, Vector3.zero, Quaternion.identity);
             Instantiate<GameObject>(null, Vector3.zero, Quaternion.identity, null);
-            Vector2Int.RoundToInt(default);
+            Vector2Int.RoundToInt(default(Vector2Int));
 
             // Hack to force AOT compilation of generic type with specific generic argument which is required by the game a more permanent fix is required!
             // Perhaps use List<object> in such cases for support for non-compiled AOT generics

@@ -44,7 +44,7 @@ namespace dotnow.Reflection.Indirection
         public CLRIndirectMethodInvocation(MethodInfo indirectMethod)
         {
             if (indirectMethod == null)
-                throw new ArgumentNullException(nameof(indirectMethod));
+                throw new ArgumentNullException("indirectMethod");
 
             this.indirectMethod = indirectMethod;
         }

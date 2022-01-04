@@ -194,7 +194,7 @@ namespace dotnow
 
         public override string ToString()
         {
-            return string.Format("{0}({1})", nameof(CLRInstance), type);
+            return string.Format("{0}({1})", "CLRInstance", type);
         }
 
         private object CreateBaseProxyInstance(AppDomain domain, Type baseType)

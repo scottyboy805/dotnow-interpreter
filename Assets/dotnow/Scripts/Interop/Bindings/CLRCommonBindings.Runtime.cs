@@ -50,7 +50,7 @@ namespace dotnow.Interop
             for(int i = 0; i < array.Length; i++)
             {
                 // Calcualte pointer for element data
-                IntPtr ptr = basePtr + localPtr;
+                IntPtr ptr = (IntPtr)((int)basePtr + localPtr);
 
                 // Set array value
                 array.SetValue(Marshal.PtrToStructure(ptr, elementType), i);
