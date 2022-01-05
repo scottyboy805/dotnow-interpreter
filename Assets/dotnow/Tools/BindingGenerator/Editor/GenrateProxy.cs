@@ -5,7 +5,8 @@ namespace dotnow.BindingGenerator
 {
     public class GenrateProxy : MonoBehaviour
     {
-#if UNITY_EDITOR && NET_4_6 && UNITY_DISABLE == false
+#if !UNITY_DISABLE
+#if UNITY_EDITOR && NET_4_6
         //[MenuItem("Tools/Generate Proxy")]
         //public static void CreateProxy()
         //{
@@ -13,6 +14,7 @@ namespace dotnow.BindingGenerator
 
         //    service.GenerateBindingsForType(typeof(System.IO.Stream), Application.dataPath + "/TestBindings");
         //}
+#endif
 #endif
     }
 }

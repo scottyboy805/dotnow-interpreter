@@ -758,9 +758,11 @@ namespace dotnow
                     return GetOverrideMethodBinding(resolvedMethod);
             }
 
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_DISABLE == false
+#if !UNITY_DISABLE
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL)
             if (UnityEngine.Application.isEditor == false)
                 UnityEngine.Debug.Log("This method may have been stripped from the build if you are using IL2CPP!");
+#endif
 #endif
 
             // Failed to resolve

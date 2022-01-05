@@ -177,9 +177,11 @@ namespace dotnow.Runtime
                 }
                 catch (Exception e)
                 {
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_DISABLE == false
+#if !UNITY_DISABLE
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL)
                     UnityEngine.Debug.LogError("At method body: " + ((frame.Method != null) ? frame.Method.ToString() : "<Unknown>"));
                     UnityEngine.Debug.LogError("At instruction: " + ((frame.instructionPtr < methodInstructions.Length) ? methodInstructions[frame.instructionPtr].ToString() : "<Unknown>"));
+#endif
 #endif
 
                     // Handle any exceptions

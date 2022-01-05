@@ -56,8 +56,10 @@ namespace dotnow.Runtime.CIL
 
 
                 /// ### WARNING - Only enable this for small snippets of non-looping (Or very shallow looping) code otherwise the performance and memory allocations will be horrific and likley cause an editor crash
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS && UNITY_DISABLE == false
+#if !UNITY_DISABLE
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS
                 //UnityEngine.Profiling.Profiler.BeginSample(instruction.instructionName);
+#endif
 #endif
 
                 // Switch (opCode)
@@ -2922,8 +2924,10 @@ namespace dotnow.Runtime.CIL
 
 
                 /// ### WARNING - Only enable this for small snippets of non-looping (Or very shallow looping) code otherwise the performance and memory allocations will be horrific and likley cause an editor crash
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS && UNITY_DISABLE == false
+#if !UNITY_DISABLE
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS
                 //UnityEngine.Profiling.Profiler.EndSample();
+#endif
 #endif
 
                 // Next instruction

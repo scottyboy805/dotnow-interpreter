@@ -1,5 +1,5 @@
-﻿
-#if UNITY_EDITOR && NET_4_6 && UNITY_DISABLE == false
+﻿#if !UNITY_DISABLE
+#if UNITY_EDITOR && NET_4_6
 using UnityEngine;
 using UnityEditor;
 
@@ -17,4 +17,5 @@ namespace dotnow.BindingGenerator
         }
     }
 }
+#endif
 #endif

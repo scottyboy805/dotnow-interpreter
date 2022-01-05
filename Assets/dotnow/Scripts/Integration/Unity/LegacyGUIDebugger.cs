@@ -1,4 +1,5 @@
-﻿#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_DISABLE == false
+﻿#if !UNITY_DISABLE
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL)
 using dotnow.Debugging;
 using dotnow.Runtime;
 using UnityEditor;
@@ -39,7 +40,8 @@ namespace dotnow
                 engine.PauseExecution();
         }
 
-#if UNITY_EDITOR && UNITY_DISABLE == false
+#if !UNITY_DISABLE
+#if UNITY_EDITOR
         public void Start()
         {
             // Add listener
@@ -160,6 +162,8 @@ namespace dotnow
             GUILayout.EndHorizontal();
         }
 #endif
+#endif
     }
 }
+#endif
 #endif

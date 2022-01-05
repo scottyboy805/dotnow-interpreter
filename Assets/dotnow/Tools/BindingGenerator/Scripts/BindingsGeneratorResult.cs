@@ -1,5 +1,5 @@
-﻿
-#if UNITY_EDITOR && NET_4_6 && UNITY_DISABLE == false
+﻿#if !UNITY_DISABLE
+#if UNITY_EDITOR && NET_4_6
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -63,4 +63,5 @@ namespace dotnow.BindingGenerator
         }
     }
 }
+#endif
 #endif

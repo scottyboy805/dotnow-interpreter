@@ -74,16 +74,20 @@ namespace dotnow.Reflection
             if (cachedInstructions == null)
                 throw new InvalidProgramException("Failed to get method body instructions for method: " + method);
 
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_PROFILE && UNITY_DISABLE == false
+#if !UNITY_DISABLE
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_PROFILE
             UnityEngine.Profiling.Profiler.BeginSample(string.Concat("[CLR Interpreted] ", Method.DeclaringType.Name, ".", Method.Name, "()"));
+#endif
 #endif
 
             // Run interpreted
             engine.Execute(domain, frame, cachedInstructions, exceptionHandlers.Value);
 
             // Profiling entry
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_PROFILE && UNITY_DISABLE == false
+#if !UNITY_DISABLE
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_PROFILE
             UnityEngine.Profiling.Profiler.EndSample();
+#endif
 #endif
         }
 
