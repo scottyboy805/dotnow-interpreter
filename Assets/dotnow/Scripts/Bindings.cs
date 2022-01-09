@@ -84,15 +84,40 @@ namespace dotnow
                 {
                     CLRProxyBindingAttribute attribute = type.GetCustomAttribute<CLRProxyBindingAttribute>();
 
-                    // Make sure type inehrits from base
-                    if(type.BaseType != attribute.BaseProxyType)
+                    // Check for interface binding
+                    if (attribute.BaseProxyType.IsInterface == true)
                     {
+                        bool implementsInterface = false;
+
+                        foreach(Type interfaceType in type.GetInterfaces())
+                        {
+                            if (interfaceType == attribute.BaseProxyType)
+                                implementsInterface = true;
+                        }
+
+                        // Make sure type implements base interface
+                        if (implementsInterface == false)
+                        {
 #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Proxy binding '{0}' must derive from base class '{1}'", type, attribute.BaseProxyType);
-                        return;
+                            UnityEngine.Debug.LogErrorFormat("Proxy binding '{0}' must implement interface '{1}'", type, attribute.BaseProxyType);
+                            return;
+#else
+                            throw new CLRBindingException("Proxy binding '{0}' must implement interface '{1}'", type, attribute.BaseProxyType));
+#endif
+                        }
+                    }
+                    else
+                    {
+                        // Make sure type inehrits from base
+                        if (type.BaseType != attribute.BaseProxyType)
+                        {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_DISABLE == false
+                            UnityEngine.Debug.LogErrorFormat("Proxy binding '{0}' must derive from base class '{1}'", type, attribute.BaseProxyType);
+                            return;
 #else
                         throw new CLRBindingException("Proxy binding '{0}' must derive from base class '{1}'", type, attribute.BaseProxyType));
 #endif
+                        }
                     }
 
                     // Check for already exists
