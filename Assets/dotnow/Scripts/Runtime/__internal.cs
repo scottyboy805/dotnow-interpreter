@@ -13,6 +13,12 @@ namespace dotnow.Runtime
 #endif
         internal static void __gc_alloc_arrays(ref StackData stack, Type arrType, int length)
         {
+            // Check for clr type - Must be stored as CLRInstance to avoid invalid cast exceptions
+            if (arrType.IsCLRType() == true)
+            {
+                arrType = typeof(CLRInstance);
+            }
+
             // Create the new instance
             Array instance = Array.CreateInstance(arrType, length);
 
@@ -26,6 +32,12 @@ namespace dotnow.Runtime
 #endif
         internal static void __gc_alloc_arrayl(ref StackData stack, Type arrType, long length)
         {
+            // Check for clr type - Must be stored as CLRInstance to avoid invalid cast exceptions
+            if (arrType.IsCLRType() == true)
+            {
+                arrType = typeof(CLRInstance);
+            }
+
             // Create the new instance
             Array instance = Array.CreateInstance(arrType, length);
 
