@@ -19,7 +19,7 @@ namespace dotnow.BindingGenerator
             if (string.IsNullOrEmpty(assemblyPath) == true) throw new ArgumentException(nameof(assemblyPath) + " cannot be null or empty");
 
             // Try to load assembly
-            Assembly asm = Assembly.ReflectionOnlyLoadFrom(assemblyPath);
+            Assembly asm = Assembly.LoadFrom(assemblyPath);
 
             // Call through
             return GenerateBindingsForAssembly(asm, outputPathOrFolder);

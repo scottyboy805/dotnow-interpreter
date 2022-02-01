@@ -136,6 +136,10 @@ namespace dotnow.BindingGenerator.Emit
 
         public string GetTypeFlattenedName()
         {
+            // Check for namespace
+            if (string.IsNullOrEmpty(type.Namespace) == true)
+                return type.Name;
+
             return string.Concat(type.Namespace.Replace('.', '_'), "_", type.Name);
         }
 
