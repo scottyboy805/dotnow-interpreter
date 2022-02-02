@@ -1527,24 +1527,36 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Stloc_0:
                         {
+                            // Copy value type
+                            StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
+
                             stack[frame.stackMin + 0] = stack[--stackPtr];
                             break;
                         }
 
                     case Code.Stloc_1:
                         {
+                            // Copy value type
+                            StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
+
                             stack[frame.stackMin + 1] = stack[--stackPtr];
                             break;
                         }
 
                     case Code.Stloc_2:
                         {
+                            // Copy value type
+                            StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
+
                             stack[frame.stackMin + 2] = stack[--stackPtr];
                             break;
                         }
 
                     case Code.Stloc_3:
                         {
+                            // Copy value type
+                            StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
+
                             stack[frame.stackMin + 3] = stack[--stackPtr];
                             break;
                         }
@@ -1552,6 +1564,9 @@ namespace dotnow.Runtime.CIL
                     case Code.Stloc:
                     case Code.Stloc_S:
                         {
+                            // Copy value type
+                            StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
+
                             stack[frame.stackMin + instruction.operand.Int32] = stack[--stackPtr];
                             break;
                         }
@@ -2379,6 +2394,9 @@ namespace dotnow.Runtime.CIL
                             }
 
                             right = stack[--stackPtr];      // val
+
+                            StackData.ValueTypeCopy(ref right);
+
                             fieldAccess.targetField.SetValue(null, right.UnboxAsType(fieldAccess.fieldTypeInfo));
                             break;
                         }
@@ -2396,6 +2414,8 @@ namespace dotnow.Runtime.CIL
 
                             right = stack[--stackPtr];      // val
                             temp = stack[--stackPtr];       // inst
+
+                            StackData.ValueTypeCopy(ref right);
 
                             if (temp.refValue is IByRef)
                             {

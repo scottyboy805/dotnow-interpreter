@@ -390,5 +390,15 @@ namespace dotnow.Runtime
             obj.type = ObjectType.RefBoxed;
             obj.refValue = valueType;
         }
+
+        public static void ValueTypeCopy(ref StackData obj)
+        {
+            // Check for boxed struct
+            if(obj.type == ObjectType.RefBoxed && obj.refValue != null)
+            {
+                // This call will take the boxed value type stored in 'src' and perform a stuct copy (memberwise clone) returning a boxed reference to the new value type with same values
+                obj.refValue = System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(obj.refValue);
+            }
+        }
     }
 }
