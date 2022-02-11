@@ -2653,7 +2653,7 @@ namespace dotnow.Runtime.CIL
 
                                 // Create call frame
                                 ExecutionFrame callFrame;//= new ExecutionFrame(engine, targetMethod, body.MaxStack, argSize, body.Locals);
-                                callFrame = new ExecutionFrame(domain, engine, frame, targetMethod, body.MaxStack, argSize, body.Locals);
+                                engine.AllocExecutionFrame(out callFrame, domain, engine, targetMethod, body.MaxStack, argSize, body.Locals);
 
                                 int baseOffset = argSize + ((isStatic == true) ? 0 : 1);
 
