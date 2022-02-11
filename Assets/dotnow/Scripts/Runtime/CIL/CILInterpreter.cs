@@ -2770,6 +2770,10 @@ namespace dotnow.Runtime.CIL
                     case Code.Ret:
                         {
                             frame.abort = true;
+
+                            // Reset call frame
+                            if (engine.currentFrame != null)
+                                engine.currentFrame = (engine.currentFrame.Parent != null) ? engine.currentFrame.Parent : null;
                             break;
                         }
 

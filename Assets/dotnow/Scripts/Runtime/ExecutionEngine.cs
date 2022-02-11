@@ -183,6 +183,9 @@ namespace dotnow.Runtime
                     UnityEngine.Debug.LogError("At instruction: " + ((frame.instructionPtr < methodInstructions.Length) ? methodInstructions[frame.instructionPtr].ToString() : "<Unknown>"));
 #endif
 #endif
+                    // Reset call frame
+                    if (currentFrame != null)
+                        currentFrame = (currentFrame.Parent != null) ? currentFrame.Parent : null;
 
                     // Handle any exceptions
                     switch (HandleException(domain, frame, methodInstructions, exceptionHandlers, e))
