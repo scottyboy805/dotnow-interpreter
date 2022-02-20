@@ -4,6 +4,7 @@ using System;
 using System.Reflection;
 using dotnow;
 using dotnow.Interop;
+using dotnowRuntime;
 using AppDomain = dotnow.AppDomain;
 
 namespace UnityEngine
@@ -220,22 +221,7 @@ namespace UnityEngine
         private CLRType instanceType = null;
         private CLRInstance instance = null;
 
-        private BindingFlags bindings = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-
-        private Action awakeHook = null;
-        private Action startHook = null;
-        private Action onDestroyHook = null;
-        private Action onEnableHook = null;
-        private Action onDisableHook = null;
-
-        private MethodImplementedFlags checkedMethods = 0;
-        private Action updateHook = null;
-        private Action lateUpdateHook = null;
-        private Action fixedUpdateHook = null;
-
-        private MethodBase onCollisionEnterHook = null;
-        private MethodBase onCollisionStayHook = null;
-        private MethodBase onCollisionExitHook = null;
+        private RuntimeBindingsCache cache = null;
 
         // Methods
         public void InitializeProxy(AppDomain domain, CLRInstance instance)
@@ -243,6 +229,8 @@ namespace UnityEngine
             this.domain = domain;
             this.instanceType = instance.Type;
             this.instance = instance;
+
+            cache = new RuntimeBindingsCache(instance, 12);
 
             // Manually call awake and OnEnable since they will do nothing when called by Unity
             Awake();
@@ -255,20 +243,17 @@ namespace UnityEngine
             if (domain == null)
                 return;
 
-            if(awakeHook == null) awakeHook = instanceType.GetMethod(nameof(Awake))?.CreateDelegate(typeof(Action), instance) as Action;
-            if (awakeHook != null) awakeHook();
+            cache.InvokeProxyMethod(0, nameof(Awake));
         }
 
         public void Start()
         {
-            if (startHook == null) startHook = instanceType.GetMethod(nameof(Start))?.CreateDelegate(typeof(Action), instance) as Action;
-            if (startHook != null) startHook();
+            cache.InvokeProxyMethod(1, nameof(Start));
         }
 
         public void OnDestroy()
         {
-            if (onDestroyHook == null) onDestroyHook = instanceType.GetMethod(nameof(OnDestroy))?.CreateDelegate(typeof(Action), instance) as Action;
-            if (onDestroyHook != null) onDestroyHook();
+            cache.InvokeProxyMethod(2, nameof(OnDestroy));
         }
 
         public void OnEnable()
@@ -277,68 +262,42 @@ namespace UnityEngine
             if (domain == null)
                 return;
 
-            if (onEnableHook == null) onEnableHook = instanceType.GetMethod(nameof(OnEnable))?.CreateDelegate(typeof(Action), instance) as Action;
-            if (onEnableHook != null) onEnableHook();
+            cache.InvokeProxyMethod(3, nameof(OnEnable));
         }
 
         public void OnDisable()
         {
-            if (onDisableHook == null) onDisableHook = instanceType.GetMethod(nameof(OnDisable))?.CreateDelegate(typeof(Action), instance) as Action;
-            if (onDisableHook != null) onDisableHook();
+            cache.InvokeProxyMethod(4, nameof(OnDisable));
         }
 
         public void Update()
         {
-            // Check for method implemented - Update is called alot so there is extra logic here to make sure 'GetMethod' is only called once and the reuslt is cached
-            if((checkedMethods & MethodImplementedFlags.Update) == 0)
-            {
-                checkedMethods |= MethodImplementedFlags.Update;
-                updateHook = instanceType.GetMethod(nameof(Update))?.CreateDelegate(typeof(Action), instance) as Action;
-            }
-
-            if (updateHook != null) updateHook();
+            cache.InvokeProxyMethod(5, nameof(Update));
         }
 
         public void LateUpdate()
         {
-            // Check for method implemented - Late update is called alot so there is extra logic here to make sure 'GetMethod' is only called once and the reuslt is cached
-            if ((checkedMethods & MethodImplementedFlags.LateUpdate) == 0)
-            {
-                checkedMethods |= MethodImplementedFlags.LateUpdate;
-                lateUpdateHook = instanceType.GetMethod(nameof(LateUpdate))?.CreateDelegate(typeof(Action), instance) as Action;
-            }
-
-            if (lateUpdateHook != null) lateUpdateHook();
+            cache.InvokeProxyMethod(6, nameof(LateUpdate));
         }
 
         public void FixedUpdate()
         {
-            // Check for method implemented - Late update is called alot so there is extra logic here to make sure 'GetMethod' is only called once and the reuslt is cached
-            if ((checkedMethods & MethodImplementedFlags.FixedUpdate) == 0)
-            {
-                checkedMethods |= MethodImplementedFlags.FixedUpdate;
-                fixedUpdateHook = instanceType.GetMethod(nameof(FixedUpdate))?.CreateDelegate(typeof(Action), instance) as Action;
-            }
-
-            if (fixedUpdateHook != null) fixedUpdateHook();
+            cache.InvokeProxyMethod(7, nameof(FixedUpdate));
         }
 
         public void OnCollisionEnter(Collision collision)
         {
-            if (onCollisionEnterHook == null) onCollisionEnterHook = instanceType.GetMethod(nameof(OnCollisionEnter), bindings);
-            if (onCollisionEnterHook != null) onCollisionEnterHook.Invoke(instance, new object[] { collision });
+            cache.InvokeProxyMethod(8, nameof(OnCollisionEnter), new object[] { collision });
         }
 
         public void OnCollisionStay(Collision collision)
         {
-            if (onCollisionStayHook == null) onCollisionStayHook = instanceType.GetMethod(nameof(OnCollisionStay), bindings);
-            if (onCollisionStayHook != null) onCollisionStayHook.Invoke(instance, new object[] { collision });
+            cache.InvokeProxyMethod(9, nameof(OnCollisionStay), new object[] { collision });
         }
 
         public void OnCollisionExit(Collision collision)
         {
-            if (onCollisionExitHook == null) onCollisionExitHook = instanceType.GetMethod(nameof(OnCollisionExit), bindings);
-            if (onCollisionExitHook != null) onCollisionExitHook.Invoke(instance, new object[] { collision });
+            cache.InvokeProxyMethod(10, nameof(OnCollisionExit), new object[] { collision });
         }
 
         [CLRMethodBinding(typeof(GameObject), "AddComponent", typeof(Type))]
