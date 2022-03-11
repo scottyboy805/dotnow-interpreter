@@ -2714,12 +2714,16 @@ namespace dotnow.Runtime.CIL
                             // Create arguments
                             for (int i = 0, j = offset; i < arguments.Length; i++, j++)
                             {
-                                // Try to unbox as type
-                                arguments[i] = stack[argOffset + j].UnboxAsType(signature.parameterTypeInfos[i]);
+                                // Check for out argument (Use 'null' as argument in this case to avoid incompatible type checking)
+                                if (signature.parameters[i].IsOut == false)
+                                {
+                                    // Try to unbox as type
+                                    arguments[i] = stack[argOffset + j].UnboxAsType(signature.parameterTypeInfos[i]);
 
-                                // Check for interop method
-                                if (methodInvoke.isCLRMethod == false)
-                                    arguments[i] = arguments[i].UnwrapAs(signature.parameterTypes[i]);
+                                    // Check for interop method
+                                    if (methodInvoke.isCLRMethod == false)
+                                        arguments[i] = arguments[i].UnwrapAs(signature.parameterTypes[i]);
+                                }
                             }
 
 
@@ -2750,6 +2754,18 @@ namespace dotnow.Runtime.CIL
 
                                 // Now we can invoke the method safely
                                 invocationResult = targetMethod.Invoke(instance, arguments);
+                            }
+
+
+                            // Load ref/out argumnents
+                            for (int i = 0, j = offset; i < arguments.Length; i++, j++)
+                            {
+                                // Skip args that are not passed by reference
+                                if (signature.parameterTypes[i].IsByRef == false)
+                                    continue;
+
+                                if (stack[argOffset + j].refValue is IByRef)
+                                    CILSignature.LoadByRefArgument(signature, (IByRef)stack[argOffset + j].refValue, arguments, i);
                             }
 
 

@@ -43,6 +43,9 @@ namespace dotnow.Runtime
 
             if (this.isEnum == true)
                 this.enumUnderlyingTypeCode = Type.GetTypeCode(type.GetEnumUnderlyingType());
+
+            if (type.IsByRef == true)
+                this.typeCode = Type.GetTypeCode(type.GetElementType());
         }
 
         // Methods
