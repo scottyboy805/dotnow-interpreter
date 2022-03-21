@@ -30,6 +30,22 @@ namespace dotnow
             return instance.GetType();
         }
 
+        public static CLRType GetCLRInterpretedType(this object instance, bool throwOnError = true)
+        {
+            if (instance == null)
+                throw new ArgumentNullException("instance");
+
+            // Get clr type for instance
+            if (instance is CLRInstance)
+                return ((CLRInstance)instance).Type;
+
+            // check for exception
+            if (throwOnError == null)
+                throw new InvalidOperationException("Specified instance is not a clr type");
+
+            return null;
+        }
+
         public static object Unwrap(this object instance)
         {
             // Check for valid clr instance
