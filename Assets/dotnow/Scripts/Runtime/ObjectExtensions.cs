@@ -21,9 +21,10 @@ namespace dotnow
 
         public static Type GetInterpretedType(this object instance)
         {
-            if (instance == null)
-                throw new NullReferenceException();
+            if (instance == null) 
+                throw new ArgumentNullException("instance");
 
+            // Get clr type for instance
             if (instance is CLRInstance)
                 return ((CLRInstance)instance).Type;
 
