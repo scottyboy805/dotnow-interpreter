@@ -146,12 +146,12 @@ namespace dotnow.Runtime
                 DebugFrame debugFrame = new DebugFrame(frame.Method, frame, instructions, frame.instructionPtr);
 
                 // Add args
-                //for (int i = 0; i < frame.Method.GetParameters().Length + ((frame.Method.IsStatic == true) ? 0 : 1); i++)
-                //    debugFrame.AddArgumentVariable(i);
+                for (int i = 0; i < frame.Method.GetParameters().Length + ((frame.Method.IsStatic == true) ? 0 : 1); i++)
+                    debugFrame.AddArgumentVariable(i);
 
-                //// Add locals
-                //for (int i = 0; i < frame.Method.GetMethodBody().LocalVariables.Count; i++)
-                //    debugFrame.AddLocalVariable(i);
+                // Add locals
+                for (int i = 0; i < frame.Method.GetMethodBody().LocalVariables.Count; i++)
+                    debugFrame.AddLocalVariable(i);
 
                 // Send frame to debugger
                 debugger.OnDebugFrame(debugFrame);
