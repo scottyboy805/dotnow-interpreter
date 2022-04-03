@@ -33,5 +33,3 @@ Take a look at the [wiki](https://github.com/scottyboy805/dotnow-interpreter/wik
 # Sponsors
 You can sponsor this project to help it grow
 [:heart: Sponsor](https://github.com/sponsors/scottyboy805)
-
-Thanks to Oleg Skutte for sponsoring the project!
