@@ -165,6 +165,12 @@ namespace UnityEngine
 
         private RuntimeBindingsCache cache = null;
 
+        // Properties
+        public CLRInstance Instance
+        {
+            get { return instance; }
+        }
+
         // Methods
         public void InitializeProxy(AppDomain domain, CLRInstance instance)
         {
