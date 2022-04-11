@@ -1084,7 +1084,7 @@ namespace dotnow.Runtime.CIL
                                     throw new NotSupportedException();
                             }
 
-                            if (flag == false)
+                            if (flag == true)
                             {
                                 instructionPtr += instruction.operand.Int32;
                                 continue;
