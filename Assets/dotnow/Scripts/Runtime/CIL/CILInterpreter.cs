@@ -953,10 +953,29 @@ namespace dotnow.Runtime.CIL
                     case Code.Brtrue:
                     case Code.Brtrue_S:
                         {
-                            if (stack[--stackPtr].value.Int32 != 0)
+                            switch (stack[stackPtr - 1].type)
                             {
-                                instructionPtr += instruction.operand.Int32;
-                                continue;
+                                case StackData.ObjectType.Ref:
+                                case StackData.ObjectType.RefBoxed:
+                                case StackData.ObjectType.ByRef:
+                                    {
+                                        if (stack[--stackPtr].Address != 0)
+                                        {
+                                            instructionPtr += instruction.operand.Int32;
+                                            continue;
+                                        }
+                                        break;
+                                    }
+
+                                default:
+                                    {
+                                        if (stack[--stackPtr].value.Int32 != 0)
+                                        {
+                                            instructionPtr += instruction.operand.Int32;
+                                            continue;
+                                        }
+                                        break;
+                                    }
                             }
                             break;
                         }
@@ -964,10 +983,29 @@ namespace dotnow.Runtime.CIL
                     case Code.Brfalse:
                     case Code.Brfalse_S:
                         {
-                            if (stack[--stackPtr].value.Int32 == 0)
+                            switch(stack[stackPtr - 1].type)
                             {
-                                instructionPtr += instruction.operand.Int32;
-                                continue;
+                                case StackData.ObjectType.Ref:
+                                case StackData.ObjectType.RefBoxed:
+                                case StackData.ObjectType.ByRef:
+                                    {
+                                        if(stack[--stackPtr].Address == 0)
+                                        {
+                                            instructionPtr += instruction.operand.Int32;
+                                            continue;
+                                        }
+                                        break;
+                                    }
+
+                                default:
+                                    {
+                                        if (stack[--stackPtr].value.Int32 == 0)
+                                        {
+                                            instructionPtr += instruction.operand.Int32;
+                                            continue;
+                                        }
+                                        break;
+                                    }
                             }
                             break;
                         }
