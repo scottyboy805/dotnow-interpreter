@@ -456,35 +456,36 @@ namespace dotnow.Runtime.CIL
                             {
                                 case StackData.ObjectType.Int8:
                                     {
-                                        stack[stackPtr].value.Int8 = (sbyte)(left.value.Int8 << right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int8;
+                                        stack[stackPtr].value.Int32 = (left.value.Int8 << right.value.Int32);
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
                                 case StackData.ObjectType.UInt8:
                                     {
-                                        stack[stackPtr].value.Int8 = (sbyte)(byte)(left.value.Int8 << right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                        stack[stackPtr].value.Int32 = (left.value.Int8 << right.value.Int32);
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
                                 case StackData.ObjectType.Int16:
                                     {
-                                        stack[stackPtr].value.Int16 = (short)(left.value.Int16 << right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                        stack[stackPtr].value.Int32 = (left.value.Int16 << right.value.Int32);
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
                                 case StackData.ObjectType.UInt16:
                                     {
-                                        stack[stackPtr].value.Int16 = (short)(ushort)(left.value.Int16 << right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.UInt16;
+                                        stack[stackPtr].value.Int32 = (left.value.Int16 << right.value.Int32);
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
                                 case StackData.ObjectType.Int32:
                                     {
-                                        stack[stackPtr++].value.Int32 = left.value.Int32 << right.value.Int32;
+                                        stack[stackPtr].value.Int32 = left.value.Int32 << right.value.Int32;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
@@ -524,35 +525,36 @@ namespace dotnow.Runtime.CIL
                             {
                                 case StackData.ObjectType.Int8:
                                     {
-                                        stack[stackPtr].value.Int8 = (sbyte)(left.value.Int8 >> right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int8;
+                                        stack[stackPtr].value.Int32 = (left.value.Int8 >> right.value.Int32);
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
                                 case StackData.ObjectType.UInt8:
                                     {
-                                        stack[stackPtr].value.Int8 = (sbyte)(byte)(left.value.Int8 >> right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                        stack[stackPtr].value.Int32 = (left.value.Int8 >> right.value.Int32);
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
                                 case StackData.ObjectType.Int16:
                                     {
-                                        stack[stackPtr].value.Int16 = (short)(left.value.Int16 >> right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                        stack[stackPtr].value.Int32 = (left.value.Int16 >> right.value.Int32);
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
                                 case StackData.ObjectType.UInt16:
                                     {
-                                        stack[stackPtr].value.Int16 = (short)(ushort)(left.value.Int16 >> right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.UInt16;
+                                        stack[stackPtr].value.Int32 = (left.value.Int16 >> right.value.Int32);
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
                                 case StackData.ObjectType.Int32:
                                     {
-                                        stack[stackPtr++].value.Int32 = left.value.Int32 >> right.value.Int32;
+                                        stack[stackPtr].value.Int32 = left.value.Int32 >> right.value.Int32;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
@@ -2970,6 +2972,7 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr - 1].value.Int32 = ~stack[stackPtr - 1].value.Int32;
+                                        stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
@@ -2994,6 +2997,7 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr - 2].value.Int32 = left.value.Int32 & right.value.Int32;
+                                        stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
@@ -3019,6 +3023,7 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr - 2].value.Int32 = left.value.Int32 | right.value.Int32;
+                                        stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
@@ -3044,6 +3049,7 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr - 2].value.Int32 = left.value.Int32 ^ right.value.Int32;
+                                        stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
