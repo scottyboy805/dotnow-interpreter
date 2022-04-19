@@ -53,7 +53,7 @@ namespace dotnowRuntime
             object token = proxyMemberCache[offset];
 
             // Check for searched
-            if(token != nullMatchToken)
+            if(token != nullMatchToken && token == null)
             {
                 // try to find the method
                 MethodInfo method = instance.Type.GetMethod(methodName, flags);
@@ -82,33 +82,6 @@ namespace dotnowRuntime
                     proxyMemberCache[offset] = nullMatchToken;
                 }
             }
-
-
-            //// Try to find member
-            //if(proxyMemberCache.TryGetValue(methodName, out token) == false)
-            //{
-            //    // Find the method
-            //    MethodInfo method = instance.Type.GetMethod(methodName, flags);
-
-            //    // Cache the result
-            //    proxyMemberCache[methodName] = method;
-            //    token = method;
-
-            //    // Check for found
-            //    if(method != null)
-            //    {
-            //        // Check for delegate
-            //        if(method.ReturnType == typeof(void) && method.GetParameters().Length == 0)
-            //        {
-            //            // Create delegate
-            //            Action invoke = (Action)method.CreateDelegate(typeof(Action), instance);
-
-            //            // Override cached result with delegate which will have lower overhead
-            //            proxyMemberCache[methodName] = invoke;
-            //            token = invoke;
-            //        }
-            //    }
-            //}
             return token;
         }
     }
