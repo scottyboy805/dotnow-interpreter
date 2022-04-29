@@ -50,10 +50,13 @@ namespace dotnow.Interop
             for(int i = 0; i < array.Length; i++)
             {
                 // Calcualte pointer for element data
-                IntPtr ptr = (IntPtr)((int)basePtr + localPtr);
+                IntPtr ptr = basePtr + localPtr;
+
+                // Convert to assignable object - boxing is not ideal but is the only way
+                object inst = Marshal.PtrToStructure(ptr, elementType);
 
                 // Set array value
-                array.SetValue(Marshal.PtrToStructure(ptr, elementType), i);
+                array.SetValue(inst, i);
 
                 // Increase pointer offset
                 localPtr += Marshal.SizeOf(elementType);
