@@ -2,6 +2,7 @@
 using System.Reflection;
 using Mono.Cecil.Cil;
 using dotnow.Reflection;
+using System.Collections;
 
 namespace dotnow.Runtime.CIL
 {
@@ -38,7 +39,7 @@ namespace dotnow.Runtime.CIL
             float[] singleArrImpl;
             double[] doubleArrImpl;
             object[] objArrImpl;
-
+            IList listArrImpl;
 
 
             int instructionLength = instructions.Length;            
@@ -2099,15 +2100,17 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            objArrImpl = (object[])left.refValue;   // arr impl
-
                             if ((int)temp.type <= 32)
                             {
-                                StackData.AllocTyped(ref stack[stackPtr++], instruction.typeOperand, objArrImpl[temp.value.Int32]);
+                                // Use IList for 32 bit indexing to support value types (Not possible to cast value type array to object[])
+                                listArrImpl = (IList)left.refValue;
+                                StackData.AllocTyped(ref stack[stackPtr++], instruction.typeOperand, listArrImpl[temp.value.Int32]);
                             }
                             else if ((int)temp.type <= 64)
                             {
-                                StackData.AllocTyped(ref stack[stackPtr++], instruction.typeOperand, objArrImpl[temp.value.Int64]);
+                                // Fallback to slow reflection access in order to support 64 bit indexing
+                                Array arr = (Array)left.refValue;
+                                StackData.AllocTyped(ref stack[stackPtr++], instruction.typeOperand, arr.GetValue(temp.value.Int64));
                             }
                             else
                                 throw new NotSupportedException();
