@@ -2864,7 +2864,7 @@ namespace dotnow.Runtime.CIL
                                     continue;
 
                                 if (stack[argOffset + j].refValue is IByRef)
-                                    CILSignature.LoadByRefArgument(signature, (IByRef)stack[argOffset + j].refValue, arguments, i);
+                                    CILSignature.LoadByRefArgument(signature, (IByRef)stack[argOffset + j].refValue, arguments, signature.parameterTypeInfos, i);
                             }
 
 

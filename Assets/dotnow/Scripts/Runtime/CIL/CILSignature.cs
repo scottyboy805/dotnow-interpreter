@@ -44,7 +44,7 @@ namespace dotnow.Runtime.CIL
         }
 
         // Methods
-        public static void LoadByRefArgument(CILSignature signature, IByRef byRef, object[] arguments, int offset)
+        public static void LoadByRefArgument(CILSignature signature, IByRef byRef, object[] arguments, CLRTypeInfo[] parameterTypeInfos, int offset)
         {
             CLRTypeInfo paramTypeInfo = signature.parameterTypeInfos[offset];
 
@@ -65,7 +65,16 @@ namespace dotnow.Runtime.CIL
                 case TypeCode.String:
                 case TypeCode.Object:
                     {
-                        byRef.SetReferenceValue((StackData)arguments[offset]);
+                        if (arguments[offset] is StackData)
+                        {
+                            byRef.SetReferenceValue((StackData)arguments[offset]);
+                        }
+                        else
+                        {
+                            StackData temp = new StackData();
+                            StackData.AllocTyped(ref temp, parameterTypeInfos[offset], arguments[offset]);
+                            byRef.SetReferenceValue(temp);
+                        }
                         break;
                     }
             }
