@@ -41,7 +41,7 @@ namespace dotnow
                 return ((CLRInstance)instance).Type;
 
             // check for exception
-            if (throwOnError == null)
+            if (throwOnError == true)
                 throw new InvalidOperationException("Specified instance is not a clr type");
 
             return null;
