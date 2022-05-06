@@ -15,6 +15,8 @@ using dotnow.Runtime.CIL;
 using System.Runtime.CompilerServices;
 using dotnow.Runtime.JIT;
 
+[assembly: InternalsVisibleTo("dotnow.Integration")]
+
 namespace dotnow
 {
     public class AppDomain : IDisposable
