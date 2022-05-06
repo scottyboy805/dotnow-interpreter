@@ -400,5 +400,17 @@ namespace dotnow.Runtime
                 obj.refValue = System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(obj.refValue);
             }
         }
+
+        public static void AssignKeepType(ref StackData dest, in StackData src)
+        {
+            // Get existing type
+            ObjectType type = dest.type;
+
+            // Copy value
+            dest = src;
+
+            // Overwrite type
+            dest.type = type;
+        }
     }
 }

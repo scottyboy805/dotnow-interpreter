@@ -1627,7 +1627,8 @@ namespace dotnow.Runtime.CIL
                             // Copy value type
                             StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
 
-                            stack[frame.stackMin + 0] = stack[--stackPtr];
+                            // Copy the value but don't overwrite dest type - This is important for unsigned primitives because the CLR loads them as non-unsigned in some cases
+                            StackData.AssignKeepType(ref stack[frame.stackMin + 0], stack[--stackPtr]);
                             break;
                         }
 
@@ -1636,7 +1637,8 @@ namespace dotnow.Runtime.CIL
                             // Copy value type
                             StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
 
-                            stack[frame.stackMin + 1] = stack[--stackPtr];
+                            // Copy the value but don't overwrite dest type - This is important for unsigned primitives because the CLR loads them as non-unsigned in some cases
+                            StackData.AssignKeepType(ref stack[frame.stackMin + 1], stack[--stackPtr]);
                             break;
                         }
 
@@ -1645,7 +1647,8 @@ namespace dotnow.Runtime.CIL
                             // Copy value type
                             StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
 
-                            stack[frame.stackMin + 2] = stack[--stackPtr];
+                            // Copy the value but don't overwrite dest type - This is important for unsigned primitives because the CLR loads them as non-unsigned in some cases
+                            StackData.AssignKeepType(ref stack[frame.stackMin + 2], stack[--stackPtr]);
                             break;
                         }
 
@@ -1654,7 +1657,8 @@ namespace dotnow.Runtime.CIL
                             // Copy value type
                             StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
 
-                            stack[frame.stackMin + 3] = stack[--stackPtr];
+                            // Copy the value but don't overwrite dest type - This is important for unsigned primitives because the CLR loads them as non-unsigned in some cases
+                            StackData.AssignKeepType(ref stack[frame.stackMin + 3], stack[--stackPtr]);
                             break;
                         }
 
@@ -1664,7 +1668,8 @@ namespace dotnow.Runtime.CIL
                             // Copy value type
                             StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
 
-                            stack[frame.stackMin + instruction.operand.Int32] = stack[--stackPtr];
+                            // Copy the value but don't overwrite dest type - This is important for unsigned primitives because the CLR loads them as non-unsigned in some cases
+                            StackData.AssignKeepType(ref stack[frame.stackMin + instruction.operand.Int32], stack[--stackPtr]);
                             break;
                         }
 #endregion
