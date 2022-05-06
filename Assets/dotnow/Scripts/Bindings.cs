@@ -102,7 +102,7 @@ namespace dotnow
                             UnityEngine.Debug.LogErrorFormat("Proxy binding '{0}' must implement interface '{1}'", type, attribute.BaseProxyType);
                             return;
 #else
-                            throw new CLRBindingException("Proxy binding '{0}' must implement interface '{1}'", type, attribute.BaseProxyType));
+                            throw new CLRBindingException("Proxy binding '{0}' must implement interface '{1}'", type, attribute.BaseProxyType);
 #endif
                         }
                     }
@@ -115,7 +115,7 @@ namespace dotnow
                             UnityEngine.Debug.LogErrorFormat("Proxy binding '{0}' must derive from base class '{1}'", type, attribute.BaseProxyType);
                             return;
 #else
-                        throw new CLRBindingException("Proxy binding '{0}' must derive from base class '{1}'", type, attribute.BaseProxyType));
+                        throw new CLRBindingException("Proxy binding '{0}' must derive from base class '{1}'", type, attribute.BaseProxyType);
 #endif
                         }
                     }
