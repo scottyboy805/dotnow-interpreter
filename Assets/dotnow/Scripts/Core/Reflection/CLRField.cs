@@ -172,7 +172,7 @@ namespace dotnow.Reflection
             }
 
             // Get static value
-            StackData.AllocTyped(ref value, fieldTypeInfo, staticValue);
+            StackData.AllocTyped(ref value, FieldTypeInfo, staticValue);
         }
 
         public override void SetValue(object obj, object value, BindingFlags invokeAttr, Binder binder, CultureInfo culture)
