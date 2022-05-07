@@ -8,8 +8,8 @@
     <ProjectGuid>{50F093A3-630C-4B08-90C1-2356968348DE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TrivialCLR.Tests</RootNamespace>
-    <AssemblyName>TrivialCLR.Tests</AssemblyName>
+    <RootNamespace>dotnow.Tests</RootNamespace>
+    <AssemblyName>dotnow.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -55,6 +55,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Arithmetic\UnitTestAdd.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="UnitTestArray.cs" />
     <Compile Include="UnitTestBranching.cs" />
@@ -73,6 +74,9 @@
     <Compile Include="UnitTestStructs.cs" />
     <Compile Include="UnitTestTypes.cs" />
     <Compile Include="UnitTestVariables.cs" />
+    <Compile Include="Variables\UnitTestInstanceFieldDeclarations.cs" />
+    <Compile Include="Variables\UnitTestLocalDeclarations.cs" />
+    <Compile Include="Variables\UnitTestStaticFieldDeclarations.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -82,6 +86,9 @@
       <Project>{599e13e8-872b-4a3d-8609-9940edfefbd3}</Project>
       <Name>TestModule</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="BinaryOp\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

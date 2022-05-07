@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Arithmetic\TestAdd.cs" />
     <Compile Include="TestArray.cs" />
     <Compile Include="TestBranching.cs" />
     <Compile Include="TestCustomAttributes.cs" />
@@ -57,6 +58,11 @@
     <Compile Include="TestStructs.cs" />
     <Compile Include="TestTypes.cs" />
     <Compile Include="TestVariables.cs" />
+    <Compile Include="Variables\TestFieldDeclarations.cs" />
+    <Compile Include="Variables\TestLocalDeclarations.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="BinaryOp\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
