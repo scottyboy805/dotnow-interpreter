@@ -81,6 +81,7 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     stack[stackPtr - 2].value.Int32 = unchecked(left.value.Int32 + right.value.Int32);
+                                    stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                     break;
 
                                 case StackData.ObjectType.UInt8:
