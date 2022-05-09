@@ -20,7 +20,7 @@ namespace dotnowRuntime
         }
 
         // Methods
-        public void InvokeProxyMethod(int offset, string methodName, BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+        public void InvokeProxyMethod(int offset, string methodName, BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
         {
             Action invoke = FindProxyMethodDelegate(offset, methodName, flags);
 
@@ -28,7 +28,7 @@ namespace dotnowRuntime
                 invoke();
         }
 
-        public object InvokeProxyMethod(int offset, string methodName, object[] args, BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+        public object InvokeProxyMethod(int offset, string methodName, object[] args, BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
         {
             MethodInfo info = FindProxyMethodInfo(offset, methodName, flags);
 
