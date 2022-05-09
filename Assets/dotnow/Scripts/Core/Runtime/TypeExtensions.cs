@@ -20,6 +20,23 @@ namespace dotnow
             return type as CLRType;
         }
 
+        public static Type GetInteropBaseType(this Type type)
+        {
+            // Only applicable to clr types
+            if(type is CLRType)
+            {
+                Type currentBase = type;
+
+                // Move down the hierarchy until we reach interop type
+                while (currentBase is CLRType)
+                    currentBase = currentBase.BaseType;
+
+                // Return base
+                return currentBase;
+            }
+            return type;
+        }
+
         public static Type GetNonNullableType(this Type type)
         {
             return IsNullableType(type) == true

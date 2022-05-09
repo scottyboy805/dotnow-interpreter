@@ -1075,6 +1075,9 @@ namespace dotnow
         {
             Type bindingProxy;
 
+            // If type is multi inheritance then move down the hierarchy to select the first interop base type
+            type = type.GetInteropBaseType();
+
             // Try to find type
             if (bindings.clrProxyBindings.TryGetValue(type, out bindingProxy) == true)
                 return bindingProxy;
