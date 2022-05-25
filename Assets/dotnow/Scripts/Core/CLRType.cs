@@ -110,11 +110,7 @@ namespace dotnow
             get { return typeof(CLRType); }
         }
 
-#if API_NET35
-        public Type[] GenericTypeArguments
-#else
         public override Type[] GenericTypeArguments
-#endif
         {
             get
             {
