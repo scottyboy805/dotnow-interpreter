@@ -401,7 +401,11 @@ namespace dotnow.Runtime
             }
         }
 
+#if API_NET35
+        public static void AssignKeepType(ref StackData dest, StackData src)
+#else
         public static void AssignKeepType(ref StackData dest, in StackData src)
+#endif
         {
             // Get existing type
             ObjectType type = dest.type;
