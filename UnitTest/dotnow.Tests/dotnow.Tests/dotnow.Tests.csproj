@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Arithmetic\UnitTestAdd.cs" />
+    <Compile Include="Arithmetic\UnitTestSubtract.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="UnitTestArray.cs" />
     <Compile Include="UnitTestBranching.cs" />
