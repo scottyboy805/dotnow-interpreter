@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Arithmetic\TestAdd.cs" />
+    <Compile Include="Arithmetic\TestMultiply.cs" />
     <Compile Include="Arithmetic\TestSubtract.cs" />
     <Compile Include="TestArray.cs" />
     <Compile Include="TestBranching.cs" />
