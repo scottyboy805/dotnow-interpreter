@@ -402,6 +402,16 @@ namespace dotnow.Runtime.CIL
                                         stack[stackPtr++].value.Int64 = (left.value.Int64 % right.value.Int64);
                                         break;
                                     }
+                                case StackData.ObjectType.Single:
+                                    {
+                                        stack[stackPtr++].value.Single = (left.value.Single % right.value.Single);
+                                        break;
+                                    }
+                                case StackData.ObjectType.Double:
+                                    {
+                                        stack[stackPtr++].value.Double = (left.value.Double % right.value.Double);
+                                        break;
+                                    }
 
                                 default:
                                     throw new NotSupportedException();
