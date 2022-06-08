@@ -287,7 +287,7 @@ namespace dotnow
                 /// ######## Need to parse the full name and resolve generic types separatley
                 /// 
 
-                string mainTypeFullName = reference.FullName;
+                string mainTypeFullName = reference.FullName.Replace("/", "+");
 
 
                 // IMPORTANT - Do not cache generics as this can result in incorrect type lookup
