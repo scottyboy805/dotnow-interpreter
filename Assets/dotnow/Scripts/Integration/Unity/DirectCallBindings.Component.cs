@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿#if !UNITY_DISABLE
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL)
+using System.Threading.Tasks;
 using dotnow;
 using dotnow.Runtime;
 
@@ -8,10 +10,12 @@ namespace UnityEngine
     {
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(Component), "get_transform")]
-        public static void unityEngine_Component_GetTransform(StackData[] stack, int offset)
+        public static void UnityEngine_Component_GetTransform(StackData[] stack, int offset)
         {
             stack[offset].refValue = ((Component)stack[offset].refValue.Unwrap()).transform;
             stack[offset].type = StackData.ObjectType.Ref;
         }
     }
 }
+#endif
+#endif
