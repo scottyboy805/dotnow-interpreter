@@ -8,10 +8,10 @@ namespace UnityEngine
     internal static partial class DirectCallBindings
     {
         [Preserve]
-        [CLRMethodDirectCallBinding(typeof(GameObject), "get_transform")]
-        public static void UnityEngine_GameObject_GetTransform(StackData[] stack, int offset)
+        [CLRMethodDirectCallBinding(typeof(Collider), "get_gameObject")]
+        public static void UnityEngine_Collider_GetGameObject(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((GameObject)stack[offset].refValue).transform;
+            stack[offset].refValue = ((Collider)stack[offset].refValue).gameObject;
             stack[offset].type = StackData.ObjectType.Ref;
         }
     }

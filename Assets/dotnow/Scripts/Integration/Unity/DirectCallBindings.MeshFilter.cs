@@ -8,10 +8,10 @@ namespace UnityEngine
     internal static partial class DirectCallBindings
     {
         [Preserve]
-        [CLRMethodDirectCallBinding(typeof(GameObject), "get_transform")]
-        public static void UnityEngine_GameObject_GetTransform(StackData[] stack, int offset)
+        [CLRMethodDirectCallBinding(typeof(MeshFilter), "get_mesh")]
+        public static void UnityEngine_MeshFilter_GetMesh(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((GameObject)stack[offset].refValue).transform;
+            stack[offset].refValue = ((MeshFilter)stack[offset].refValue).mesh;
             stack[offset].type = StackData.ObjectType.Ref;
         }
     }
