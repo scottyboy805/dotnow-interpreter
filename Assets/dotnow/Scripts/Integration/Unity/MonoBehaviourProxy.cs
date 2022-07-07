@@ -159,7 +159,14 @@ namespace UnityEngine
     public class MonoBehaviourProxy : MonoBehaviour, ICLRProxy
     {
         // Private
+        private static AppDomain domainShared = null; // Not ideal, maybe find a nicer way at some point.
+
         private AppDomain domain = null;
+        [SerializeField]
+        private string assemblyInfo = null;
+        [SerializeField]
+        private string typeInfo = null;
+
         private CLRType instanceType = null;
         private CLRInstance instance = null;
 
@@ -174,24 +181,61 @@ namespace UnityEngine
         // Methods
         public void InitializeProxy(AppDomain domain, CLRInstance instance)
         {
-            this.domain = domain;
+            if(domainShared == null)
+                domainShared = domain;
+
+            this.domain = domain;            
             this.instanceType = instance.Type;
             this.instance = instance;
 
             cache = new RuntimeBindingsCache(instance, 12);
 
+            // Avoid instantiate loop
+            this.assemblyInfo = null;
+            this.typeInfo = null;
+
             // Manually call awake and OnEnable since they will do nothing when called by Unity
             Awake();
             OnEnable();
+
+            // Important - these serialized values must be set after Awake otherwise we have infinite instantiate loop
+            this.assemblyInfo = instance.Type.Assembly.FullName;
+            this.typeInfo = instance.Type.Name;
+        }
+
+        private void InstantiateProxy()
+        {
+            this.domain = domainShared;
+
+            // Resolve type
+            CLRType type = domain.ResolveType(assemblyInfo, typeInfo) as CLRType;
+
+            // Check for error
+            if(type == null)
+            {
+                Debug.LogError("Failed to resolve CLR type during instantiate! Script cannot run", this);
+                enabled = false;
+                return;
+            }
+
+            // Create initialized instance from this instantiated proxy
+            domain.CreateInstanceFromProxy(type, this);
         }
 
         public void Awake()
         {
             // When Unity calls this method, we have not yet had chance to 'InitializeProxy'. This method will be called manually when ready.
-            if (domain == null)
-                return;
+            if (string.IsNullOrEmpty(typeInfo) == false)
+            {
+                InstantiateProxy();
+            }
+            else
+            {
+                if (domain == null)
+                    return;
 
-            cache.InvokeProxyMethod(0, nameof(Awake));
+                cache.InvokeProxyMethod(0, nameof(Awake));
+            }
         }
 
         public void Start()
