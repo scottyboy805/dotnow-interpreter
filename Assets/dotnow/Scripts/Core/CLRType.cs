@@ -65,7 +65,7 @@ namespace dotnow
 
         public override Assembly Assembly
         {
-            get { throw new NotSupportedException("A CLRType is not defined in the context of a runtime assembly"); }
+            get { return module; }// throw new NotSupportedException("A CLRType is not defined in the context of a runtime assembly"); }
         }
 
         public override string AssemblyQualifiedName
