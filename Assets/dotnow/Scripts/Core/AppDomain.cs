@@ -55,6 +55,11 @@ namespace dotnow
             get { return mainThread == null; }
         }
 
+        public IReadOnlyCollection<CLRModule> Modules
+        {
+            get { return moduleCache; }
+        }
+
         // Constructor
         public AppDomain()
         {
@@ -1366,6 +1371,30 @@ namespace dotnow
             }
         }
 #endregion
+
+        public Type ResolveType(string assemblyName, string typeName)
+        {
+            CLRModule match = null;
+
+            // Try to find module (Maybe optimize this later)
+            foreach(CLRModule module in moduleCache)
+            {
+                if(module.FullName == assemblyName || module.GetName().Name == assemblyName)
+                {
+                    match = module;
+                    break;
+                }
+            }
+
+            if(match != null)
+            {
+                // Try to get type
+                return match.GetType(typeName, false);
+            }
+
+            // Type not found
+            return null;
+        }
 
         internal VTable GetMethodVTableForType(Type type)
         {
