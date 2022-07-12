@@ -2618,6 +2618,29 @@ namespace dotnow.Runtime.CIL
                             break;
                         }
 
+                    case Code.Ldobj:
+                        {
+                            while (stack[stackPtr].refValue is IByRef)
+                            {
+                                // Load value type from by ref
+                                stack[stackPtr - 1] = ((IByRef)stack[stackPtr - 1].refValue).GetReferenceValue();
+                            }
+
+                            // Perform value type copy on stack value type
+                            StackData.ValueTypeCopy(ref stack[stackPtr - 1]);
+                            break;
+                        }
+
+                    case Code.Stobj:
+                        {
+                            right = stack[--stackPtr];
+                            left = stack[--stackPtr];
+
+                            // Overwrite source
+                            ((IByRef)left.refValue).SetReferenceValue(right);
+                            break;
+                        }
+
                     case Code.Isinst:
                         {
                             temp = stack[--stackPtr];       // inst
@@ -2840,6 +2863,10 @@ namespace dotnow.Runtime.CIL
                                     if (methodInvoke.isCLRMethod == false)
                                         arguments[i] = arguments[i].UnwrapAs(signature.parameterTypes[i]);
                                 }
+
+                                // Check for by ref
+                                while (arguments[i] is IByRef)
+                                    arguments[i] = ((IByRef)arguments[i]).GetReferenceValue().refValue;
                             }
 
 
