@@ -169,6 +169,7 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.UInt16:
                                 case StackData.ObjectType.UInt32:
                                     stack[stackPtr - 2].value.Int32 = (int)unchecked((uint)left.value.Int32 - (uint)right.value.Int32);
+                                    stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                     break;
 
                                 case StackData.ObjectType.Int64:
@@ -204,12 +205,14 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     stack[stackPtr - 2].value.Int32 = checked(left.value.Int32 - right.value.Int32);
+                                    stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                     break;
 
                                 case StackData.ObjectType.UInt8:
                                 case StackData.ObjectType.UInt16:
                                 case StackData.ObjectType.UInt32:
                                     stack[stackPtr - 2].value.Int32 = (int)checked((uint)left.value.Int32 - (uint)right.value.Int32);
+                                    stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                     break;
 
                                 case StackData.ObjectType.Int64:
