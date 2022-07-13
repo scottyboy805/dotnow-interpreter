@@ -413,6 +413,16 @@ namespace dotnow.Runtime
             // Copy value
             dest = src;
 
+            // Check for primitive promoted types
+            switch(type)
+            {
+                case ObjectType.Int8:
+                case ObjectType.Int16:
+                case ObjectType.UInt8:
+                case ObjectType.UInt16:
+                    return;
+            }
+
             // Overwrite type
             dest.type = type;
         }
