@@ -189,7 +189,7 @@ namespace dotnow
                 throw new TargetException("The specified instance does not declare the field: " + field);
 
             // Set field value
-            StackData.AllocTypedSlow(ref fields[fieldOffset + fieldPtr], field.FieldType, value);
+            StackData.AllocTypedSlow(ref fields[fieldOffset + fieldPtr], field.FieldType, value, true);
         }
 
         public override string ToString()

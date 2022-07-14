@@ -185,7 +185,7 @@ namespace dotnow.Runtime
             }
         }
 
-        public static void AllocTypedSlow(ref StackData obj, Type asType, object value)
+        public static void AllocTypedSlow(ref StackData obj, Type asType, object value, bool promoteSmallPrimitives = false)
         {
             // Get type code
             TypeCode code = Type.GetTypeCode(asType);
@@ -193,17 +193,17 @@ namespace dotnow.Runtime
             // Check for enum
             if (code == TypeCode.Object && asType.IsEnum == true && asType.IsArray == false)
             {
-                AllocTypedSlow(ref obj, asType.GetEnumUnderlyingType(), value);
+                AllocTypedSlow(ref obj, asType.GetEnumUnderlyingType(), value, promoteSmallPrimitives);
                 return;
             }
 
-            AllocTyped(ref obj, code, value);
+            AllocTyped(ref obj, code, value, promoteSmallPrimitives);
         }
 
 #if API_NET35
         public static void AllocTyped(ref StackData obj, CLRTypeInfo typeInfo, object value)
 #else
-        public static void AllocTyped(ref StackData obj, in CLRTypeInfo typeInfo, object value)
+        public static void AllocTyped(ref StackData obj, in CLRTypeInfo typeInfo, object value, bool promoteSmallPrimitives = false)
 #endif
         {
             // Check for enum
@@ -213,10 +213,10 @@ namespace dotnow.Runtime
                 return;
             }
 
-            AllocTyped(ref obj, typeInfo.typeCode, value);
+            AllocTyped(ref obj, typeInfo.typeCode, value, promoteSmallPrimitives);
         }
 
-        public static void AllocTyped(ref StackData obj, TypeCode typeCode, object value)
+        public static void AllocTyped(ref StackData obj, TypeCode typeCode, object value, bool promoteSmallPrimitives = false)
         {
             switch (typeCode)
             {
@@ -228,8 +228,16 @@ namespace dotnow.Runtime
                     }
                 case TypeCode.SByte:
                     {
-                        obj.type = ObjectType.Int8;
-                        obj.value.Int8 = (sbyte)value;
+                        if (promoteSmallPrimitives == true)
+                        {
+                            obj.type = ObjectType.Int32;
+                            obj.value.Int32 = (sbyte)value;
+                        }
+                        else
+                        {
+                            obj.type = ObjectType.Int8;
+                            obj.value.Int8 = (sbyte)value;
+                        }
                         break;
                     }
                 case TypeCode.Char:
@@ -240,8 +248,16 @@ namespace dotnow.Runtime
                     }
                 case TypeCode.Int16: 
                     {
-                        obj.type = ObjectType.Int16;
-                        obj.value.Int16 = (short)value;
+                        if (promoteSmallPrimitives == true)
+                        {
+                            obj.type = ObjectType.Int32;
+                            obj.value.Int32 = (short)value;
+                        }
+                        else
+                        {
+                            obj.type = ObjectType.Int16;
+                            obj.value.Int16 = (short)value;
+                        }
                         break;
                     }
                 case TypeCode.Int32:
@@ -258,14 +274,30 @@ namespace dotnow.Runtime
                     }
                 case TypeCode.Byte:
                     {
-                        obj.type = ObjectType.UInt8;
-                        obj.value.Int8 = (sbyte)(byte)value;
+                        if (promoteSmallPrimitives == true)
+                        {
+                            obj.type = ObjectType.Int32;
+                            obj.value.Int32 = (byte)value;
+                        }
+                        else
+                        {
+                            obj.type = ObjectType.UInt8;
+                            obj.value.Int8 = (sbyte)(byte)value;
+                        }
                         break;
                     }
                 case TypeCode.UInt16:
                     {
-                        obj.type = ObjectType.UInt16;
-                        obj.value.Int16 = (short)(ushort)value;
+                        if (promoteSmallPrimitives == true)
+                        {
+                            obj.type = ObjectType.Int32;
+                            obj.value.Int32 = (ushort)value;
+                        }
+                        else
+                        {
+                            obj.type = ObjectType.UInt16;
+                            obj.value.Int16 = (short)(ushort)value;
+                        }
                         break;
                     }
                 case TypeCode.UInt32:
