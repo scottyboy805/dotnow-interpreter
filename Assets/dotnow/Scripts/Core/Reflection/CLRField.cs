@@ -19,6 +19,9 @@ namespace dotnow.Reflection
 
         private CLRTypeInfo fieldTypeInfo = null;
 
+        // Internal
+        internal bool isStatic = false;
+
         // Properties
         public FieldDefinition Definition
         {
@@ -87,6 +90,7 @@ namespace dotnow.Reflection
             this.domain = domain;
             this.declaringType = declaringType;
             this.field = field;
+            this.isStatic = (field.Attributes & Mono.Cecil.FieldAttributes.Static) != 0;
 
             // Force read the initial value data otherwise we will get stream disposed exception when called out of loading context
             byte[] unused = field.InitialValue;
@@ -119,7 +123,7 @@ namespace dotnow.Reflection
             declaringType.StaticInitializeType();
 
             // Check for static
-            if (IsStatic == false)
+            if (isStatic == false)
             {
                 // Check for instance
                 if (obj.IsCLRInstanceOrByRefInstance() == false)
@@ -151,7 +155,7 @@ namespace dotnow.Reflection
             declaringType.StaticInitializeType();
 
             // Check for static
-            if (IsStatic == false)
+            if (isStatic == false)
             {
                 // Check for instance
                 if (obj.refValue.IsCLRInstanceOrByRefInstance() == false)
@@ -181,7 +185,7 @@ namespace dotnow.Reflection
             declaringType.StaticInitializeType();
 
             // Check for static
-            if (IsStatic == false)
+            if (isStatic == false)
             {                
                 // Check for instance
                 if (obj.IsCLRInstanceOrByRefInstance() == false)
@@ -213,7 +217,7 @@ namespace dotnow.Reflection
 
         internal void StaticInitialize()
         {
-            if (IsStatic == true)
+            if (isStatic == true)
             {
                 this.staticValue = fieldType.Value.GetDefaultValue(domain);
             }
