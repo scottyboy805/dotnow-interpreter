@@ -3,6 +3,9 @@ namespace dotnow.Runtime
 {
     public interface IByRef
     {
+        // Properties
+        object Instance { get; }
+
         // Methods
         StackData GetReferenceValue();
         byte GetReferenceValueU1();

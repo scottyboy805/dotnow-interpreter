@@ -7,6 +7,12 @@ namespace dotnow.Runtime
         private StackData[] stack;
         private int varOffset;
 
+        // Properties
+        public object Instance
+        {
+            get { return stack[varOffset].refValue; }
+        }
+
         // Constructor
         public ByRefVariable(StackData[] stack, int varOffset)
         {

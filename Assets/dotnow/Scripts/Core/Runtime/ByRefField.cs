@@ -11,6 +11,12 @@ namespace dotnow.Runtime
         private CILFieldAccess fieldAccess = null;
         private StackData instance = default(StackData);
 
+        // Properties
+        public object Instance
+        {
+            get { return instance.refValue; }
+        }
+
         // Constructor
         internal ByRefField(CILFieldAccess fieldAccess, StackData instance)
         {
@@ -251,7 +257,14 @@ namespace dotnow.Runtime
             // Check for by ref
             if(instance.type == StackData.ObjectType.ByRef)
             {
-                fieldAccess.targetField.SetValue(((IByRef)instance.refValue).GetReferenceValue().Box(), value.UnboxAsType(fieldAccess.fieldTypeInfo));
+                // Fetch target object
+                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+
+                // Assign field on object
+                fieldAccess.targetField.SetValue(val.Box(), value);
+
+                // Update reference chain
+                ((IByRef)instance.refValue).SetReferenceValue(val);
                 return;
             }
 
@@ -274,7 +287,14 @@ namespace dotnow.Runtime
             // Check for by ref
             if (instance.type == StackData.ObjectType.ByRef)
             {
-                fieldAccess.targetField.SetValue(((IByRef)instance.refValue).GetReferenceValue().Box(), value);
+                // Fetch target object
+                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+
+                // Assign field on object
+                fieldAccess.targetField.SetValue(val.Box(), value);
+
+                // Update reference chain
+                ((IByRef)instance.refValue).SetReferenceValue(val);
                 return;
             }
 
@@ -297,7 +317,14 @@ namespace dotnow.Runtime
             // Check for by ref
             if (instance.type == StackData.ObjectType.ByRef)
             {
-                fieldAccess.targetField.SetValue(((IByRef)instance.refValue).GetReferenceValue().Box(), value);
+                // Fetch target object
+                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+
+                // Assign field on object
+                fieldAccess.targetField.SetValue(val.Box(), value);
+
+                // Update reference chain
+                ((IByRef)instance.refValue).SetReferenceValue(val);
                 return;
             }
 
@@ -320,7 +347,14 @@ namespace dotnow.Runtime
             // Check for by ref
             if (instance.type == StackData.ObjectType.ByRef)
             {
-                fieldAccess.targetField.SetValue(((IByRef)instance.refValue).GetReferenceValue().Box(), value);
+                // Fetch target object
+                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+
+                // Assign field on object
+                fieldAccess.targetField.SetValue(val.Box(), value);
+
+                // Update reference chain
+                ((IByRef)instance.refValue).SetReferenceValue(val);
                 return;
             }
 
@@ -343,7 +377,14 @@ namespace dotnow.Runtime
             // Check for by ref
             if (instance.type == StackData.ObjectType.ByRef)
             {
-                fieldAccess.targetField.SetValue(((IByRef)instance.refValue).GetReferenceValue().Box(), value);
+                // Fetch target object
+                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+
+                // Assign field on object
+                fieldAccess.targetField.SetValue(val.Box(), value);
+
+                // Update reference chain
+                ((IByRef)instance.refValue).SetReferenceValue(val);
                 return;
             }
 
@@ -366,7 +407,14 @@ namespace dotnow.Runtime
             // Check for by ref
             if (instance.type == StackData.ObjectType.ByRef)
             {
-                fieldAccess.targetField.SetValue(((IByRef)instance.refValue).GetReferenceValue().Box(), value);
+                // Fetch target object
+                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+
+                // Assign field on object
+                fieldAccess.targetField.SetValue(val.Box(), value);
+
+                // Update reference chain
+                ((IByRef)instance.refValue).SetReferenceValue(val);
                 return;
             }
 
@@ -389,7 +437,14 @@ namespace dotnow.Runtime
             // Check for by ref
             if (instance.type == StackData.ObjectType.ByRef)
             {
-                fieldAccess.targetField.SetValue(((IByRef)instance.refValue).GetReferenceValue().Box(), value);
+                // Fetch target object
+                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+
+                // Assign field on object
+                fieldAccess.targetField.SetValue(val.Box(), value);
+
+                // Update reference chain
+                ((IByRef)instance.refValue).SetReferenceValue(val);
                 return;
             }
 

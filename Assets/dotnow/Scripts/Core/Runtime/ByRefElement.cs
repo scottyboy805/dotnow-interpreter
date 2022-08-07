@@ -10,6 +10,12 @@ namespace dotnow.Runtime
         private Array array;
         private long index;
 
+        // Properties
+        public object Instance
+        {
+            get { return array; }
+        }
+
         // Constructor
         public ByRefElement(Array array, int index)
         {
