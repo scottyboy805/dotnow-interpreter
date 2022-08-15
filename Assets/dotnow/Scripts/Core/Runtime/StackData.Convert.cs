@@ -34,6 +34,35 @@ namespace dotnow.Runtime
             obj.type = StackData.ObjectType.Int8;
         }
 
+        public static void ToInt8Promote(ref StackData obj)
+        {
+            switch (obj.type)
+            {
+                // Error case
+                default: throw new InvalidCastException();
+
+                // No conversion required (invalid IL code??)
+                case StackData.ObjectType.Int8: return;
+                case StackData.ObjectType.UInt8: obj.value.Int32 = (int)(sbyte)obj.value.Int8; break; // implicit conversion
+
+                case StackData.ObjectType.Int16:
+                case StackData.ObjectType.UInt16: obj.value.Int32 = (int)(sbyte)obj.value.Int16; break;
+
+                case StackData.ObjectType.Int32:
+                case StackData.ObjectType.UInt32: obj.value.Int32 = (int)(sbyte)obj.value.Int32; break;
+
+                case StackData.ObjectType.Int64:
+                case StackData.ObjectType.UInt64: obj.value.Int32 = (int)(sbyte)obj.value.Int64; break;
+
+                case StackData.ObjectType.Single: obj.value.Int32 = (int)(sbyte)obj.value.Single; break;
+                case StackData.ObjectType.Double: obj.value.Int32 = (int)(sbyte)obj.value.Double; break;
+
+                case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)(sbyte)obj.UnboxAsType(TypeCode.SByte); break;
+            }
+
+            obj.type = StackData.ObjectType.Int32;
+        }
+
         public static void ToInt8Checked(ref StackData obj)
         {
             checked
@@ -66,6 +95,38 @@ namespace dotnow.Runtime
             obj.type = StackData.ObjectType.Int8;
         }
 
+        public static void ToInt8CheckedPromote(ref StackData obj)
+        {
+            checked
+            {
+                switch (obj.type)
+                {
+                    // Error case
+                    default: throw new InvalidCastException();
+
+                    // No conversion required (invalid IL code??)
+                    case StackData.ObjectType.Int8: return;
+                    case StackData.ObjectType.UInt8: obj.value.Int32 = (int)obj.value.Int8; break; // implicit conversion
+
+                    case StackData.ObjectType.Int16:
+                    case StackData.ObjectType.UInt16: obj.value.Int32 = (int)(sbyte)obj.value.Int16; break;
+
+                    case StackData.ObjectType.Int32:
+                    case StackData.ObjectType.UInt32: obj.value.Int32 = (int)(sbyte)obj.value.Int32; break;
+
+                    case StackData.ObjectType.Int64:
+                    case StackData.ObjectType.UInt64: obj.value.Int32 = (int)(sbyte)obj.value.Int64; break;
+
+                    case StackData.ObjectType.Single: obj.value.Int32 = (int)(sbyte)obj.value.Single; break;
+                    case StackData.ObjectType.Double: obj.value.Int32 = (int)(sbyte)obj.value.Double; break;
+
+                    case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)(sbyte)obj.UnboxAsType(TypeCode.SByte); break;
+                }
+            }
+
+            obj.type = StackData.ObjectType.Int32;
+        }
+
         public static void ToInt16(ref StackData obj)
         {
             switch (obj.type)
@@ -93,6 +154,35 @@ namespace dotnow.Runtime
             }
 
             obj.type = StackData.ObjectType.Int16;
+        }
+
+        public static void ToInt16Promote(ref StackData obj)
+        {
+            switch (obj.type)
+            {
+                // Error case
+                default: throw new InvalidCastException();
+
+                // No conversion required (invalid IL code??)
+                case StackData.ObjectType.Int16: return;
+                case StackData.ObjectType.UInt16: obj.value.Int32 = (int)(short)obj.value.Int16; break; // implicit conversion
+
+                case StackData.ObjectType.Int8:
+                case StackData.ObjectType.UInt8: obj.value.Int32 = (int)(short)obj.value.Int8; break;
+
+                case StackData.ObjectType.Int32:
+                case StackData.ObjectType.UInt32: obj.value.Int32 = (int)(short)obj.value.Int32; break;
+
+                case StackData.ObjectType.Int64:
+                case StackData.ObjectType.UInt64: obj.value.Int32 = (int)(short)obj.value.Int64; break;
+
+                case StackData.ObjectType.Single: obj.value.Int32 = (int)(short)obj.value.Single; break;
+                case StackData.ObjectType.Double: obj.value.Int32 = (int)(short)obj.value.Double; break;
+
+                case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)(short)obj.UnboxAsType(TypeCode.Int16); break;
+            }
+
+            obj.type = StackData.ObjectType.Int32;
         }
 
         public static void ToInt16Checked(ref StackData obj)
@@ -125,6 +215,38 @@ namespace dotnow.Runtime
             }
 
             obj.type = StackData.ObjectType.Int16;
+        }
+
+        public static void ToInt16CheckedPromote(ref StackData obj)
+        {
+            checked
+            {
+                switch (obj.type)
+                {
+                    // Error case
+                    default: throw new InvalidCastException();
+
+                    // No conversion required (invalid IL code??)
+                    case StackData.ObjectType.Int16: return;
+                    case StackData.ObjectType.UInt16: obj.value.Int32 = (int)(short)obj.value.Int16; break; // implicit conversion
+
+                    case StackData.ObjectType.Int8:
+                    case StackData.ObjectType.UInt8: obj.value.Int32 = (int)(short)obj.value.Int8; break;
+
+                    case StackData.ObjectType.Int32:
+                    case StackData.ObjectType.UInt32: obj.value.Int32 = (int)(short)obj.value.Int32; break;
+
+                    case StackData.ObjectType.Int64:
+                    case StackData.ObjectType.UInt64: obj.value.Int32 = (int)(short)obj.value.Int64; break;
+
+                    case StackData.ObjectType.Single: obj.value.Int32 = (int)(short)obj.value.Single; break;
+                    case StackData.ObjectType.Double: obj.value.Int32 = (int)(short)obj.value.Double; break;
+
+                    case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)(short)obj.UnboxAsType(TypeCode.Int16); break;
+                }
+            }
+
+            obj.type = StackData.ObjectType.Int32;
         }
 
         public static void ToInt32(ref StackData obj)
@@ -278,6 +400,35 @@ namespace dotnow.Runtime
             obj.type = StackData.ObjectType.UInt8;
         }
 
+        public static void ToUInt8Promote(ref StackData obj)
+        {
+            switch (obj.type)
+            {
+                // Error case
+                default: throw new InvalidCastException();
+
+                // No conversion required (invalid IL code??)
+                case StackData.ObjectType.UInt8: return;
+                case StackData.ObjectType.Int8: obj.value.Int32 = (int)(byte)obj.value.Int8; break; // implicit conversion
+
+                case StackData.ObjectType.Int16:
+                case StackData.ObjectType.UInt16: obj.value.Int32 = (int)(byte)obj.value.Int16; break;
+
+                case StackData.ObjectType.Int32:
+                case StackData.ObjectType.UInt32: obj.value.Int32 = (int)(byte)obj.value.Int32; break;
+
+                case StackData.ObjectType.Int64:
+                case StackData.ObjectType.UInt64: obj.value.Int32 = (int)(byte)obj.value.Int64; break;
+
+                case StackData.ObjectType.Single: obj.value.Int32 = (int)(byte)obj.value.Single; break;
+                case StackData.ObjectType.Double: obj.value.Int32 = (int)(byte)obj.value.Double; break;
+
+                case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)(byte)obj.UnboxAsType(TypeCode.Byte); break;
+            }
+
+            obj.type = StackData.ObjectType.Int32;
+        }
+
         public static void ToUInt8Checked(ref StackData obj)
         {
             checked
@@ -310,6 +461,38 @@ namespace dotnow.Runtime
             obj.type = StackData.ObjectType.UInt8;
         }
 
+        public static void ToUInt8CheckedPromote(ref StackData obj)
+        {
+            checked
+            {
+                switch (obj.type)
+                {
+                    // Error case
+                    default: throw new InvalidCastException();
+
+                    // No conversion required (invalid IL code??)
+                    case StackData.ObjectType.UInt8: return;
+                    case StackData.ObjectType.Int8: obj.value.Int32 = (int)(byte)obj.value.Int8; break; // implicit conversion
+
+                    case StackData.ObjectType.Int16:
+                    case StackData.ObjectType.UInt16: obj.value.Int32 = (int)(byte)obj.value.Int16; break;
+
+                    case StackData.ObjectType.Int32:
+                    case StackData.ObjectType.UInt32: obj.value.Int32 = (int)(byte)obj.value.Int32; break;
+
+                    case StackData.ObjectType.Int64:
+                    case StackData.ObjectType.UInt64: obj.value.Int32 = (int)(byte)obj.value.Int64; break;
+
+                    case StackData.ObjectType.Single: obj.value.Int32 = (int)(byte)obj.value.Single; break;
+                    case StackData.ObjectType.Double: obj.value.Int32 = (int)(byte)obj.value.Double; break;
+
+                    case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)(byte)obj.UnboxAsType(TypeCode.Byte); break;
+                }
+            }
+
+            obj.type = StackData.ObjectType.Int32;
+        }
+
         public static void ToUInt16(ref StackData obj)
         {
             switch (obj.type)
@@ -337,6 +520,35 @@ namespace dotnow.Runtime
             }
 
             obj.type = StackData.ObjectType.UInt16;
+        }
+
+        public static void ToUInt16Promote(ref StackData obj)
+        {
+            switch (obj.type)
+            {
+                // Error case
+                default: throw new InvalidCastException();
+
+                // No conversion required (invalid IL code??)
+                case StackData.ObjectType.UInt16: return;
+                case StackData.ObjectType.Int16: obj.value.Int32 = (int)obj.value.Int16; break;
+
+                case StackData.ObjectType.Int8:
+                case StackData.ObjectType.UInt8: obj.value.Int32 = (int)(ushort)obj.value.Int8; break;
+
+                case StackData.ObjectType.Int32:
+                case StackData.ObjectType.UInt32: obj.value.Int32 = (int)(ushort)obj.value.Int32; break;
+
+                case StackData.ObjectType.Int64:
+                case StackData.ObjectType.UInt64: obj.value.Int32 = (int)(ushort)obj.value.Int64; break;
+
+                case StackData.ObjectType.Single: obj.value.Int32 = (int)(ushort)obj.value.Single; break;
+                case StackData.ObjectType.Double: obj.value.Int32 = (int)(ushort)obj.value.Double; break;
+
+                case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)(ushort)obj.UnboxAsType(TypeCode.UInt16); break;
+            }
+
+            obj.type = StackData.ObjectType.Int32;
         }
 
         public static void ToUInt16Checked(ref StackData obj)
@@ -369,6 +581,38 @@ namespace dotnow.Runtime
             }
 
             obj.type = StackData.ObjectType.UInt16;
+        }
+
+        public static void ToUInt16CheckedPromote(ref StackData obj)
+        {
+            checked
+            {
+                switch (obj.type)
+                {
+                    // Error case
+                    default: throw new InvalidCastException();
+
+                    // No conversion required (invalid IL code??)
+                    case StackData.ObjectType.UInt16: return;
+                    case StackData.ObjectType.Int16: obj.value.Int32 = (int)(ushort)obj.value.Int16; break; // implicit conversion
+
+                    case StackData.ObjectType.Int8:
+                    case StackData.ObjectType.UInt8: obj.value.Int32 = (int)(ushort)obj.value.Int8; break;
+
+                    case StackData.ObjectType.Int32:
+                    case StackData.ObjectType.UInt32: obj.value.Int32 = (int)(ushort)obj.value.Int32; break;
+
+                    case StackData.ObjectType.Int64:
+                    case StackData.ObjectType.UInt64: obj.value.Int32 = (int)(ushort)obj.value.Int64; break;
+
+                    case StackData.ObjectType.Single: obj.value.Int32 = (int)(ushort)obj.value.Single; break;
+                    case StackData.ObjectType.Double: obj.value.Int32 = (int)(ushort)obj.value.Double; break;
+
+                    case StackData.ObjectType.RefBoxed: obj.value.Int32 = (int)(ushort)obj.UnboxAsType(TypeCode.UInt16); break;
+                }
+            }
+
+            obj.type = StackData.ObjectType.Int32;
         }
 
         public static void ToUInt32(ref StackData obj)

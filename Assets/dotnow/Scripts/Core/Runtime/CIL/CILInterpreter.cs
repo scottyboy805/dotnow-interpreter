@@ -825,13 +825,13 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Conv_I1:
                         {
-                            RuntimeConvert.ToInt8(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToInt8Promote(ref stack[stackPtr - 1]);
                             break;
                         }
 
                     case Code.Conv_I2:
                         {
-                            RuntimeConvert.ToInt16(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToInt16Promote(ref stack[stackPtr - 1]);
                             break;
                         }
 
@@ -855,13 +855,13 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Conv_U1:
                         {
-                            RuntimeConvert.ToUInt8(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToUInt8Promote(ref stack[stackPtr - 1]);
                             break;
                         }
 
                     case Code.Conv_U2:
                         {
-                            RuntimeConvert.ToUInt16(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToUInt16Promote(ref stack[stackPtr - 1]);
                             break;
                         }
 
@@ -909,25 +909,25 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Conv_Ovf_I1:
                         {
-                            RuntimeConvert.ToInt8Checked(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToInt8CheckedPromote(ref stack[stackPtr - 1]);
                             break;
                         }
 
                     case Code.Conv_Ovf_I1_Un:
                         {
-                            RuntimeConvert.ToInt8Checked(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToInt8CheckedPromote(ref stack[stackPtr - 1]);
                             break;
                         }
 
                     case Code.Conv_Ovf_I2:
                         {
-                            RuntimeConvert.ToInt16Checked(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToInt16CheckedPromote(ref stack[stackPtr - 1]);
                             break;
                         }
 
                     case Code.Conv_Ovf_I2_Un:
                         {
-                            RuntimeConvert.ToInt16Checked(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToInt16CheckedPromote(ref stack[stackPtr - 1]);
                             break;
                         }
 
@@ -969,25 +969,25 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Conv_Ovf_U1:
                         {
-                            RuntimeConvert.ToUInt8Checked(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToUInt8CheckedPromote(ref stack[stackPtr - 1]);
                             break;
                         }
 
                     case Code.Conv_Ovf_U1_Un:
                         {
-                            RuntimeConvert.ToUInt8Checked(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToUInt8CheckedPromote(ref stack[stackPtr - 1]);
                             break;
                         }
 
                     case Code.Conv_Ovf_U2:
                         {
-                            RuntimeConvert.ToUInt16Checked(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToUInt16CheckedPromote(ref stack[stackPtr - 1]);
                             break;
                         }
 
                     case Code.Conv_Ovf_U2_Un:
                         {
-                            RuntimeConvert.ToUInt16Checked(ref stack[stackPtr - 1]);
+                            RuntimeConvert.ToUInt16CheckedPromote(ref stack[stackPtr - 1]);
                             break;
                         }
 
