@@ -9,6 +9,11 @@ namespace System.Collections
         // Private
         private CLRInstance instance;
 
+        public CLRInstance Instance
+        {
+            get { return instance; }
+        }
+
         public object Current
         {
             get

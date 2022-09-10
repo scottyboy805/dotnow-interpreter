@@ -9,6 +9,11 @@ namespace System
         // Private
         private CLRInstance instance;
 
+        public CLRInstance Instance
+        {
+            get { return instance; }
+        }
+
         public void Dispose()
         {
             instance.Type.GetMethod("Dispose")?.Invoke(instance, null);

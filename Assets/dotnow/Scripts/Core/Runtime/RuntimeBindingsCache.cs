@@ -2,7 +2,7 @@
 using System;
 using System.Reflection;
 
-namespace dotnowRuntime
+namespace dotnow.Runtime
 {
     public class RuntimeBindingsCache
     {

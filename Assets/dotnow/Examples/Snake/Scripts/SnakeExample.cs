@@ -45,7 +45,7 @@ namespace dotnow.Examples
             Debug.Log("Using main type: " + mainType);
 
             // Add component - cannot use 'gameObject.AddComponent' because it would crash the engine.
-            MonoBehaviourProxy.AddComponentOverride(domain, null, gameObject, new object[] { mainType });
+            OverrideBindings.AddComponentOverride(domain, null, gameObject, new object[] { mainType });
 
             // Hack to prevent code stripping of required method - a more permanent fix is required!
             Instantiate<GameObject>(null);
