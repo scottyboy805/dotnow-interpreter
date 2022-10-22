@@ -6,11 +6,21 @@ using System.IO;
 using dotnow.Reflection;
 using AppDomain = dotnow.AppDomain;
 using Microsoft.CodeAnalysis.CSharp;
+using UnityEngine;
 
 namespace RoslynCSharp
 {
     public static class ScriptDomainExtensions
     {
+        // Type
+        private struct CompilerState
+        {
+            // Public
+            public bool loadCompiledAssemblies;
+            public bool allowConcurrentCompile;
+            public bool generateInMemory;
+        }
+
         // Private
         private static Dictionary<ScriptDomain, AppDomain> clrDomains = new Dictionary<ScriptDomain, AppDomain>();
 
@@ -196,9 +206,14 @@ namespace RoslynCSharp
             // Send the compile request
             bool loadAssemblies = RoslynCSharpCompiler.loadCompiledAssemblies;
 
-            RoslynCSharpCompiler.loadCompiledAssemblies = false;
+            // Make sure settings are valid for current target
+            CompilerState state = ForceCompilerSettings();
+
+            // Compile call
             domain.CompileFromSyntaxTrees(cSharpSyntaxTrees, additionalReferenceAssemblies);
-            RoslynCSharpCompiler.loadCompiledAssemblies = loadAssemblies;
+
+            // Restore settings to original before compile call
+            RestoreCompilerSettings(state);
 
             // Log output to console
             domain.LogCompilerOutputToConsole();
@@ -237,6 +252,42 @@ namespace RoslynCSharp
             clrDomains.Add(domain, result);
 
             return result;
+        }
+
+        private static CompilerState ForceCompilerSettings()
+        {
+            // Get current state
+            CompilerState state = new CompilerState
+            {
+                loadCompiledAssemblies = RoslynCSharpCompiler.loadCompiledAssemblies,
+                allowConcurrentCompile = RoslynCSharp.Settings.AllowConcurrentCompile,
+                generateInMemory = RoslynCSharp.Settings.GenerateInMemory,
+            };
+
+#if UNITY_WEBGL
+            if(RoslynCSharp.Settings.AllowConcurrentCompile == true)
+            {
+                RoslynCSharp.Settings.AllowConcurrentCompile = false;
+                Debug.LogWarning("Concurrent compile is not supported for WebGL execution. Disabling compiler setting!");
+            }
+#endif
+
+#if UNITY_WEBGL || UNITY_ANDROID || UNITY_IOS
+            if (RoslynCSharp.Settings.GenerateInMemory == false)
+            {
+                RoslynCSharp.Settings.GenerateInMemory = true;
+                Debug.LogWarning("Generate in memory must be enabled for current platform. Enabling compiler setting!");
+            }
+#endif
+
+            return state;
+        }
+
+        private static void RestoreCompilerSettings(in CompilerState state)
+        {
+            RoslynCSharpCompiler.loadCompiledAssemblies = state.loadCompiledAssemblies;
+            RoslynCSharp.Settings.AllowConcurrentCompile = state.allowConcurrentCompile;
+            RoslynCSharp.Settings.GenerateInMemory = state.generateInMemory;
         }
     }
 }
