@@ -29,6 +29,7 @@ namespace dotnow.Runtime.CIL
             CILMethodInvocation methodInvoke;
             CILSignature signature;
 
+            bool[] boolArrImpl;
             sbyte[] int8ArrImpl;
             byte[] uint8ArrImpl;
             short[] int16ArrImpl;
@@ -2044,20 +2045,42 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            uint8ArrImpl = (byte[])left.refValue;   // arr impl
+                            // Check for bool array as I1
+                            if (left.refValue is bool[])
+                            {
+                                boolArrImpl = (bool[])left.refValue;    // arr impl
 
-                            if ((int)temp.type <= 32)
-                            {
-                                stack[stackPtr].value.Int8 = (sbyte)uint8ArrImpl[temp.value.Int32];
-                                stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                if ((int)temp.type <= 32)
+                                {
+                                    stack[stackPtr].value.Int8 = (sbyte)(boolArrImpl[temp.value.Int32] == true ? 1 : 0);
+                                    stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                }
+                                else if ((int)temp.type <= 64)
+                                {
+                                    stack[stackPtr].value.Int8 = (sbyte)(boolArrImpl[temp.value.Int64] == true ? 1 : 0);
+                                    stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                }
+                                else
+                                    throw new NotSupportedException();
                             }
-                            else if ((int)temp.type <= 64)
-                            {
-                                stack[stackPtr].value.Int8 = (sbyte)uint8ArrImpl[temp.value.Int64];
-                                stack[stackPtr++].type = StackData.ObjectType.UInt8;
-                            }
+                            // Use I1 abyte or byte array
                             else
-                                throw new NotSupportedException();
+                            {
+                                uint8ArrImpl = (byte[])left.refValue;   // arr impl
+
+                                if ((int)temp.type <= 32)
+                                {
+                                    stack[stackPtr].value.Int8 = (sbyte)uint8ArrImpl[temp.value.Int32];
+                                    stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                }
+                                else if ((int)temp.type <= 64)
+                                {
+                                    stack[stackPtr].value.Int8 = (sbyte)uint8ArrImpl[temp.value.Int64];
+                                    stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                }
+                                else
+                                    throw new NotSupportedException();
+                            }
                             break;
                         }
 
@@ -2224,18 +2247,38 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int8ArrImpl = (sbyte[])left.refValue;   // arr impl
+                            // Check for bool array as I1
+                            if (left.refValue is bool[])
+                            {
+                                boolArrImpl = (bool[])left.refValue;    // arr impl
 
-                            if ((int)temp.type <= 32)
-                            {
-                                int8ArrImpl[temp.value.Int32] = right.value.Int8;
+                                if ((int)temp.type <= 32)
+                                {
+                                    boolArrImpl[temp.value.Int32] = ((byte)right.value.Int8) == 1 ? true : false;
+                                }
+                                else if ((int)temp.type <= 64)
+                                {
+                                    boolArrImpl[temp.value.Int64] = ((byte)right.value.Int8) == 1 ? true : false;
+                                }
+                                else
+                                    throw new NotSupportedException();
                             }
-                            else if ((int)temp.type <= 64)
-                            {
-                                int8ArrImpl[temp.value.Int64] = right.value.Int8;
-                            }
+                            // Use I1 sbyte or byte array
                             else
-                                throw new NotSupportedException();
+                            {
+                                int8ArrImpl = (sbyte[])left.refValue;   // arr impl
+
+                                if ((int)temp.type <= 32)
+                                {
+                                    int8ArrImpl[temp.value.Int32] = right.value.Int8;
+                                }
+                                else if ((int)temp.type <= 64)
+                                {
+                                    int8ArrImpl[temp.value.Int64] = right.value.Int8;
+                                }
+                                else
+                                    throw new NotSupportedException();
+                            }
                             break;
                         }
 
