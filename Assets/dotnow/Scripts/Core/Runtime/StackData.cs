@@ -330,6 +330,13 @@ namespace dotnow.Runtime
                 case TypeCode.String:
                 case TypeCode.Object:
                     {
+                        // Check for null
+                        if(value == null)
+                        {
+                            obj = nullPtr;
+                            break;
+                        }
+
                         // Check for value types - probably a little expensive??
                         if (value is ValueType)
                         {
