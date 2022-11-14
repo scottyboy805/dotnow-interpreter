@@ -412,7 +412,20 @@ namespace dotnow
 
                 // Apply generic parameter types
                 if (resolvedType != null && genericTypes != null)
+                {
+                    // Check for system type used as the base generic
+                    if(resolvedType.IsCLRType() == false)
+                    {
+                        // 'SystemType<InterpretedType>' must be mapped to 'SystemType<object>' because the clr does not know about interpreted types at all
+                        for(int i = 0; i < genericTypes.Length; i++)
+                        {
+                            if (genericTypes[i].IsCLRType() == true)
+                                genericTypes[i] = typeof(object);
+                        }
+                    }
+
                     resolvedType = resolvedType.MakeGenericType(genericTypes);
+                }
 
                 // Cache the result
                 if (resolvedType != null)
