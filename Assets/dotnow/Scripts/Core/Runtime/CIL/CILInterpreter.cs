@@ -2484,6 +2484,15 @@ namespace dotnow.Runtime.CIL
                             break;
                         }
 
+                    case Code.Ldsflda:
+                        {
+                            fieldAccess = (CILFieldAccess)instruction.objectOperand;
+
+                            // Get address of field value
+                            __internal.__gc_alloc_addr_fld(ref stack[stackPtr++], fieldAccess, StackData.nullPtr);
+                            break;
+                        }
+
                     case Code.Ldfld:
                         {
                             fieldAccess = (CILFieldAccess)instruction.objectOperand;
