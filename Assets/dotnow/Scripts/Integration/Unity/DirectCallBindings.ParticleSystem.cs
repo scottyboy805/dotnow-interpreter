@@ -23,10 +23,27 @@ namespace UnityEngine
         }
 
         [Preserve]
+        [CLRMethodDirectCallBinding(typeof(ParticleSystem), "set_rateOverTime", typeof(float))]
+        public static void UnityEngine_ParticleSystem_SetRateOverTime(StackData[] stack, int offset)
+        {
+            ParticleSystem.EmissionModule emission = ((ParticleSystem)stack[offset].refValue).emission;
+            emission.rateOverTime = stack[offset + 1].value.Single;
+        }
+
+        [Preserve]
         [CLRMethodDirectCallBinding(typeof(ParticleSystem), "get_emissionRate")]
         public static void UnityEngine_ParticleSystem_GetEmissionRate(StackData[] stack, int offset)
         {
             stack[offset].refValue = ((ParticleSystem)stack[offset].refValue).emissionRate;
+            stack[offset].type = StackData.ObjectType.Ref;
+        }
+
+        [Preserve]
+        [CLRMethodDirectCallBinding(typeof(ParticleSystem), "get_rateOverTime")]
+        public static void UnityEngine_ParticleSystem_GetRateOverTime(StackData[] stack, int offset)
+        {
+            ParticleSystem.EmissionModule emission = ((ParticleSystem)stack[offset].refValue).emission;
+            stack[offset].refValue = emission.rateOverTime;
             stack[offset].type = StackData.ObjectType.Ref;
         }
     }
