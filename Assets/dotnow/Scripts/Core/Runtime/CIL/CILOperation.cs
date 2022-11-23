@@ -4,6 +4,9 @@ namespace dotnow.Runtime.CIL
 {
     public struct CILOperation
     {
+        // Internal
+        internal Instruction monoInstruction;
+
         // Public
         public Code opCode;
         public StackData.Primitive operand;
@@ -13,6 +16,7 @@ namespace dotnow.Runtime.CIL
         // Constructor
         public CILOperation(Code opCode, StackData.Primitive operand, object objectOperand)
         {
+            this.monoInstruction = null;
             this.opCode = opCode;
             this.operand = operand;
             this.objectOperand = objectOperand;

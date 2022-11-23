@@ -162,5 +162,13 @@ namespace dotnow.Runtime.JIT
                 emitPtr++;
             }
         }
+
+        internal void AttachMonoInstruction(Instruction monoInstruction)
+        {
+            if(dynamic == false && monoInstruction != null && emitPtr > 0)
+            {
+                operationsStatic[emitPtr - 1].monoInstruction = monoInstruction;
+            }
+        }
     }
 }

@@ -36,7 +36,7 @@ namespace dotnow.Reflection
 
             // Lazy initialize
             this.locals = new Lazy<StackLocal[]>(InitLocalDefaults);
-
+            
             // Exception handlers
             this.exceptionHandlers = new Lazy<CLRExceptionHandler[]>(InitExceptionHandlers);
         }

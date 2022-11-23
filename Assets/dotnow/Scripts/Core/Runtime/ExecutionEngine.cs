@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using dotnow.Debugging;
 using dotnow.Reflection;
@@ -306,5 +307,88 @@ namespace dotnow.Runtime
                     currentFrame = frame.Parent;
             }
         }
+
+        public string GetStackTrace(bool includeFileInfo)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            // Build from current frame
+            BuildStackTrace(currentFrame, builder, includeFileInfo);
+
+            // Get full string
+            return builder.ToString();
+        }
+
+        private void BuildStackTrace(ExecutionFrame frame, StringBuilder builder, bool includeFileInfo)
+        {
+            // Get method from frame
+            MethodBase currentMethod = frame.Method;
+
+            // Add interpreted tag
+            builder.Append("[Interpreted] ");
+
+            // Get full method string
+            string methodString = currentMethod.ToString();
+
+            // Remove return type
+            methodString = methodString.Remove(0, methodString.IndexOf(' ') + 1);
+
+            // Append method info
+            builder.Append(methodString);
+            
+            if(includeFileInfo == true)
+            {
+                CLRMethod method = currentMethod as CLRMethod;
+                CILOperation op;
+
+                if (method != null && frame.GetCurrentOperation(out op) == true)
+                {
+                    // Get debug location
+                    DebugSymbolLocation location = method.GetDebugSymbolLocation(op);
+
+                    // File name
+                    builder.Append(" (at ");
+                    builder.Append(location.fileName);
+
+                    // Check for line number
+                    if (location.lineNumber > 0)
+                    {
+                        builder.Append(":");
+                        builder.Append(location.lineNumber);
+                    }
+                    builder.Append(")");
+                }
+                else
+                {
+                    builder.Append(" (at unknown)");
+                }
+            }
+
+            // Check for parent
+            if (frame.Parent != null)
+            {
+                builder.Append("\n");
+                BuildStackTrace(frame.Parent, builder, includeFileInfo);
+            }
+        }
+
+        //private FieldInfo stackTraceField = typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
+        //private FieldInfo remoteStackTraceField = typeof(Exception).GetField("_remoteStackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
+        //internal object InitExceptionCallstack(object o)
+        //{
+        //    if (o is Exception)
+        //    {
+        //        Exception e = o as Exception;
+
+        //        string callstack = "Testing";
+
+        //        stackTraceField.SetValue(e, callstack);
+        //        remoteStackTraceField.SetValue(e, callstack);
+
+        //        UnityEngine.Debug.Log("Stack trace: " + GetStackTrace(true));// e.StackTrace);
+        //    }
+
+        //    return o;
+        //}
     }
 }

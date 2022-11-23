@@ -106,7 +106,7 @@ namespace dotnow.Reflection
             this.assembly = assembly;
             this.assemblyName = new AssemblyName(assembly.FullName);
             this.location = location;
-
+            
             // Create references
             this.referenceAssemblyNames = new AssemblyName[assembly.MainModule.AssemblyReferences.Count];
 

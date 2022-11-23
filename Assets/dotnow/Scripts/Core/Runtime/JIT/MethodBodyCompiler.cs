@@ -50,7 +50,7 @@ namespace dotnow.Runtime.JIT
                 // Get the current instruction
                 MonoInstruction current = instructions[i];
                 Code currentCode = current.OpCode.Code;
-
+                
                 // Check for new
                 if(currentCode == Code.Newobj)
                 {
@@ -60,7 +60,7 @@ namespace dotnow.Runtime.JIT
                     il.Emit(currentCode, ctor, instanceType);
                     continue;
                 }
-
+                
                 // Build optimized instruction set just in time for execution
                 switch(current.OpCode.OperandType)
                 {
@@ -158,6 +158,9 @@ namespace dotnow.Runtime.JIT
                         throw new NotSupportedException(string.Format("Op code '{0}' uses an unsupported operand type '{1}'", current, current.OpCode.OperandType));
 
                 }
+
+                // Attach instruction
+                il.AttachMonoInstruction(current);
             }
 
             // Return the code generator

@@ -8,9 +8,19 @@ using dotnow.Runtime.CIL;
 using dotnow.Runtime.JIT;
 using MethodAttributes = System.Reflection.MethodAttributes;
 using MethodImplAttributes = System.Reflection.MethodImplAttributes;
+using Mono.Cecil.Cil;
 
 namespace dotnow.Reflection
 {
+    public struct DebugSymbolLocation
+    {
+        // Public
+        public static readonly DebugSymbolLocation unknown = new DebugSymbolLocation { fileName = "unknown", lineNumber = -1 };
+
+        public string fileName;
+        public int lineNumber;
+    }
+
     public sealed class CLRMethod : MethodInfo, IJITOptimizable
     {
         // Private
@@ -112,6 +122,27 @@ namespace dotnow.Reflection
             // Initialize executable method
             if (executableMethod == null)
                 executableMethod = new ExecutionMethod(domain, signature.Value, this, body, IsStatic, false);
+        }
+
+        public DebugSymbolLocation GetDebugSymbolLocation(in CILOperation op)
+        {
+            // Check for mono instruction
+            if (op.monoInstruction == null)
+                return DebugSymbolLocation.unknown;
+
+            // Get sequence point
+            SequencePoint point = method.DebugInformation.GetSequencePoint(op.monoInstruction);
+
+            // Check for found
+            if (point == null)
+                return DebugSymbolLocation.unknown;
+
+            // Get sequence location
+            return new DebugSymbolLocation
+            {
+                fileName = point.Document.Url,
+                lineNumber = point.StartLine,
+            };
         }
 
         public override MethodInfo GetBaseDefinition()

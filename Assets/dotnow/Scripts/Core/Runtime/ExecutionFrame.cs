@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using dotnow.Reflection;
+using dotnow.Runtime.CIL;
+using System.Reflection;
 
 namespace dotnow.Runtime
 {
@@ -86,6 +88,25 @@ namespace dotnow.Runtime
             this.stackBaseIndex = stackArgIndex + paramCount + ((method.IsStatic == true) ? 0 : 1);
             this.stackMin = localAllocPtr;
             this.stackMax = stackBaseIndex + maxStackDepth;
+        }
+
+        public bool GetCurrentOperation(out CILOperation op)
+        {
+            if(method is CLRMethod)
+            {
+                // Get method body instructions
+                CILOperation[] operations = ((CLRMethod)method).Body.Operations;
+
+                // Check bounds
+                if (instructionPtr >= 0 && instructionPtr < operations.Length)
+                {
+                    op = operations[instructionPtr];
+                    return true;
+                }
+            }
+
+            op = default;
+            return false;
         }
     }
 }
