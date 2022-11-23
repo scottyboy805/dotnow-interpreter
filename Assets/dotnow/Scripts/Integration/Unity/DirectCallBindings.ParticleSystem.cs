@@ -25,11 +25,11 @@ namespace UnityEngine
         }
 
         [Preserve]
-        [CLRMethodDirectCallBinding(typeof(ParticleSystem), "set_rateOverTime", typeof(float))]
+        [CLRMethodDirectCallBinding(typeof(ParticleSystem.EmissionModule), "set_rateOverTimeMultiplier", typeof(float))]
         public static void UnityEngine_ParticleSystem_SetRateOverTime(StackData[] stack, int offset)
         {
-            ParticleSystem.EmissionModule emission = ((ParticleSystem)stack[offset].refValue).emission;
-            emission.rateOverTime = stack[offset + 1].value.Single;
+            ParticleSystem.EmissionModule emission = ((ParticleSystem.EmissionModule)stack[offset].refValue);
+            emission.rateOverTimeMultiplier = stack[offset + 1].value.Single;
         }
 
         [Preserve]
@@ -43,10 +43,10 @@ namespace UnityEngine
         }
 
         [Preserve]
-        [CLRMethodDirectCallBinding(typeof(ParticleSystem), "get_rateOverTime")]
+        [CLRMethodDirectCallBinding(typeof(ParticleSystem.EmissionModule), "get_rateOverTime")]
         public static void UnityEngine_ParticleSystem_GetRateOverTime(StackData[] stack, int offset)
         {
-            ParticleSystem.EmissionModule emission = ((ParticleSystem)stack[offset].refValue).emission;
+            ParticleSystem.EmissionModule emission = ((ParticleSystem.EmissionModule)stack[offset].refValue);
             stack[offset].refValue = emission.rateOverTime;
             stack[offset].type = StackData.ObjectType.Ref;
         }
