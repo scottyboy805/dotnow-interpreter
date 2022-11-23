@@ -59,7 +59,7 @@ namespace dotnow
             {
                 // Script field
                 GUILayout.Label("Script", GUILayout.Width(EditorGUIUtility.labelWidth));
-                EditorGUILayout.ObjectField(fakeScriptInfo, typeof(MonoScript));
+                EditorGUILayout.ObjectField(fakeScriptInfo, typeof(MonoScript), false);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUI.EndDisabledGroup();

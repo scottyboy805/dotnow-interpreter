@@ -19,7 +19,9 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(ParticleSystem), "set_emissionRate", typeof(float))]
         public static void UnityEngine_ParticleSystem_SetEmissionRate(StackData[] stack, int offset)
         {
+#pragma warning disable CS0618
             ((ParticleSystem)stack[offset].refValue).emissionRate = stack[offset + 1].value.Single;
+#pragma warning restore CS0618
         }
 
         [Preserve]
@@ -34,8 +36,10 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(ParticleSystem), "get_emissionRate")]
         public static void UnityEngine_ParticleSystem_GetEmissionRate(StackData[] stack, int offset)
         {
+#pragma warning disable CS0618
             stack[offset].refValue = ((ParticleSystem)stack[offset].refValue).emissionRate;
             stack[offset].type = StackData.ObjectType.Ref;
+#pragma warning restore CS0618
         }
 
         [Preserve]
