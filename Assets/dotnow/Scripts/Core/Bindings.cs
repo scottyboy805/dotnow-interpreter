@@ -316,7 +316,7 @@ namespace dotnow
                         }
 
 #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("Method direct call binding {0} targets a method that could not be resolved: {1}.{2}(3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
+                        UnityEngine.Debug.LogErrorFormat("Method direct call binding {0} targets a method that could not be resolved: {1}.{2}{3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
                         continue;
 #else
                         throw new CLRBindingException("Method direct call binding {0} targets a method that could not be resolved: {1}.{2}(3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
