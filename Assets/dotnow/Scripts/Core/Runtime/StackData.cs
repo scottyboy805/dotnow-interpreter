@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace dotnow.Runtime
@@ -104,6 +105,7 @@ namespace dotnow.Runtime
 #if API_NET35
         public object UnboxAsType(CLRTypeInfo typeInfo)
 #else
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object UnboxAsType(in CLRTypeInfo typeInfo)
 #endif
         {
@@ -203,6 +205,7 @@ namespace dotnow.Runtime
 #if API_NET35
         public static void AllocTyped(ref StackData obj, CLRTypeInfo typeInfo, object value)
 #else
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AllocTyped(ref StackData obj, in CLRTypeInfo typeInfo, object value, bool promoteSmallPrimitives = false)
 #endif
         {
@@ -352,84 +355,126 @@ namespace dotnow.Runtime
             }
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, bool val)
         {
             obj.type = ObjectType.Int32;
             obj.value.Int32 = (val == true) ? 1 : 0;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, sbyte val)
         {
             obj.type = ObjectType.Int8;
             obj.value.Int8 = val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, byte val)
         {
             obj.type = ObjectType.UInt8;
             obj.value.Int8 = (sbyte)val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, short val)
         {
             obj.type = ObjectType.Int16;
             obj.value.Int16 = val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, ushort val)
         {
             obj.type = ObjectType.UInt16;
             obj.value.Int16 = (short)val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, int val)
         {
             obj.type = ObjectType.Int32;
             obj.value.Int32 = val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, uint val)
         {
             obj.type = ObjectType.UInt32;
             obj.value.Int32 = (int)val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, long val)
         {
             obj.type = ObjectType.Int64;
             obj.value.Int64 = val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, ulong val)
         {
             obj.type = ObjectType.UInt64;
             obj.value.Int64 = (long)val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, float val)
         {
             obj.type = ObjectType.Single;
             obj.value.Single = val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void Alloc(ref StackData obj, double val)
         {
             obj.type = ObjectType.Double;
             obj.value.Double = val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void AllocRef(ref StackData obj, object val)
         {
             obj.type = ObjectType.Ref;
             obj.refValue = val;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void AllocRefBoxed(ref StackData obj, object valueType)
         {
             obj.type = ObjectType.RefBoxed;
             obj.refValue = valueType;
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static void ValueTypeCopy(ref StackData obj)
         {
             // Check for boxed struct
@@ -443,6 +488,7 @@ namespace dotnow.Runtime
 #if API_NET35
         public static void AssignKeepType(ref StackData dest, StackData src)
 #else
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AssignKeepType(ref StackData dest, in StackData src)
 #endif
         {
