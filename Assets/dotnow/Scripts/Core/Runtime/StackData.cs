@@ -337,6 +337,7 @@ namespace dotnow.Runtime
                         if(value == null)
                         {
                             obj = nullPtr;
+                            obj.type = ObjectType.Ref;
                             break;
                         }
 
