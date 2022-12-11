@@ -414,10 +414,10 @@ namespace dotnow
                 if (resolvedType != null && genericTypes != null)
                 {
                     // Check for system type used as the base generic
-                    if(resolvedType.IsCLRType() == false)
+                    if (resolvedType.IsCLRType() == false)
                     {
                         // 'SystemType<InterpretedType>' must be mapped to 'SystemType<object>' because the clr does not know about interpreted types at all
-                        for(int i = 0; i < genericTypes.Length; i++)
+                        for (int i = 0; i < genericTypes.Length; i++)
                         {
                             if (genericTypes[i].IsCLRType() == true)
                                 genericTypes[i] = typeof(object);
@@ -821,6 +821,8 @@ namespace dotnow
             // Check for null
             if (type == null) throw new ArgumentNullException("type");
 
+            object inst;
+
             // Check for clr type
             if (type.IsCLRType() == true)
             {
@@ -828,13 +830,19 @@ namespace dotnow
                 CLRType clrType = type as CLRType;
 
                 // Create instance
-                return CLRInstance.CreateAllocatedInstance(this, clrType);
+                inst = CLRInstance.CreateAllocatedInstance(this, clrType);
             }
             else
             {
                 // Get uninitialized object
-                return FormatterServices.GetUninitializedObject(type);
+                inst = FormatterServices.GetUninitializedObject(type);
             }
+
+            // Check for exception
+            if (inst is Exception)
+                inst = engine.CreateException((Exception)inst);
+
+            return inst;
         }
 
         public object CreateInstance(Type type)
@@ -842,34 +850,46 @@ namespace dotnow
             // Check for null
             if (type == null) throw new ArgumentNullException("type");
 
+            object inst;
+
             // Try to get create instance binding
             MethodBase createInstanceOverride = GetOverrideCreateInstanceBinding(type);
 
             // Invoke override create instance provider
             if (createInstanceOverride != null)
-                return createInstanceOverride.Invoke(null, null);
-
-            // Check for clr type
-            if (type.IsCLRType() == true)
             {
-                // Get clr type
-                CLRType clrType = type as CLRType;
-
-                // Get ctor
-                CLRConstructor ctor = GetRuntimeCLRCtor(clrType, null);
-
-                // Check for constructor
-                if (ctor == null)
-                    throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
-
-                // Create instance
-                return CLRInstance.CreateAllocatedInstance(this, clrType, ctor, null);
+                inst = createInstanceOverride.Invoke(null, null);
             }
             else
             {
-                // Get uninitialized object
-                return Activator.CreateInstance(type);
+                // Check for clr type
+                if (type.IsCLRType() == true)
+                {
+                    // Get clr type
+                    CLRType clrType = type as CLRType;
+
+                    // Get ctor
+                    CLRConstructor ctor = GetRuntimeCLRCtor(clrType, null);
+
+                    // Check for constructor
+                    if (ctor == null)
+                        throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
+
+                    // Create instance
+                    inst = CLRInstance.CreateAllocatedInstance(this, clrType, ctor, null);
+                }
+                else
+                {
+                    // Get uninitialized object
+                    inst = Activator.CreateInstance(type);
+                }
             }
+
+            // Check for exception
+            if (inst is Exception)
+                inst = engine.CreateException((Exception)inst);
+
+            return inst;
         }
 
         public object CreateInstance(Type type, object[] args)
@@ -877,44 +897,62 @@ namespace dotnow
             // Check for null
             if (type == null) throw new ArgumentNullException("type");
 
+            object inst;
+
             // Try to get create instance binding
             MethodBase createInstanceOverride = GetOverrideCreateInstanceBinding(type);
 
             // Invoke override create instance provider
             if (createInstanceOverride != null)
-                return createInstanceOverride.Invoke(null, args);
-
-            // Check for clr type
-            if (type.IsCLRType() == true)
             {
-                // Get clr type
-                CLRType clrType = type as CLRType;
-
-                // Get ctor
-                CLRConstructor ctor = GetRuntimeCLRCtor(clrType, args);
-
-                // Check for constructor
-                if (ctor == null)
-                    throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
-
-                // Create instance
-                return CLRInstance.CreateAllocatedInstance(this, clrType, ctor, args);
+                inst = createInstanceOverride.Invoke(null, args);
             }
             else
             {
-                // Create using default ctor
-                if (args == null || args.Length == 0)
-                    return Activator.CreateInstance(type);
+                // Check for clr type
+                if (type.IsCLRType() == true)
+                {
+                    // Get clr type
+                    CLRType clrType = type as CLRType;
 
-                // Get uninitialized object
-                return Activator.CreateInstance(type, args);
+                    // Get ctor
+                    CLRConstructor ctor = GetRuntimeCLRCtor(clrType, args);
+
+                    // Check for constructor
+                    if (ctor == null)
+                        throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
+
+                    // Create instance
+                    inst = CLRInstance.CreateAllocatedInstance(this, clrType, ctor, args);
+                }
+                else
+                {
+                    // Create using default ctor
+                    if (args == null || args.Length == 0)
+                    {
+                        inst = Activator.CreateInstance(type);
+                    }
+                    else
+                    {
+                        // Get uninitialized object
+                        inst = Activator.CreateInstance(type, args);
+                    }
+                }
             }
+
+            // Check for exception
+            if (inst is Exception)
+                inst = engine.CreateException((Exception)inst);
+
+            return inst;
         }
 
         internal object CreateInstance(Type type, MethodBase ctor, params object[] args)
         {
             // Check for null
             if (type == null) throw new ArgumentNullException("type");
+
+            object inst;
 
             // Try to get create instance binding
             MethodBase createInstanceOverride = GetOverrideCreateInstanceBinding(type, ctor as ConstructorInfo);
@@ -925,50 +963,64 @@ namespace dotnow
 
             // Invoke override create instance provider
             if (createInstanceOverride != null)
-                return createInstanceOverride.Invoke(null, args);
-
-            // Check for clr type
-            if (type.IsCLRType() == true)
             {
-                // Get clr type
-                CLRType clrType = type as CLRType;
-
-
-                // Check for multidimensional array
-                if(type.IsArray == true && type.GetArrayRank() >= 2)
-                {
-                    int[] lengths = new int[args.Length];
-
-                    for (int i = 0; i < args.Length; i++)
-                        lengths[i] = (int)args[i];
-
-                    return Array.CreateInstance(typeof(object), lengths);
-                }
-
-                // Check for constructor
-                if (ctor == null || ((ctor is CLRConstructor) == false && ctor.Name.StartsWith("_SpecialRuntime") == false))
-                    throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
-
-                // Get params
-                ParameterInfo[] parameters = ctor.GetParameters();
-
-                // Validate arguments and parameters here
-
-
-                // Create instance
-                return CLRInstance.CreateAllocatedInstance(this, clrType, ctor as ConstructorInfo, args);
+                inst = createInstanceOverride.Invoke(null, args);
             }
             else
             {
-                Type rt = type.UnderlyingSystemType.GetType();
+                // Check for clr type
+                if (type.IsCLRType() == true)
+                {
+                    // Get clr type
+                    CLRType clrType = type as CLRType;
 
-                // Create using default ctor
-                if (args == null || args.Length == 0)
-                    return Activator.CreateInstance(type);
 
-                // Get uninitialized object
-                return Activator.CreateInstance(type, args);
+                    // Check for multidimensional array
+                    if (type.IsArray == true && type.GetArrayRank() >= 2)
+                    {
+                        int[] lengths = new int[args.Length];
+
+                        for (int i = 0; i < args.Length; i++)
+                            lengths[i] = (int)args[i];
+
+                        return Array.CreateInstance(typeof(object), lengths);
+                    }
+
+                    // Check for constructor
+                    if (ctor == null || ((ctor is CLRConstructor) == false && ctor.Name.StartsWith("_SpecialRuntime") == false))
+                        throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
+
+                    // Get params
+                    ParameterInfo[] parameters = ctor.GetParameters();
+
+                    // Validate arguments and parameters here
+
+
+                    // Create instance
+                    inst = CLRInstance.CreateAllocatedInstance(this, clrType, ctor as ConstructorInfo, args);
+                }
+                else
+                {
+                    Type rt = type.UnderlyingSystemType.GetType();
+
+                    // Create using default ctor
+                    if (args == null || args.Length == 0)
+                    {
+                        inst = Activator.CreateInstance(type);
+                    }
+                    else
+                    {
+                        // Get uninitialized object
+                        inst = Activator.CreateInstance(type, args);
+                    }
+                }
             }
+
+            // Check for exception
+            if (inst is Exception)
+                inst = engine.CreateException((Exception)inst);
+
+            return inst;
         }
 
         public object CreateInstanceFromProxy(Type type, ICLRProxy proxy)

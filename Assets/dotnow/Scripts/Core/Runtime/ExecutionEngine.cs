@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -40,9 +41,11 @@ namespace dotnow.Runtime
         internal Dictionary<int, object[]> argumentCache = new Dictionary<int, object[]>();
 
         internal ExecutionFrame currentFrame = null;
-        internal StackData[] stack = null;        
+        internal StackData[] stack = null;
 
         // Private        
+        private static readonly FieldInfo exceptionStackTraceProperty = typeof(Exception).GetField("_stackTraceString", BindingFlags.Instance | BindingFlags.NonPublic);
+
         private Stack<ExecutionFrame> availableFrames = new Stack<ExecutionFrame>();
 
         private bool isDebuggerPaused = false;
@@ -233,7 +236,7 @@ namespace dotnow.Runtime
                         case ExceptionHandlingResult.Continue: continue;
                         case ExceptionHandlingResult.Return: return ExceptionHandlingResult.Return;
 
-                        default: throw new Exception("Unreachable code was executed");
+                        default: throw CreateException(new Exception("Unreachable code was executed"));
                     }
                 }
             }
@@ -306,6 +309,28 @@ namespace dotnow.Runtime
                 if (currentFrame == frame && frame != null)
                     currentFrame = frame.Parent;
             }
+        }        
+
+        public Exception CreateException(Exception e)
+        {
+            // Update stack trace to use interpreted stack
+            if (e != null)
+                PatchException(e);
+
+            return e;
+        }
+
+        private void PatchException(Exception e)
+        {
+            // Check for null
+            if (e == null)
+                return;
+
+            // Create stack trace
+            string stackTrace = GetStackTrace(true);
+
+            // Update exception
+            exceptionStackTraceProperty.SetValue(e, stackTrace);
         }
 
         public string GetStackTrace(bool includeFileInfo)

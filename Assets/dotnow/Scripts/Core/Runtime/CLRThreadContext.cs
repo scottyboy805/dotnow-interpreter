@@ -79,7 +79,7 @@ namespace dotnow.Runtime
                     }
                     catch(NotSupportedException)
                     {
-                        throw new ApplicationException(string.Format("Failed to terminate thread with id '{0}'!", thread.ManagedThreadId));
+                        throw engine.CreateException(new ApplicationException(string.Format("Failed to terminate thread with id '{0}'!", thread.ManagedThreadId)));
                     }
                 }
             }
