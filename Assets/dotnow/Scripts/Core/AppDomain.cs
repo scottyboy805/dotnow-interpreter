@@ -952,7 +952,7 @@ namespace dotnow
             // Check for null
             if (type == null) throw new ArgumentNullException("type");
 
-            object inst;
+            object inst = null;
 
             // Try to get create instance binding
             MethodBase createInstanceOverride = GetOverrideCreateInstanceBinding(type, ctor as ConstructorInfo);
@@ -1006,12 +1006,25 @@ namespace dotnow
                     // Create using default ctor
                     if (args == null || args.Length == 0)
                     {
+                        // Create instance default
                         inst = Activator.CreateInstance(type);
                     }
                     else
                     {
-                        // Get uninitialized object
-                        inst = Activator.CreateInstance(type, args);
+                        try
+                        {
+                            // Create instance - try to infer ctor from args
+                            inst = Activator.CreateInstance(type, args);
+                        }
+                        catch(MissingMethodException)
+                        {
+                            if (ctor == null)
+                                throw;
+
+                            // Create instance using explicit constructor
+                            inst = FormatterServices.GetUninitializedObject(type);
+                            ctor.Invoke(inst, args);
+                        }
                     }
                 }
             }
