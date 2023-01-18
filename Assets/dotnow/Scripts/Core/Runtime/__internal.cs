@@ -16,7 +16,17 @@ namespace dotnow.Runtime
             // Check for clr type - Must be stored as CLRInstance to avoid invalid cast exceptions
             if (arrType.IsCLRType() == true)
             {
-                arrType = typeof(CLRInstance);
+                // Check for enum
+                if (arrType.IsEnum == true)
+                {
+                    // Use enum underlying value
+                    arrType = arrType.GetEnumUnderlyingType();
+                }
+                else
+                {
+                    // Use clr instance
+                    arrType = typeof(CLRInstance);
+                }
             }
 
             // Create the new instance
