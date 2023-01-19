@@ -1,4 +1,5 @@
-﻿using System;
+﻿using dotnow.Runtime;
+using System;
 using System.Reflection;
 
 namespace dotnow.Interop
@@ -9,70 +10,35 @@ namespace dotnow.Interop
         [CLRCreateInstanceBinding(typeof(Action))]
         public static object CreateActionInstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
-            Action delegateCallIntermediate = () =>
-            {
-                // Get instance and method target
-                object instance = args[0];
-                MethodBase method = (MethodBase)args[1];
-
-                // Invoke the target method
-                method.Invoke(instance, null);
-            };
-
-            return delegateCallIntermediate;
+            // Create delegate
+            return __delegate.ActionInteropDelegate(args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<>))]
         public static object CreateActionT1InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
-            Action<object> delegateCallIntermediate = (object value) =>
-            {
-                // Get instance and method target
-                object instance = args[0];
-                MethodBase method = (MethodBase)args[1];
-
-                // Invoke the target method with argument
-                method.Invoke(instance, new object[] { value });
-            };
-
-            return delegateCallIntermediate;
+            // Create delegate
+            return __delegate.AutoActionInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<,>))]
         public static object CreateActionT2InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
-            Action<object, object> delegateCallIntermediate = (object val0, object val1) =>
-            {
-                // Get instance and method target
-                object instance = args[0];
-                MethodBase method = (MethodBase)args[1];
-
-                // Invoke the target method with argument
-                method.Invoke(instance, new object[] { val0, val1 });
-            };
-
-            return delegateCallIntermediate;
+            // Create delegate
+            return __delegate.AutoActionInteropDelegate(args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<,,>))]
         public static object CreateActionT3InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
-            Action<object, object, object> delegateCallIntermediate = (object val0, object val1, object val2) =>
-            {
-                // Get instance and method target
-                object instance = args[0];
-                MethodBase method = (MethodBase)args[1];
-
-                // Invoke the target method with argument
-                method.Invoke(instance, new object[] { val0, val1, val2 });
-            };
-
-            return delegateCallIntermediate;
+            // Create delegate
+            return __delegate.AutoActionInteropDelegate(args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<,,,>))]
         public static object CreateActionT4InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
+            // __delegate cannot support more than 3 arguments, so we must fall back to useing object for all args which requires casting on the recevine end
             Action<object, object, object, object> delegateCallIntermediate = (object val0, object val1, object val2, object val3) =>
             {
                 // Get instance and method target
@@ -89,33 +55,22 @@ namespace dotnow.Interop
         [CLRCreateInstanceBinding(typeof(Func<>))]
         public static object CreateFuncInstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
-            Func<object> delegateCallIntermediate = () =>
-            {
-                // Get instance and method target
-                object instance = args[0];
-                MethodBase method = (MethodBase)args[1];
-
-                // Invoke the target method with argument
-                return method.Invoke(instance, null);
-            };
-
-            return delegateCallIntermediate;
+            // Create delegate
+            return __delegate.AutoFuncInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Func<,>))]
         public static object CreateFuncT1InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
-            Func<object, object> delegateCallIntermediate = (object value) =>
-            {
-                // Get instance and method target
-                object instance = args[0];
-                MethodBase method = (MethodBase)args[1];
+            // Create delegate
+            return __delegate.AutoFuncInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
+        }
 
-                // Invoke the target method with argument
-                return method.Invoke(instance, new object[] { value });
-            };
-
-            return delegateCallIntermediate;
+        [CLRCreateInstanceBinding(typeof(Func<,,>))]
+        public static object CreateFuncT2InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
+        {
+            // Create delegate
+            return __delegate.AutoFuncInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(MulticastDelegate))]
@@ -143,6 +98,8 @@ namespace dotnow.Interop
                 switch (paramCount)
                 {
                     case 0: return CreateFuncInstanceOverride(domain, type, ctor, args);
+                    case 1: return CreateFuncT1InstanceOverride(domain, type, ctor, args);
+                    case 2: return CreateFuncT2InstanceOverride(domain, type, ctor, args);
                 }
             }
 
