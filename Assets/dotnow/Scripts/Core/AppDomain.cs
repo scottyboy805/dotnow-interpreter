@@ -649,7 +649,7 @@ namespace dotnow
 
                 // Resolve all parameters
                 for (int i = 0; i < parameters.Length; i++)
-                    parameters[i] = ResolveType(reference.Parameters[i].ParameterType);
+                    parameters[i] = ResolveType(reference.Parameters[i].ParameterType, resolvedDeclaringType);
 
                 if (parameters.Length == 0)
                     parameters = Type.EmptyTypes;
