@@ -373,7 +373,7 @@ namespace dotnow
 
                     // Resolve all generic types
                     for (int i = 0; i < genericTypes.Length; i++)
-                        genericTypes[i] = ResolveType(generics[i]);
+                        genericTypes[i] = ResolveType(generics[i], typeContext);
 
                     // Remove generic section from argument
                     int startIndex = mainTypeFullName.IndexOf('<');
