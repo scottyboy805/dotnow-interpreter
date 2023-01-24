@@ -75,7 +75,7 @@ namespace dotnow.Reflection
                 throw new InvalidProgramException("Failed to get method body instructions for method: " + method);
 
 #if !UNITY_DISABLE
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_PROFILE
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_PROFILE
             UnityEngine.Profiling.Profiler.BeginSample(string.Concat("[CLR Interpreted] ", Method.DeclaringType.Name, ".", Method.Name, "()"));
 #endif
 #endif
@@ -85,7 +85,7 @@ namespace dotnow.Reflection
 
             // Profiling entry
 #if !UNITY_DISABLE
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL) && UNITY_PROFILE
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_PROFILE
             UnityEngine.Profiling.Profiler.EndSample();
 #endif
 #endif

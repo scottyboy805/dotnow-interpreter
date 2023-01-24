@@ -779,7 +779,7 @@ namespace dotnow
             }
 
 #if !UNITY_DISABLE
-#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL)
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH)
             if (UnityEngine.Application.isEditor == false)
                 UnityEngine.Debug.Log("This method may have been stripped from the build if you are using IL2CPP!");
 #endif
