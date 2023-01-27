@@ -1182,8 +1182,8 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.Null:
                                 case StackData.ObjectType.Ref:
                                 case StackData.ObjectType.RefBoxed:
-                                    {
-                                        if (left.type == StackData.ObjectType.Null)
+                                    {                                      
+                                        if(StackData.NullCheck(left) == true)
                                         {
                                             flag = (right.type != StackData.ObjectType.Null);
                                             break;
