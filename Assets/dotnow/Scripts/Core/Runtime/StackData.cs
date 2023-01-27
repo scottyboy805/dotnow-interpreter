@@ -512,5 +512,28 @@ namespace dotnow.Runtime
             // Overwrite type
             dest.type = type;
         }
+
+#if API_NET35
+    public static bool NullCheck(StackData val)
+#else
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool NullCheck(in StackData val)
+#endif
+        {
+            switch (val.type)
+            {
+                default:
+                    throw new NotSupportedException("Null check operation is not supported on data type: " + val.type);
+
+                    // Check explicit null
+                case ObjectType.Null: 
+                    return true;
+
+                    // Check reference null
+                case ObjectType.Ref:
+                case ObjectType.RefBoxed:
+                    return val.refValue == null;
+            }
+        }
     }
 }
