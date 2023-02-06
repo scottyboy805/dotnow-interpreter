@@ -1,4 +1,5 @@
-﻿using System;
+﻿using dotnow.Reflection;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -18,6 +19,15 @@ namespace dotnow
         public static CLRType GetCLRType(this Type type)
         {
             return type as CLRType;
+        }
+
+        public static bool IsCLRMember(this MemberInfo member)
+        {
+            return member is CLRField ||
+                member is CLRProperty ||
+                member is CLRMethod ||
+                member is CLRConstructor ||
+                member is CLRType;
         }
 
         public static Type GetInteropBaseType(this Type type)

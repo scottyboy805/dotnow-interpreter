@@ -10,7 +10,7 @@ namespace dotnow.Reflection
         // Private
         private AppDomain domain = null;
         private ICollection<CustomAttribute> attributes = null;
-        private List<object> attributeInstances = null;
+        private List<Attribute> attributeInstances = null;
 
         // Constructor
         public CLRAttributeBuilder(AppDomain domain, ICollection<CustomAttribute> attributes)
@@ -20,7 +20,7 @@ namespace dotnow.Reflection
         }
 
         // Methods
-        public object[] GetAttributeInstances()
+        public Attribute[] GetAttributeInstances()
         {
             // Create attributes
             BuildAttributeInstances();
@@ -29,15 +29,15 @@ namespace dotnow.Reflection
             return attributeInstances.ToArray();
         }
 
-        public object[] GetAttributeInstancesOfType(Type baseType)
+        public Attribute[] GetAttributeInstancesOfType(Type baseType)
         {
             // Create attributes
             BuildAttributeInstances();
 
             // Get cound
-            List<object> result = new List<object>();
+            List<Attribute> result = new List<Attribute>();
 
-            foreach(object attributeInstance in attributeInstances)
+            foreach(Attribute attributeInstance in attributeInstances)
             {
                 Type attribType = attributeInstance.GetInterpretedType();
 
@@ -68,7 +68,7 @@ namespace dotnow.Reflection
         {
             if(attributeInstances == null)
             {
-                attributeInstances = new List<object>();
+                attributeInstances = new List<Attribute>();
 
                 // Process all attributes
                 foreach(CustomAttribute attribute in attributes)
@@ -85,8 +85,11 @@ namespace dotnow.Reflection
                         args[i] = attribute.ConstructorArguments[i].Value;
                     }
 
+                    // Get as base attribute
+                    object attrib = domain.CreateInstance(attributeType, ctor, args).UnwrapAs<Attribute>();
+
                     // Create instance of attribute
-                    attributeInstances.Add(domain.CreateInstance(attributeType, ctor, args));
+                    attributeInstances.Add(attrib as Attribute);
                 }
             }
         }
