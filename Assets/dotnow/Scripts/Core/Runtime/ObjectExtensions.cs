@@ -57,14 +57,14 @@ namespace dotnow
             return instance;
         }
 
-        public static object UnwrapAs<T>(this object instance) where T : class
+        public static T UnwrapAs<T>(this object instance) where T : class
         {
             // Check for valid clr instance
             if (instance != null && instance is CLRInstance)
             {
-                return ((CLRInstance)instance).UnwrapAs(typeof(T));
+                return ((CLRInstance)instance).UnwrapAs(typeof(T)) as T;
             }
-            return instance;
+            return instance as T;
         }
 
         public static object UnwrapAs(this object instance, Type unwrapType)
