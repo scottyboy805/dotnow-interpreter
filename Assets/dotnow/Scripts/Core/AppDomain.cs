@@ -1154,6 +1154,47 @@ namespace dotnow
             throw new Exception("Failed to find suitable proxy binding for type: " + type);
         }
 
+        public object CreateCLRProxyBindingOrImplicitInteropInstance(Type type)
+        {
+            Type bindingProxy;
+
+            // Create instance
+            if (bindings.clrProxyBindings.TryGetValue(type, out bindingProxy) == true)
+            {
+                // Create instance of proxy
+                object proxyInstance = Activator.CreateInstance(bindingProxy);
+
+                // Get as instance
+                return proxyInstance;
+            }
+
+
+            // Check if type has public accessible constructor and no virtual or abstract methods - we can create the instance automatically in that case with out requiring a a proxy implementation
+            if(IsProxyBindingRequiredForType(type) == false)
+            {
+                // Create uninitialized instance
+                // Ctor will be run when CLRInstance is initialized
+                return FormatterServices.GetUninitializedObject(type);
+            }
+
+            // Generate error
+            throw new Exception("Failed to find suitable proxy binding for type and an implicit interop instance could not be created automatically: " + type);
+        }
+
+        public bool IsProxyBindingRequiredForType(Type type)
+        {
+            // Check for null
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+
+            // Check for abstract
+            if (type.IsAbstract == true)
+                return true;
+
+            // Check for any virtual members
+            return type.HasVirtualMembers() == false;
+        }
+
         public Type GetCLRProxyBindingForType(Type type, bool throwOnError = true)
         {
             Type bindingProxy;

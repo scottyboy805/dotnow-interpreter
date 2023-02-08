@@ -199,17 +199,8 @@ namespace dotnow
 
         private object CreateBaseProxyInstance(AppDomain domain, Type baseType)
         {
-            if (baseType.IsAbstract == false)
-            {
-                if (baseType.IsSealed == true || baseType.HasVirtualMembers() == false)
-                {
-                    // We can create an instance of the base type without requiring a proxy
-                    return FormatterServices.GetUninitializedObject(type);
-                }
-            }
-
             // Create a proxy
-            return domain.CreateCLRProxyBinding(baseType);
+            return domain.CreateCLRProxyBindingOrImplicitInteropInstance(baseType);
         }
 
         private ICLRProxy[] CreateInterfaceProxyInstances(AppDomain domain, Type[] interfaceTypes)
