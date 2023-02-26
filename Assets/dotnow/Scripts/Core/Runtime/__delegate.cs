@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
+using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine.Windows.Speech;
 
 namespace dotnow.Runtime
 {
@@ -16,6 +19,9 @@ namespace dotnow.Runtime
         private static AutoFuncDelegate[] func_T1 = Func_T1_Providers();
         private static AutoFuncDelegate[,] func_T2 = Func_T2_Providers();
         private static AutoFuncDelegate[,,] func_T3 = Func_T3_Providers();
+
+        // Private
+        private static Dictionary<MethodBase, object> delegateCache = new Dictionary<MethodBase, object>();
 
         // Methods
         public static object AutoAnyInteropDelegateFromParameters(object instance, MethodBase target)
@@ -35,6 +41,10 @@ namespace dotnow.Runtime
             // Important - this method does slow lookup for a suitable AOT delegate that can be used for interop calls
             // For the moment there is no other way and unfortunately it will not support passing reference types explicitly for interop calls. 
             // Instead you must use 'System.object' in those cases and cast at the receivng end. 
+
+            // Check for cached
+            if (delegateCache.ContainsKey(target) == true)
+                return delegateCache[target];
 
             // Get parameters
             ParameterInfo[] parameters = target.GetParameters();
@@ -72,7 +82,12 @@ namespace dotnow.Runtime
 
                 // Construct final delegate
                 if (targetDelegate != null)
+                {
+                    // Cache delegate
+                    delegateCache[target] = targetDelegate;
+
                     return targetDelegate(instance, target);
+                }
 
                 throw new NotSupportedException("A suitable AOT delegate could not be constructed for the given parameters. Please replace reference type parameters with System.object to ensure compatibility with interop calls");
             }
@@ -83,6 +98,10 @@ namespace dotnow.Runtime
             // Important - this method does slow lookup for a suitable AOT delegate that can be used for interop calls
             // For the moment there is no other way and unfortunately it will not support passing reference types explicitly for interop calls. 
             // Instead you must use 'System.object' in those cases and cast at the receivng end. 
+
+            // Check for cached
+            if (delegateCache.ContainsKey(target) == true)
+                return delegateCache[target];
 
             // Get return
             Type returnType = ((MethodInfo)target).ReturnType;
@@ -114,7 +133,12 @@ namespace dotnow.Runtime
 
             // Construct final delegate
             if (targetDelegate != null)
+            {
+                // Add to cache
+                delegateCache[target] = targetDelegate;
+
                 return targetDelegate(instance, target);
+            }
 
             throw new NotSupportedException("A suitable AOT delegate could not be constructed for the given parameters. Please replace reference type parameters with System.object to ensure compatibility with interop calls");            
         }
@@ -122,7 +146,17 @@ namespace dotnow.Runtime
         #region Action
         public static object AutoActionInteropDelegate(object instance, MethodBase target)
         {
-            return ActionInteropDelegate(instance, target);
+            // Get cached delegate
+            if (delegateCache.ContainsKey(target) == true)
+                return delegateCache[target];
+
+            // Create delegate
+            object call = ActionInteropDelegate(instance, target);
+
+            // Cache delegate
+            delegateCache[target] = call;
+
+            return call;
         }
 
         public static Action ActionInteropDelegate(object instance, MethodBase target)
@@ -138,8 +172,15 @@ namespace dotnow.Runtime
         #region Action(T)
         public static object AutoActionInteropDelegate<T>(object instance, MethodBase target)
         {
+            // Get cached delegate
+            if (delegateCache.ContainsKey(target) == true)
+                return delegateCache[target];
+
             Type t = typeof(T);
             object val = ActionInteropDelegate<T>(instance, target);
+
+            // Cache delegate
+            delegateCache[target] = val;
 
             return val;
         }
@@ -182,7 +223,17 @@ namespace dotnow.Runtime
         #region Action(T0, T1)
         public static object AutoActionInteropDelegate<T0, T1>(object instance, MethodBase target)
         {
-            return ActionInteropDelegate<T0, T1>(instance, target);
+            // Get cached delegate
+            if (delegateCache.ContainsKey(target) == true)
+                return delegateCache[target];
+
+            // Get call
+            object call = ActionInteropDelegate<T0, T1>(instance, target);
+
+            // Add to cache
+            delegateCache[target] = call;
+
+            return call;
         }
 
         public static Action<T0, T1> ActionInteropDelegate<T0, T1>(object instance, MethodBase target)
@@ -465,7 +516,17 @@ namespace dotnow.Runtime
         #region Action(T0, T1, T2)
         public static object AutoActionInteropDelegate<T0, T1, T2>(object instance, MethodBase target)
         {
-            return ActionInteropDelegate<T0, T1, T2>(instance, target);
+            // Get cached delegate
+            if (delegateCache.ContainsKey(target) == true)
+                return delegateCache[target];
+
+            // Get call
+            object call = ActionInteropDelegate<T0, T1, T2>(instance, target);
+
+            // Add to cache
+            delegateCache[target] = call;
+
+            return call;
         }
 
         public static Action<T0, T1, T2> ActionInteropDelegate<T0, T1, T2>(object instance, MethodBase target)
@@ -4587,7 +4648,17 @@ namespace dotnow.Runtime
         #region Action(T0, T1, T2, T3)
         public static object AutoActionInteropDelegate<T0, T1, T2, T3>(object instance, MethodBase target)
         {
-            return ActionInteropDelegate<T0, T1, T2, T3>(instance, target);
+            // Get cached delegate
+            if (delegateCache.ContainsKey(target) == true)
+                return delegateCache[target];
+
+            // Get call
+            object call = ActionInteropDelegate<T0, T1, T2, T3>(instance, target);
+
+            // Add to cache
+            delegateCache[target] = call;
+
+            return call;
         }
 
         public static Action<T0, T1, T2, T3> ActionInteropDelegate<T0, T1, T2, T3>(object instance, MethodBase target)
@@ -4604,7 +4675,17 @@ namespace dotnow.Runtime
         #region TR Func
         public static object AutoFuncInteropDelegate<T>(object instance, MethodBase target)
         {
-            return FuncInteropDelegate<T>(instance, target);
+            // Get cached delegate
+            if (delegateCache.ContainsKey(target) == true)
+                return delegateCache[target];
+
+            // Get call
+            object call = FuncInteropDelegate<T>(instance, target);
+
+            // Add to cache
+            delegateCache[target] = call;
+
+            return call;
         }
 
         public static Func<T> FuncInteropDelegate<T>(object instance, MethodBase target)
@@ -4645,7 +4726,17 @@ namespace dotnow.Runtime
         #region TR Func<T0>
         public static object AutoFuncInteropDelegate<T0, TR>(object instance, MethodBase target)
         {
-            return FuncInteropDelegate<T0, TR>(instance, target);
+            // Get cached delegate
+            if (delegateCache.ContainsKey(target) == true)
+                return delegateCache[target];
+
+            // Get call
+            object call = FuncInteropDelegate<T0, TR>(instance, target);
+
+            // Add to cache
+            delegateCache[target] = call;
+
+            return call;
         }
 
         public static Func<T0, TR> FuncInteropDelegate<T0, TR>(object instance, MethodBase target)
@@ -4928,7 +5019,17 @@ namespace dotnow.Runtime
         #region TR Func<T0, T1>
         public static object AutoFuncInteropDelegate<T0, T1, TR>(object instance, MethodBase target)
         {
-            return FuncInteropDelegate<T0, T1, TR>(instance, target);
+            // Get cached delegate
+            if (delegateCache.ContainsKey(target) == true)
+                return delegateCache[target];
+
+            // Get call
+            object call = FuncInteropDelegate<T0, T1, TR>(instance, target);
+
+            // Add to cache
+            delegateCache[target] = call;
+
+            return call;
         }
 
         public static Func<T0, T1, TR> FuncInteropDelegate<T0, T1, TR>(object instance, MethodBase target)

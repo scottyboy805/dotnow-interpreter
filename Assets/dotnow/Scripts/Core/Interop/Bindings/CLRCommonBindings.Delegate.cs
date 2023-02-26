@@ -11,7 +11,7 @@ namespace dotnow.Interop
         public static object CreateActionInstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.ActionInteropDelegate(args[0], (MethodBase)args[1]);
+            return __delegate.AutoActionInteropDelegate(args[0], (MethodBase)args[1]);//.ActionInteropDelegate(args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<>))]
