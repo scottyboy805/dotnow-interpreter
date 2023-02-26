@@ -1185,7 +1185,7 @@ namespace dotnow.Runtime.CIL
                                     {                                      
                                         if(StackData.NullCheck(left) == true)
                                         {
-                                            flag = (right.type != StackData.ObjectType.Null);
+                                            flag = StackData.NullCheck(right) == false;
                                             break;
                                         }
 
