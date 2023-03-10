@@ -1,11 +1,14 @@
-﻿#if API_NET35
+﻿using dotnow;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace System
 {
     public static class ReflectionExtensions
     {
         // Methods
+#if API_NET35
         public static Type GetEnumUnderlyingType(this Type type)
         {
             if (type.IsEnum == false)
@@ -38,6 +41,80 @@ namespace System
 
             return null;
         }
+#endif
+
+        #region GetCustomAttributes(T)
+        public static IEnumerable<T> GetCustomAttributesInterpreted<T>(this Assembly element) where T : Attribute
+        {
+            return GetCustomAttributesOfType<T>(element.GetCustomAttributes(typeof(T)));
+        }
+
+        public static IEnumerable<T> GetCustomAttributesInterpreted<T>(this Module element) where T : Attribute
+        {
+            return GetCustomAttributesOfType<T>(element.GetCustomAttributes(typeof(T)));
+        }
+
+        public static IEnumerable<T> GetCustomAttributesInterpreted<T>(this MemberInfo element) where T : Attribute
+        {
+            return GetCustomAttributesOfType<T>(element.GetCustomAttributes(typeof(T)));
+        }
+
+        public static IEnumerable<T> GetCustomAttributesInterpreted<T>(this ParameterInfo element) where T : Attribute
+        {
+            return GetCustomAttributesOfType<T>(element.GetCustomAttributes(typeof(T)));
+        }
+        #endregion
+
+        #region GetCustomAttribute(T)
+        public static T GetCustomAttributeInterpreted<T>(this Assembly element) where T : Attribute
+        {
+            return GetCustomAttributeOfType<T>(element.GetCustomAttributes(typeof(T)));
+        }
+
+        public static T GetCustomAttributeInterpreted<T>(this Module element) where T : Attribute
+        {
+            return GetCustomAttributeOfType<T>(element.GetCustomAttributes(typeof(T)));
+        }
+
+        public static T GetCustomAttributeInterpreted<T>(this MemberInfo element) where T : Attribute
+        {
+            return GetCustomAttributeOfType<T>(element.GetCustomAttributes(typeof(T)));
+        }
+
+        public static T GetCustomAttributeInterpreted<T>(this ParameterInfo element) where T : Attribute
+        {
+            return GetCustomAttributeOfType<T>(element.GetCustomAttributes(typeof(T)));
+        }
+        #endregion
+
+
+        private static IEnumerable<T> GetCustomAttributesOfType<T>(IEnumerable<Attribute> customAttributes) where T : Attribute
+        {
+            // Find all attributes
+            IEnumerable<Attribute> attributes = customAttributes;
+
+            // Check for matched type
+            foreach (Attribute attribute in attributes)
+            {
+                // Try to convert
+                if (attribute.GetInterpretedType() == typeof(T))
+                    yield return attribute as T;
+            }
+        }
+
+        private static T GetCustomAttributeOfType<T>(IEnumerable<Attribute> customAttributes) where T : Attribute
+        {
+            // Find all attributes
+            IEnumerable<Attribute> attributes = customAttributes;
+
+            // Check for matched type
+            foreach (Attribute attribute in attributes)
+            {
+                // Try to convert
+                if (attribute.GetInterpretedType() == typeof(T))
+                    return attribute as T;
+            }
+            return null;
+        }
     }
 }
-#endif
