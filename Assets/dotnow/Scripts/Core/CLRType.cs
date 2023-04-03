@@ -354,6 +354,13 @@ namespace dotnow
                 current = current.BaseType;
             }
 
+            // Check interfaces
+            foreach(Type interaceType in interfaceTypes.Value)
+            {
+                if (interaceType == c)
+                    return true;
+            }
+
             return false;
         }
 
