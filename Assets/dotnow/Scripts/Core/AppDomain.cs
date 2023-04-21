@@ -150,6 +150,24 @@ namespace dotnow
         }        
 
         #region LoadModule
+        public CLRModule LoadModule(string path, bool keepOpen, bool optimizeOnLoad = true)
+        {
+            // Try to read stream
+            Stream input = File.OpenRead(path);
+
+            // Load the stream
+            return LoadModuleStream(input, keepOpen, optimizeOnLoad);
+        }
+
+        public CLRModule LoadModuleData(byte[] moduleData, bool keepOpen, bool optimizeOnLoad = true)
+        {
+            // Create stream
+            MemoryStream input = new MemoryStream(moduleData);
+
+            // Load the stream
+            return LoadModuleStream(input, keepOpen, optimizeOnLoad);
+        }
+
         public CLRModule LoadModuleStream(Stream input, bool keepOpen, bool optimizeOnLoad = true)
         {
             // Try to load the definition
