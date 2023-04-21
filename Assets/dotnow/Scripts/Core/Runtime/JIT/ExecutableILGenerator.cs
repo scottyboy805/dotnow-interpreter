@@ -4,10 +4,11 @@ using System.Reflection;
 using Mono.Cecil.Cil;
 using dotnow.Reflection;
 using dotnow.Runtime.CIL;
+using System.Runtime.CompilerServices;
 
 namespace dotnow.Runtime.JIT
 {
-    public class ExecutableILGenerator
+    public sealed class ExecutableILGenerator
     {
         // Private
         private AppDomain domain = null;
@@ -32,6 +33,7 @@ namespace dotnow.Runtime.JIT
         }
 
         // Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal CILOperation[] GetExecutableInstructions()
         {
             // Check for dynamically emitted instructions - can change at any time
@@ -149,6 +151,7 @@ namespace dotnow.Runtime.JIT
 #if API_NET35
         private void EmitOperation(CILOperation op)
 #else
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EmitOperation(in CILOperation op)
 #endif
         {
