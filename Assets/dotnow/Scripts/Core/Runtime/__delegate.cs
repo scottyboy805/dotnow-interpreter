@@ -22,6 +22,22 @@ namespace dotnow.Runtime
         private static Dictionary<MethodBase, object> delegateCache = new Dictionary<MethodBase, object>();
 
         // Methods
+        public static object AutoAnyInteropDelegateFromParametersAsType(Type delegateType, object instance, MethodBase target)
+        {
+            // Try to get action or func delegate
+            object targetDelegate = AutoAnyInteropDelegateFromParameters(instance, target);
+
+            // Check for null
+            if (targetDelegate == null)
+                return null;
+
+            // Get as delegate
+            Delegate inst = (Delegate)targetDelegate;
+
+            // Try to create delegate
+            return Delegate.CreateDelegate(delegateType, inst.Target, inst.Method);
+        }
+
         public static object AutoAnyInteropDelegateFromParameters(object instance, MethodBase target)
         {
             if(target is MethodInfo && ((MethodInfo)target).ReturnType != typeof(void))
