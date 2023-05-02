@@ -12,6 +12,7 @@ namespace dotnow.Interop
         private ConstructorInfo originalConstructor = null;
         private MethodBase target = null;
 
+        private Type dynamicOriginalType = null;
         private ConstructorInfo dynamicOriginalConstructor = null;
 
         // Properties
@@ -89,16 +90,24 @@ namespace dotnow.Interop
         {
             object[] args = new object[4];
 
+            Type typeInfo = originalType;
             ConstructorInfo ctorInfo = originalConstructor;
 
             if (ctorInfo == null && dynamicOriginalConstructor != null)
                 ctorInfo = dynamicOriginalConstructor;
 
+            if (dynamicOriginalType != null)
+                typeInfo = dynamicOriginalType;
+
             // Fill out parameters
             args[0] = domain;
-            args[1] = originalType;
+            args[1] = typeInfo;
             args[2] = ctorInfo;
             args[3] = parameters;
+
+            // Reset state
+            dynamicOriginalType = null;
+            dynamicOriginalConstructor = null;
 
             // Invoke with mapped configuration
             return target.Invoke(null, args);
@@ -109,11 +118,12 @@ namespace dotnow.Interop
             throw new NotImplementedException();
         }
 
-        internal void DynamicOriginalConstructorCall(MethodBase dynamicCtor)
+        internal void DynamicOriginalConstructorCall(MethodBase dynamicCtor, Type dynamicType = null)
         {
-            if (dynamicCtor == null || dynamicCtor.DeclaringType != originalType)
+            if (dynamicCtor == null || (dynamicCtor.DeclaringType.IsGenericType == false && dynamicCtor.DeclaringType != originalType))
                 return;
 
+            this.dynamicOriginalType = dynamicType;
             this.dynamicOriginalConstructor = dynamicCtor as ConstructorInfo;
         }
     }

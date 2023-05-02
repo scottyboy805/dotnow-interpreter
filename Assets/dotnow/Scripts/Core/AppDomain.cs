@@ -977,7 +977,7 @@ namespace dotnow
 
             // Check for dynamic resolve
             if (createInstanceOverride is CLRCreateInstanceBindingCallSite)
-                ((CLRCreateInstanceBindingCallSite)createInstanceOverride).DynamicOriginalConstructorCall(ctor);
+                ((CLRCreateInstanceBindingCallSite)createInstanceOverride).DynamicOriginalConstructorCall(ctor, type);
 
             // Invoke override create instance provider
             if (createInstanceOverride != null)
