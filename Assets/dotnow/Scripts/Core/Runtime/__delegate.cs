@@ -77,7 +77,6 @@ namespace dotnow.Runtime
                 {
                     case 1:
                         {
-                            TypeCode code = Type.GetTypeCode(parameters[0].ParameterType);
                             targetDelegate = action_T1[(int)Type.GetTypeCode(parameters[0].ParameterType)];
                             break;
                         }
@@ -97,10 +96,13 @@ namespace dotnow.Runtime
                 // Construct final delegate
                 if (targetDelegate != null)
                 {
-                    // Cache delegate
-                    delegateCache[target] = targetDelegate;
+                    // Construct the delaget with generic parameters
+                    object delegateImplicit = targetDelegate(instance, target);
 
-                    return targetDelegate(instance, target);
+                    // Cache delegate
+                    delegateCache[target] = delegateImplicit;
+
+                    return delegateImplicit;
                 }
 
                 throw new NotSupportedException("A suitable AOT delegate could not be constructed for the given parameters. Please replace reference type parameters with System.object to ensure compatibility with interop calls");

@@ -25,14 +25,14 @@ namespace dotnow.Interop
         public static object CreateActionT2InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoActionInteropDelegate(args[0], (MethodBase)args[1]);
+            return __delegate.AutoActionInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<,,>))]
         public static object CreateActionT3InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoActionInteropDelegate(args[0], (MethodBase)args[1]);
+            return __delegate.AutoActionInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<,,,>))]
@@ -76,6 +76,9 @@ namespace dotnow.Interop
         [CLRCreateInstanceBinding(typeof(MulticastDelegate))]
         public static object CreateMulticastDelegateInstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
+            //return __delegate.AutoAnyInteropDelegateFromParametersAsType(typeof(MulticastDelegate), args[0], (MethodBase)args[1]);
+
+
             // Get method target
             MethodBase method = (MethodBase)args[1];
 
