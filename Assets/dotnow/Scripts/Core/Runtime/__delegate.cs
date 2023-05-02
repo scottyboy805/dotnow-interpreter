@@ -150,10 +150,13 @@ namespace dotnow.Runtime
             // Construct final delegate
             if (targetDelegate != null)
             {
-                // Add to cache
-                delegateCache[target] = targetDelegate;
+                // Construct the delegate
+                object delegateImplicit = targetDelegate(instance, target);
 
-                return targetDelegate(instance, target);
+                // Add to cache
+                delegateCache[target] = delegateImplicit;
+
+                return delegateImplicit;
             }
 
             throw new NotSupportedException("A suitable AOT delegate could not be constructed for the given parameters. Please replace reference type parameters with System.object to ensure compatibility with interop calls");            
