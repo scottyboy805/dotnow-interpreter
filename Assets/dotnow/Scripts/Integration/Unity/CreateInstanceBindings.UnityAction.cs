@@ -34,7 +34,7 @@ namespace UnityEngine
         }
 
         [Preserve]
-        [CLRCreateInstanceBinding(typeof(Events.UnityAction<,,,>))]
+        [CLRCreateInstanceBinding(typeof(Events.UnityAction<,,>))]
         public static object CreateUnityActionInstanceOverride_T2(dotnow.AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
