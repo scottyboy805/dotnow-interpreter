@@ -7,8 +7,8 @@ namespace dotnow.Runtime
     internal static class __delegate
     {
         // Delegate
-        private delegate object AutoActionDelegate(object instance, MethodBase target);
-        private delegate object AutoFuncDelegate(object instance, MethodBase target);
+        private delegate object AutoActionDelegate(AppDomain domain, object instance, MethodBase target);
+        private delegate object AutoFuncDelegate(AppDomain domain, object instance, MethodBase target);
 
         private static AutoActionDelegate[] action_T1 = Action_T1_Providers();
         private static AutoActionDelegate[,] action_T2 = Action_T2_Providers();
@@ -18,14 +18,11 @@ namespace dotnow.Runtime
         private static AutoFuncDelegate[,] func_T2 = Func_T2_Providers();
         private static AutoFuncDelegate[,,] func_T3 = Func_T3_Providers();
 
-        // Private
-        private static Dictionary<MethodBase, object> delegateCache = new Dictionary<MethodBase, object>();
-
         // Methods
-        public static object AutoAnyInteropDelegateFromParametersAsType(Type delegateType, object instance, MethodBase target)
+        public static object AutoAnyInteropDelegateFromParametersAsType(AppDomain domain, Type delegateType, object instance, MethodBase target)
         {
             // Try to get action or func delegate
-            object targetDelegate = AutoAnyInteropDelegateFromParameters(instance, target);
+            object targetDelegate = AutoAnyInteropDelegateFromParameters(domain, instance, target);
 
             // Check for null
             if (targetDelegate == null)
@@ -38,27 +35,27 @@ namespace dotnow.Runtime
             return Delegate.CreateDelegate(delegateType, inst.Target, inst.Method);
         }
 
-        public static object AutoAnyInteropDelegateFromParameters(object instance, MethodBase target)
+        public static object AutoAnyInteropDelegateFromParameters(AppDomain domain, object instance, MethodBase target)
         {
             if(target is MethodInfo && ((MethodInfo)target).ReturnType != typeof(void))
             {
                 // Create func delegate
-                return AutoFuncInteropDelegateFromParameters(instance, target);
+                return AutoFuncInteropDelegateFromParameters(domain, instance, target);
             }
 
             // Create action delegate
-            return AutoActionInteropDelegateFromParameters(instance, target);
+            return AutoActionInteropDelegateFromParameters(domain, instance, target);
         }
 
-        public static object AutoActionInteropDelegateFromParameters(object instance, MethodBase target)
+        public static object AutoActionInteropDelegateFromParameters(AppDomain domain, object instance, MethodBase target)
         {
             // Important - this method does slow lookup for a suitable AOT delegate that can be used for interop calls
             // For the moment there is no other way and unfortunately it will not support passing reference types explicitly for interop calls. 
             // Instead you must use 'System.object' in those cases and cast at the receivng end. 
 
             // Check for cached
-            if (delegateCache.ContainsKey(target) == true)
-                return delegateCache[target];
+            if (domain.delegateCache.ContainsKey(target) == true)
+                return domain.delegateCache[target];
 
             // Get parameters
             ParameterInfo[] parameters = target.GetParameters();
@@ -67,7 +64,7 @@ namespace dotnow.Runtime
             if (parameters.Length == 0)
             {
                 // Create parameterless delegate
-                return AutoActionInteropDelegate(instance, target);
+                return AutoActionInteropDelegate(domain, instance, target);
             }
             else
             {
@@ -97,10 +94,10 @@ namespace dotnow.Runtime
                 if (targetDelegate != null)
                 {
                     // Construct the delaget with generic parameters
-                    object delegateImplicit = targetDelegate(instance, target);
+                    object delegateImplicit = targetDelegate(domain, instance, target);
 
                     // Cache delegate
-                    delegateCache[target] = delegateImplicit;
+                    domain.delegateCache[target] = delegateImplicit;
 
                     return delegateImplicit;
                 }
@@ -109,15 +106,15 @@ namespace dotnow.Runtime
             }
         }
 
-        public static object AutoFuncInteropDelegateFromParameters(object instance, MethodBase target)
+        public static object AutoFuncInteropDelegateFromParameters(AppDomain domain, object instance, MethodBase target)
         {
             // Important - this method does slow lookup for a suitable AOT delegate that can be used for interop calls
             // For the moment there is no other way and unfortunately it will not support passing reference types explicitly for interop calls. 
             // Instead you must use 'System.object' in those cases and cast at the receivng end. 
 
             // Check for cached
-            if (delegateCache.ContainsKey(target) == true)
-                return delegateCache[target];
+            if (domain.delegateCache.ContainsKey(target) == true)
+                return domain.delegateCache[target];
 
             // Get return
             Type returnType = ((MethodInfo)target).ReturnType;
@@ -151,10 +148,10 @@ namespace dotnow.Runtime
             if (targetDelegate != null)
             {
                 // Construct the delegate
-                object delegateImplicit = targetDelegate(instance, target);
+                object delegateImplicit = targetDelegate(domain, instance, target);
 
                 // Add to cache
-                delegateCache[target] = delegateImplicit;
+                domain.delegateCache[target] = delegateImplicit;
 
                 return delegateImplicit;
             }
@@ -163,22 +160,22 @@ namespace dotnow.Runtime
         }
 
         #region Action
-        public static object AutoActionInteropDelegate(object instance, MethodBase target)
+        public static object AutoActionInteropDelegate(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (delegateCache.ContainsKey(target) == true)
-                return delegateCache[target];
+            if (domain.delegateCache.ContainsKey(target) == true)
+                return domain.delegateCache[target];
 
             // Create delegate
-            object call = ActionInteropDelegate(instance, target);
+            object call = ActionInteropDelegate(domain, instance, target);
 
             // Cache delegate
-            delegateCache[target] = call;
+            domain.delegateCache[target] = call;
 
             return call;
         }
 
-        public static Action ActionInteropDelegate(object instance, MethodBase target)
+        public static Action ActionInteropDelegate(AppDomain domain, object instance, MethodBase target)
         {
             return () =>
             {
@@ -189,22 +186,22 @@ namespace dotnow.Runtime
         #endregion
 
         #region Action(T)
-        public static object AutoActionInteropDelegate<T>(object instance, MethodBase target)
+        public static object AutoActionInteropDelegate<T>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (delegateCache.ContainsKey(target) == true)
-                return delegateCache[target];
+            if (domain.delegateCache.ContainsKey(target) == true)
+                return domain.delegateCache[target];
 
             Type t = typeof(T);
-            object val = ActionInteropDelegate<T>(instance, target);
+            object val = ActionInteropDelegate<T>(domain, instance, target);
 
             // Cache delegate
-            delegateCache[target] = val;
+            domain.delegateCache[target] = val;
 
             return val;
         }
 
-        public static Action<T> ActionInteropDelegate<T>(object instance, MethodBase target)
+        public static Action<T> ActionInteropDelegate<T>(AppDomain domain, object instance, MethodBase target)
         {
             return (T val) =>
             {
@@ -240,22 +237,22 @@ namespace dotnow.Runtime
         #endregion
 
         #region Action(T0, T1)
-        public static object AutoActionInteropDelegate<T0, T1>(object instance, MethodBase target)
+        public static object AutoActionInteropDelegate<T0, T1>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (delegateCache.ContainsKey(target) == true)
-                return delegateCache[target];
+            if (domain.delegateCache.ContainsKey(target) == true)
+                return domain.delegateCache[target];
 
             // Get call
-            object call = ActionInteropDelegate<T0, T1>(instance, target);
+            object call = ActionInteropDelegate<T0, T1>(domain, instance, target);
 
             // Add to cache
-            delegateCache[target] = call;
+            domain.delegateCache[target] = call;
 
             return call;
         }
 
-        public static Action<T0, T1> ActionInteropDelegate<T0, T1>(object instance, MethodBase target)
+        public static Action<T0, T1> ActionInteropDelegate<T0, T1>(AppDomain domain, object instance, MethodBase target)
         {
             return (T0 a, T1 b) =>
             {
@@ -533,22 +530,22 @@ namespace dotnow.Runtime
         #endregion
 
         #region Action(T0, T1, T2)
-        public static object AutoActionInteropDelegate<T0, T1, T2>(object instance, MethodBase target)
+        public static object AutoActionInteropDelegate<T0, T1, T2>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (delegateCache.ContainsKey(target) == true)
-                return delegateCache[target];
+            if (domain.delegateCache.ContainsKey(target) == true)
+                return domain.delegateCache[target];
 
             // Get call
-            object call = ActionInteropDelegate<T0, T1, T2>(instance, target);
+            object call = ActionInteropDelegate<T0, T1, T2>(domain, instance, target);
 
             // Add to cache
-            delegateCache[target] = call;
+            domain.delegateCache[target] = call;
 
             return call;
         }
 
-        public static Action<T0, T1, T2> ActionInteropDelegate<T0, T1, T2>(object instance, MethodBase target)
+        public static Action<T0, T1, T2> ActionInteropDelegate<T0, T1, T2>(AppDomain domain, object instance, MethodBase target)
         {
             return (T0 a, T1 b, T2 c) =>
             {
@@ -4665,22 +4662,22 @@ namespace dotnow.Runtime
         #endregion
 
         #region Action(T0, T1, T2, T3)
-        public static object AutoActionInteropDelegate<T0, T1, T2, T3>(object instance, MethodBase target)
+        public static object AutoActionInteropDelegate<T0, T1, T2, T3>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (delegateCache.ContainsKey(target) == true)
-                return delegateCache[target];
+            if (domain.delegateCache.ContainsKey(target) == true)
+                return domain.delegateCache[target];
 
             // Get call
-            object call = ActionInteropDelegate<T0, T1, T2, T3>(instance, target);
+            object call = ActionInteropDelegate<T0, T1, T2, T3>(domain, instance, target);
 
             // Add to cache
-            delegateCache[target] = call;
+            domain.delegateCache[target] = call;
 
             return call;
         }
 
-        public static Action<T0, T1, T2, T3> ActionInteropDelegate<T0, T1, T2, T3>(object instance, MethodBase target)
+        public static Action<T0, T1, T2, T3> ActionInteropDelegate<T0, T1, T2, T3>(AppDomain domain, object instance, MethodBase target)
         {
             return (T0 a, T1 b, T2 c, T3 d) =>
             {
@@ -4692,22 +4689,22 @@ namespace dotnow.Runtime
 
 
         #region TR Func
-        public static object AutoFuncInteropDelegate<T>(object instance, MethodBase target)
+        public static object AutoFuncInteropDelegate<T>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (delegateCache.ContainsKey(target) == true)
-                return delegateCache[target];
+            if (domain.delegateCache.ContainsKey(target) == true)
+                return domain.delegateCache[target];
 
             // Get call
-            object call = FuncInteropDelegate<T>(instance, target);
+            object call = FuncInteropDelegate<T>(domain, instance, target);
 
             // Add to cache
-            delegateCache[target] = call;
+            domain.delegateCache[target] = call;
 
             return call;
         }
 
-        public static Func<T> FuncInteropDelegate<T>(object instance, MethodBase target)
+        public static Func<T> FuncInteropDelegate<T>(AppDomain domain, object instance, MethodBase target)
         {
             return () =>
             {
@@ -4743,22 +4740,22 @@ namespace dotnow.Runtime
         #endregion
 
         #region TR Func<T0>
-        public static object AutoFuncInteropDelegate<T0, TR>(object instance, MethodBase target)
+        public static object AutoFuncInteropDelegate<T0, TR>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (delegateCache.ContainsKey(target) == true)
-                return delegateCache[target];
+            if (domain.delegateCache.ContainsKey(target) == true)
+                return domain.delegateCache[target];
 
             // Get call
-            object call = FuncInteropDelegate<T0, TR>(instance, target);
+            object call = FuncInteropDelegate<T0, TR>(domain, instance, target);
 
             // Add to cache
-            delegateCache[target] = call;
+            domain.delegateCache[target] = call;
 
             return call;
         }
 
-        public static Func<T0, TR> FuncInteropDelegate<T0, TR>(object instance, MethodBase target)
+        public static Func<T0, TR> FuncInteropDelegate<T0, TR>(AppDomain domain, object instance, MethodBase target)
         {
             return (T0 arg) =>
             {
@@ -5036,22 +5033,22 @@ namespace dotnow.Runtime
         #endregion
 
         #region TR Func<T0, T1>
-        public static object AutoFuncInteropDelegate<T0, T1, TR>(object instance, MethodBase target)
+        public static object AutoFuncInteropDelegate<T0, T1, TR>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (delegateCache.ContainsKey(target) == true)
-                return delegateCache[target];
+            if (domain.delegateCache.ContainsKey(target) == true)
+                return domain.delegateCache[target];
 
             // Get call
-            object call = FuncInteropDelegate<T0, T1, TR>(instance, target);
+            object call = FuncInteropDelegate<T0, T1, TR>(domain, instance, target);
 
             // Add to cache
-            delegateCache[target] = call;
+            domain.delegateCache[target] = call;
 
             return call;
         }
 
-        public static Func<T0, T1, TR> FuncInteropDelegate<T0, T1, TR>(object instance, MethodBase target)
+        public static Func<T0, T1, TR> FuncInteropDelegate<T0, T1, TR>(AppDomain domain, object instance, MethodBase target)
         {
             return (T0 a, T1 b) =>
             {

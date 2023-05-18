@@ -14,7 +14,7 @@ namespace UnityEngine
         public static object CreateUnityActionInstanceOverride(dotnow.AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoAnyInteropDelegateFromParametersAsType(type, args[0], (MethodBase)args[1]);
+            return __delegate.AutoAnyInteropDelegateFromParametersAsType(domain, type, args[0], (MethodBase)args[1]);
         }
 
         [Preserve]
@@ -22,7 +22,7 @@ namespace UnityEngine
         public static object CreateUnityActionInstanceOverride_T0(dotnow.AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoAnyInteropDelegateFromParametersAsType(type, args[0], (MethodBase)args[1]);
+            return __delegate.AutoAnyInteropDelegateFromParametersAsType(domain, type, args[0], (MethodBase)args[1]);
         }
 
         [Preserve]
@@ -30,7 +30,7 @@ namespace UnityEngine
         public static object CreateUnityActionInstanceOverride_T1(dotnow.AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoAnyInteropDelegateFromParametersAsType(type, args[0], (MethodBase)args[1]);
+            return __delegate.AutoAnyInteropDelegateFromParametersAsType(domain, type, args[0], (MethodBase)args[1]);
         }
 
         [Preserve]
@@ -38,7 +38,7 @@ namespace UnityEngine
         public static object CreateUnityActionInstanceOverride_T2(dotnow.AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoAnyInteropDelegateFromParametersAsType(type, args[0], (MethodBase)args[1]);
+            return __delegate.AutoAnyInteropDelegateFromParametersAsType(domain, type, args[0], (MethodBase)args[1]);
         }
     }
 }

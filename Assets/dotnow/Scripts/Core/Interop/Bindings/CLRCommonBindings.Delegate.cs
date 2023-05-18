@@ -11,28 +11,28 @@ namespace dotnow.Interop
         public static object CreateActionInstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoActionInteropDelegate(args[0], (MethodBase)args[1]);//.ActionInteropDelegate(args[0], (MethodBase)args[1]);
+            return __delegate.AutoActionInteropDelegate(domain, args[0], (MethodBase)args[1]);//.ActionInteropDelegate(args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<>))]
         public static object CreateActionT1InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoActionInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
+            return __delegate.AutoActionInteropDelegateFromParameters(domain, args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<,>))]
         public static object CreateActionT2InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoActionInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
+            return __delegate.AutoActionInteropDelegateFromParameters(domain, args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<,,>))]
         public static object CreateActionT3InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoActionInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
+            return __delegate.AutoActionInteropDelegateFromParameters(domain, args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Action<,,,>))]
@@ -56,21 +56,21 @@ namespace dotnow.Interop
         public static object CreateFuncInstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoFuncInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
+            return __delegate.AutoFuncInteropDelegateFromParameters(domain, args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Func<,>))]
         public static object CreateFuncT1InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoFuncInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
+            return __delegate.AutoFuncInteropDelegateFromParameters(domain, args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(Func<,,>))]
         public static object CreateFuncT2InstanceOverride(AppDomain domain, Type type, ConstructorInfo ctor, object[] args)
         {
             // Create delegate
-            return __delegate.AutoFuncInteropDelegateFromParameters(args[0], (MethodBase)args[1]);
+            return __delegate.AutoFuncInteropDelegateFromParameters(domain, args[0], (MethodBase)args[1]);
         }
 
         [CLRCreateInstanceBinding(typeof(MulticastDelegate))]
