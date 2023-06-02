@@ -117,6 +117,112 @@ namespace dotnow.Runtime
             return UnboxAsType(typeInfo.typeCode);
         }
 
+#if !API_NET35
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        public void UnboxAsType(ref StackData dest, in CLRTypeInfo typeInfo)
+        {
+            // Check for enum type
+            if (typeInfo.typeCode == TypeCode.Object && typeInfo.isEnum == true && typeInfo.isArray == false)
+            {
+                UnboxAsType(ref dest, typeInfo.enumUnderlyingTypeCode);
+            }
+            else
+            {
+                // Unbox by type code
+                UnboxAsType(ref dest, typeInfo.typeCode);
+            }
+        }
+
+        public void UnboxAsType(ref StackData dest, TypeCode typeCode)
+        {
+            // Check for null
+            if(type == ObjectType.Null)
+            {
+                dest = StackData.nullPtr;
+                return;
+            }
+
+            // Check for boxed
+            if (type == ObjectType.RefBoxed)
+            {
+                switch (typeCode)
+                {
+                    case TypeCode.Boolean:
+                        {
+                            dest.value.Int32 = (bool)refValue ? 1 : 0;
+                            dest.type = ObjectType.Int32;
+                            break;
+                        }
+                    case TypeCode.SByte:
+                        {
+                            dest.value.Int8 = (sbyte)refValue; 
+                            dest.type = ObjectType.Int8;
+                            break;
+                        }
+                    case TypeCode.Byte:
+                        {
+                            dest.value.Int8 = (sbyte)(byte)refValue;
+                            dest.type = ObjectType.UInt8;
+                            break;
+                        }
+                    case TypeCode.Int16:
+                        {
+                            dest.value.Int16 = (short)refValue;
+                            dest.type = ObjectType.Int16;
+                            break;
+                        }
+                    case TypeCode.UInt16:
+                        {
+                            dest.value.Int16 = (short)(ushort)refValue;
+                            dest.type = ObjectType.UInt16;
+                            break;
+                        }
+                    case TypeCode.Int32:
+                        {
+                            dest.value.Int32 = (int)refValue;
+                            dest.type = ObjectType.Int32;
+                            break;
+                        }
+                    case TypeCode.UInt32:
+                        {
+                            dest.value.Int32 = (int)(uint)refValue;
+                            dest.type = ObjectType.UInt32;
+                            break;
+                        }
+                    case TypeCode.Int64:
+                        {
+                            dest.value.Int64 = (long)refValue;
+                            dest.type = ObjectType.Int64;
+                            break;
+                        }
+                    case TypeCode.UInt64:
+                        {
+                            dest.value.Int64 = (long)(ulong)refValue;
+                            dest.type = ObjectType.UInt64;
+                            break;
+                        }
+                    case TypeCode.Single:
+                        {
+                            dest.value.Single = (float)refValue;
+                            dest.type = ObjectType.Single;
+                            break;
+                        }
+                    case TypeCode.Double:
+                        {
+                            dest.value.Double = (double)refValue;
+                            dest.type = ObjectType.Double;
+                            break;
+                        }
+
+                    default:
+                        throw new NotSupportedException("Attemtping to box unsupported type: " + typeCode);
+                }
+            }
+            else
+                throw new InvalidOperationException("Type must be RefBoxed in order to support unbox operation: " + type);
+        }
+
         public object UnboxAsType(TypeCode typeCode)
         {
             // Cannot box nullable
@@ -509,8 +615,9 @@ namespace dotnow.Runtime
                     return;
             }
 
-            // Overwrite type
-            dest.type = type;
+            // Overwrite type - except for boxed primitved
+            if(src.type != ObjectType.RefBoxed)
+                dest.type = type;
         }
 
 #if API_NET35
@@ -534,6 +641,28 @@ namespace dotnow.Runtime
                 case ObjectType.RefBoxed:
                     return val.refValue == null;
             }
+        }
+
+        public static ObjectType StackTypeFromTypeCode(TypeCode code)
+        {
+            switch(code)
+            {
+                case TypeCode.Boolean: return ObjectType.Int32;
+                case TypeCode.Object:
+                case TypeCode.String: return ObjectType.Ref;
+                case TypeCode.Byte: return ObjectType.UInt8;
+                case TypeCode.SByte: return ObjectType.Int8;
+                case TypeCode.UInt16: return ObjectType.UInt16;
+                case TypeCode.Int16: return ObjectType.Int16;
+                case TypeCode.UInt32: return ObjectType.UInt32;
+                case TypeCode.Int32: return ObjectType.Int32;
+                case TypeCode.UInt64: return ObjectType.UInt64;
+                case TypeCode.Int64: return ObjectType.Int64;
+                case TypeCode.Single: return ObjectType.Single;
+                case TypeCode.Double: return ObjectType.Double;
+            }
+
+            throw new NotSupportedException("Unsupported type: " + code.ToString());
         }
     }
 }

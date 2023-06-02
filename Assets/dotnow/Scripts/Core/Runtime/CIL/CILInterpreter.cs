@@ -780,6 +780,11 @@ namespace dotnow.Runtime.CIL
                             stack[stackPtr - 1].refValue = stack[stackPtr - 1].Box();
                             stack[stackPtr - 1].type = StackData.ObjectType.RefBoxed;
                             break;
+                        }
+
+                    case Code.Unbox_Any:
+                        {
+                            stack[stackPtr - 1].UnboxAsType(ref stack[stackPtr - 1], instruction.typeOperand);
                             break;
                         }
 
