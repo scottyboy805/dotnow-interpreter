@@ -14,6 +14,22 @@ namespace UnityEngine
             stack[offset].value.Int32 = Input.GetKey((KeyCode)stack[offset].value.Int32) ? 1 : 0;
             stack[offset].type = StackData.ObjectType.Int32;
         }
+
+        [Preserve]
+        [CLRMethodDirectCallBinding(typeof(Input), "GetKeyDown", typeof(KeyCode))]
+        public static void UnityEngine_Input_GetKeyDown(StackData[] stack, int offset)
+        {
+            stack[offset].value.Int32 = Input.GetKeyDown((KeyCode)stack[offset].value.Int32) ? 1 : 0;
+            stack[offset].type = StackData.ObjectType.Int32;
+        }
+
+        [Preserve]
+        [CLRMethodDirectCallBinding(typeof(Input), "GetKeyUp", typeof(KeyCode))]
+        public static void UnityEngine_Input_GetKeyUp(StackData[] stack, int offset)
+        {
+            stack[offset].value.Int32 = Input.GetKeyUp((KeyCode)stack[offset].value.Int32) ? 1 : 0;
+            stack[offset].type = StackData.ObjectType.Int32;
+        }
     }
 }
 #endif

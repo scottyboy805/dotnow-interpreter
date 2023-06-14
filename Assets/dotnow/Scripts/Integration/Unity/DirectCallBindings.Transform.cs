@@ -11,6 +11,14 @@ namespace UnityEngine
     internal static partial class DirectCallBindings
     {
         [Preserve]
+        [CLRMethodDirectCallBinding(typeof(Transform), "get_position")]
+        public static void UnityEngine_Transform_GetPosition(StackData[] stack, int offset)
+        {
+            stack[offset].refValue = ((Transform)stack[offset].refValue).position;
+            stack[offset].type = StackData.ObjectType.Ref;
+        }
+
+        [Preserve]
         [CLRMethodDirectCallBinding(typeof(Transform), "Rotate", typeof(float), typeof(float), typeof(float))]
         public static void UnityEngine_Transform_Rotate_SingleSingleSingle(StackData[] stack, int offset)
         {
