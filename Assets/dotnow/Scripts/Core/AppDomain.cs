@@ -788,8 +788,37 @@ namespace dotnow
                             parameters[i] = ResolveType(reference.Parameters[i].ParameterType, resolvedDeclaringType);
                     }
 
-                    // Try to resolve the field
-                    resolvedMethod = resolvedDeclaringType.GetMethod(reference.Name, parameters);
+                    // Handle implicit and explicit operators
+                    if (reference.Name.StartsWith("op_", StringComparison.Ordinal) == true && (reference.Name == "op_Implicit" || reference.Name == "op_Explicit"))
+                    {
+                        // Resolve return type
+                        Type returnType = ResolveType(reference.ReturnType, resolvedDeclaringType);
+
+                        // Get public static methods - implicit and explicit operators must be public static so we can save some work
+                        MethodInfo[] methods = resolvedDeclaringType.GetMethods(BindingFlags.Public | BindingFlags.Static);
+
+                        for(int i = 0; i < methods.Length; i++)
+                        {
+                            if (methods[i].Name == reference.Name)
+                            {
+                                // Operations must have 1 parameter
+                                Type paramType = methods[i].GetParameters()[0].ParameterType;
+
+                                // Check for matching parameter type
+                                if(paramType == parameters[0] && returnType == methods[i].ReturnType)
+                                {
+                                    resolvedMethod = methods[i];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    // Standard behaviour for normal methods
+                    else
+                    {
+                        // Try to resolve the field
+                        resolvedMethod = resolvedDeclaringType.GetMethod(reference.Name, parameters);
+                    }
                 }
 
                 // Check for success
