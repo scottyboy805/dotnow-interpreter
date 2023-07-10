@@ -19,6 +19,30 @@ namespace UnityEngine
         }
 
         [Preserve]
+        [CLRMethodDirectCallBinding(typeof(Transform), "get_localPosition")]
+        public static void UnityEngine_Transform_GetLocalPosition(StackData[] stack, int offset)
+        {
+            stack[offset].refValue = ((Transform)stack[offset].refValue).localPosition;
+            stack[offset].type = StackData.ObjectType.Ref;
+        }
+
+        [Preserve]
+        [CLRMethodDirectCallBinding(typeof(Transform), "get_rotation")]
+        public static void UnityEngine_Transform_GetRotation(StackData[] stack, int offset)
+        {
+            stack[offset].refValue = ((Transform)stack[offset].refValue).rotation;
+            stack[offset].type = StackData.ObjectType.Ref;
+        }
+
+        [Preserve]
+        [CLRMethodDirectCallBinding(typeof(Transform), "get_localRotation")]
+        public static void GetLocalRotation(StackData[] stack, int offset)
+        {
+            stack[offset].refValue = ((Transform)stack[offset].refValue).localRotation;
+            stack[offset].type = StackData.ObjectType.Ref;
+        }
+
+        [Preserve]
         [CLRMethodDirectCallBinding(typeof(Transform), "Rotate", typeof(float), typeof(float), typeof(float))]
         public static void UnityEngine_Transform_Rotate_SingleSingleSingle(StackData[] stack, int offset)
         {
@@ -44,28 +68,6 @@ namespace UnityEngine
 
             StackData.AllocTyped(ref stack[offset], System.TypeCode.Object, enumerator.Current);
         }
-
-
-        //[Preserve]
-        //[CLRFieldDirectAccessBinding(typeof(Vector3), "x", CLRFieldAccessMode.Read)]
-        //public static void UnityEngine_Vector3_Xr(StackData[] stack, int offset)
-        //{
-        //    StackData.Alloc(ref stack[offset], ((Vector3)((IByRef)stack[offset].refValue).GetReferenceValue().refValue).x);
-        //}
-
-        //[Preserve]
-        //[CLRFieldDirectAccessBinding(typeof(Vector3), "x", CLRFieldAccessMode.Write)]
-        //public static void UnityEngine_Vector3_Xw(StackData[] stack, int offset)
-        //{
-        //    ((IByRef)stack[offset].refValue).SetReferenceValueR4(stack[1].value.Single);
-
-
-        //    // Cannot set value directly due to non-reference type. Struct copy is required
-        //    //Vector3 temp = (Vector3)((IByRef)stack[offset].refValue).GetReferenceValue().refValue;
-        //    //temp.x = stack[offset + 1].value.Single;
-
-        //    //stack[offset].refValue = temp;
-        //}
     }
 }
 #endif
