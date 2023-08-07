@@ -810,6 +810,10 @@ namespace dotnow.Runtime.CIL
                                     // Push object
                                     stack[stackPtr++] = temp;
                                 }
+                                else if(castType.type.IsSubclassOf(typeof(MulticastDelegate)) == true)
+                                {
+                                    // Do nothing - cast is implicit
+                                }
                                 else
                                 {
                                     // Invalid cast
