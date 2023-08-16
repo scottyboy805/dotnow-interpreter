@@ -44,12 +44,14 @@
     <Compile Include="Arithmetic\TestAdd.cs" />
     <Compile Include="Arithmetic\TestMultiply.cs" />
     <Compile Include="Arithmetic\TestSubtract.cs" />
+    <Compile Include="TestAction.cs" />
     <Compile Include="TestArray.cs" />
     <Compile Include="TestBranching.cs" />
     <Compile Include="TestCustomAttributes.cs" />
     <Compile Include="TestDelegates.cs" />
     <Compile Include="TestExceptions.cs" />
     <Compile Include="TestFields.cs" />
+    <Compile Include="TestFunc.cs" />
     <Compile Include="TestGenerics.cs" />
     <Compile Include="TestInheritance.cs" />
     <Compile Include="TestMisc.cs" />
@@ -65,6 +67,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="BinaryOp\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TestInterop\TestInterop.csproj">
+      <Project>{16d365e5-a361-4052-a32e-a6c33a79f4a9}</Project>
+      <Name>TestInterop</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

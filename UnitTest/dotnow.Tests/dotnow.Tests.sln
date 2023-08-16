@@ -1,11 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30711.63
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnow.Tests", "dotnow.Tests\dotnow.Tests.csproj", "{50F093A3-630C-4B08-90C1-2356968348DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestModule", "TestModule\TestModule.csproj", "{599E13E8-872B-4A3D-8609-9940EDFEFBD3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestInterop", "TestInterop\TestInterop.csproj", "{16D365E5-A361-4052-A32E-A6C33A79F4A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnow", "..\..\dotnow.csproj", "{52786102-E669-D12F-63E4-B34A31BE8F17}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{599E13E8-872B-4A3D-8609-9940EDFEFBD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{599E13E8-872B-4A3D-8609-9940EDFEFBD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{599E13E8-872B-4A3D-8609-9940EDFEFBD3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16D365E5-A361-4052-A32E-A6C33A79F4A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16D365E5-A361-4052-A32E-A6C33A79F4A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16D365E5-A361-4052-A32E-A6C33A79F4A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16D365E5-A361-4052-A32E-A6C33A79F4A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52786102-E669-D12F-63E4-B34A31BE8F17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52786102-E669-D12F-63E4-B34A31BE8F17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52786102-E669-D12F-63E4-B34A31BE8F17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52786102-E669-D12F-63E4-B34A31BE8F17}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

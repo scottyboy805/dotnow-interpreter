@@ -39,9 +39,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="dotnow">
-      <HintPath>..\..\..\Library\ScriptAssemblies\dotnow.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\MSTest.TestFramework.2.1.1\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
     </Reference>
@@ -59,12 +56,14 @@
     <Compile Include="Arithmetic\UnitTestMultiply.cs" />
     <Compile Include="Arithmetic\UnitTestSubtract.cs" />
     <Compile Include="TestUtils.cs" />
+    <Compile Include="UnitTestAction.cs" />
     <Compile Include="UnitTestArray.cs" />
     <Compile Include="UnitTestBranching.cs" />
     <Compile Include="UnitTestCustomAttributes.cs" />
     <Compile Include="UnitTestDelegates.cs" />
     <Compile Include="UnitTestExceptions.cs" />
     <Compile Include="UnitTestFields.cs" />
+    <Compile Include="UnitTestFunc.cs" />
     <Compile Include="UnitTestGenerics.cs" />
     <Compile Include="UnitTestILGenerator.cs" />
     <Compile Include="UnitTestInheritance.cs" />
@@ -84,6 +83,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\dotnow.csproj">
+      <Project>{52786102-e669-d12f-63e4-b34a31be8f17}</Project>
+      <Name>dotnow</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TestInterop\TestInterop.csproj">
+      <Project>{16d365e5-a361-4052-a32e-a6c33a79f4a9}</Project>
+      <Name>TestInterop</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TestModule\TestModule.csproj">
       <Project>{599e13e8-872b-4a3d-8609-9940edfefbd3}</Project>
       <Name>TestModule</Name>
