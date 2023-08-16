@@ -41,7 +41,7 @@ namespace dotnow.Runtime
         internal Dictionary<int, object[]> argumentCache = new Dictionary<int, object[]>();
 
         internal ExecutionFrame currentFrame = null;
-        internal StackData[] stack = null;
+        internal byte[] stack = null;
 
         // Private        
         private static readonly FieldInfo exceptionStackTraceProperty = typeof(Exception).GetField("_stackTraceString", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -76,7 +76,7 @@ namespace dotnow.Runtime
             int stackSize = (maxStack > 0) ? maxStack : defaultStackSize;
 
             this.thread = thread;
-            this.stack = new StackData[stackSize];
+            this.stack = new byte[stackSize];
         }
 
         // Methods
@@ -176,7 +176,7 @@ namespace dotnow.Runtime
             {
                 try
                 {
-                    CILInterpreter.ExecuteInterpreted(domain, this, ref frame, ref methodInstructions, ref exceptionHandlers, debugFlags);
+                    CILInterpreterUnsafe.ExecuteInterpreted(domain, this, ref frame, ref methodInstructions, ref exceptionHandlers, debugFlags);
                     return;
                 }
                 catch (Exception e)
@@ -219,7 +219,7 @@ namespace dotnow.Runtime
             {
                 try
                 {
-                    CILInterpreter.ExecuteInterpreted(domain, this, ref frame, ref instructions, ref exceptionHandlers, debugFlags);
+                    CILInterpreterUnsafe.ExecuteInterpreted(domain, this, ref frame, ref instructions, ref exceptionHandlers, debugFlags);
                     
                     // Check for rethrow
                     if (frame.instructionPtr == rethrowOnReturn)

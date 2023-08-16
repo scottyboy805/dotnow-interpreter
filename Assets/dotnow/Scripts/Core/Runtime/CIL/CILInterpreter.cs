@@ -43,10 +43,10 @@ namespace dotnow.Runtime.CIL
             IList listArrImpl;
 
 
-            int instructionLength = instructions.Length;            
+            int instructionLength = instructions.Length;
 
             // Use local variables in instruction loop           
-            
+
             int instructionPtr = frame.instructionPtr;
             int stackArgOffset = frame.Method.IsStatic == false ? 1 : 0;
 
@@ -70,7 +70,7 @@ namespace dotnow.Runtime.CIL
                     default:
                         throw new NotImplementedException("MSIL instruction is not implemented: " + instruction.opCode.ToString() + "\nAt method body: " + frame.Method);
 
-#region Arithmetic
+                    #region Arithmetic
                     case Code.Add:
                         {
                             left = stack[stackPtr - 2];
@@ -601,9 +601,9 @@ namespace dotnow.Runtime.CIL
                             }
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Compare
+                    #region Compare
                     case Code.Ceq:
                         {
                             right = stack[--stackPtr];
@@ -733,7 +733,7 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Int32 > right.value.Int32) ? 1 : 0;
-                                        stack[stackPtr++].type = StackData.ObjectType.Int32;    
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
@@ -773,9 +773,9 @@ namespace dotnow.Runtime.CIL
                         }
 
 
-#endregion
+                    #endregion
 
-#region Convert
+                    #region Convert
                     case Code.Box:
                         {
                             stack[stackPtr - 1].refValue = stack[stackPtr - 1].Box();
@@ -800,18 +800,18 @@ namespace dotnow.Runtime.CIL
                             object inst = temp.Box();
 
                             // Chekc for null
-                            if(inst != null)
+                            if (inst != null)
                             {
                                 // Get interpreted type
                                 Type instType = inst.GetInterpretedType();
 
                                 // Check for equal or assignable (May need more work to support interfaces??)
-                                if(castType.type == instType || instType.IsSubclassOf(castType.type) == true)
+                                if (castType.type == instType || instType.IsSubclassOf(castType.type) == true)
                                 {
                                     // Push object
                                     stack[stackPtr++] = temp;
                                 }
-                                else if(castType.type.IsSubclassOf(typeof(MulticastDelegate)) == true)
+                                else if (castType.type.IsSubclassOf(typeof(MulticastDelegate)) == true)
                                 {
                                     // Do nothing - cast is implicit
                                 }
@@ -1026,9 +1026,9 @@ namespace dotnow.Runtime.CIL
                             RuntimeConvert.ToUInt64Checked(ref stack[stackPtr - 1]);
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Branch
+                    #region Branch
                     case Code.Br:
                     case Code.Br_S:
                         {
@@ -1069,13 +1069,13 @@ namespace dotnow.Runtime.CIL
                     case Code.Brfalse:
                     case Code.Brfalse_S:
                         {
-                            switch(stack[stackPtr - 1].type)
+                            switch (stack[stackPtr - 1].type)
                             {
                                 case StackData.ObjectType.Ref:
                                 case StackData.ObjectType.RefBoxed:
                                 case StackData.ObjectType.ByRef:
                                     {
-                                        if(stack[--stackPtr].Address == 0)
+                                        if (stack[--stackPtr].Address == 0)
                                         {
                                             instructionPtr += instruction.operand.Int32;
                                             continue;
@@ -1100,7 +1100,7 @@ namespace dotnow.Runtime.CIL
                     case Code.Beq_S:
                         {
                             right = stack[--stackPtr];
-                            left = stack[--stackPtr];                            
+                            left = stack[--stackPtr];
 
                             switch (left.type)
                             {
@@ -1193,8 +1193,8 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.Null:
                                 case StackData.ObjectType.Ref:
                                 case StackData.ObjectType.RefBoxed:
-                                    {                                      
-                                        if(StackData.NullCheck(left) == true)
+                                    {
+                                        if (StackData.NullCheck(left) == true)
                                         {
                                             flag = StackData.NullCheck(right) == false;
                                             break;
@@ -1441,9 +1441,9 @@ namespace dotnow.Runtime.CIL
                             }
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Constant
+                    #region Constant
                     case Code.Ldnull:
                         {
                             stack[stackPtr] = StackData.nullPtr;
@@ -1555,9 +1555,9 @@ namespace dotnow.Runtime.CIL
                             stack[stackPtr++].type = StackData.ObjectType.Double;
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Argument
+                    #region Argument
                     case Code.Ldarg_0:
                         {
                             stack[stackPtr++] = stack[frame.stackArgIndex];
@@ -1605,9 +1605,9 @@ namespace dotnow.Runtime.CIL
                             stack[frame.stackArgIndex + instruction.operand.Int32 + stackArgOffset] = stack[--stackPtr];
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Local
+                    #region Local
                     case Code.Ldloc_0:
                         {
                             stack[stackPtr++] = stack[frame.stackMin + 0];
@@ -1699,9 +1699,9 @@ namespace dotnow.Runtime.CIL
                             StackData.AssignKeepType(ref stack[frame.stackMin + instruction.operand.Int32], stack[--stackPtr]);
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Indirect
+                    #region Indirect
                     case Code.Ldind_I:
                         {
                             stack[stackPtr - 1].value.Int32 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI4();
@@ -1850,9 +1850,9 @@ namespace dotnow.Runtime.CIL
                             ((IByRef)left.refValue).SetReferenceValue(right);
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Array
+                    #region Array
                     case Code.Newarr:
                         {
                             // Length
@@ -2468,15 +2468,15 @@ namespace dotnow.Runtime.CIL
                             stack[stackPtr++].type = StackData.ObjectType.UInt32;
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Field
+                    #region Field
                     case Code.Ldsfld:
                         {
                             fieldAccess = (CILFieldAccess)instruction.objectOperand;
 
                             // Check for direct access delegate
-                            if(fieldAccess.directReadAccessDelegate != null)
+                            if (fieldAccess.directReadAccessDelegate != null)
                             {
                                 // No instance + add 1 to stack
                                 fieldAccess.directReadAccessDelegate(stack, stackPtr);
@@ -2509,7 +2509,7 @@ namespace dotnow.Runtime.CIL
                             fieldAccess = (CILFieldAccess)instruction.objectOperand;
 
                             // Check for direct access delegate
-                            if(fieldAccess.directReadAccessDelegate != null)
+                            if (fieldAccess.directReadAccessDelegate != null)
                             {
                                 fieldAccess.directReadAccessDelegate(stack, stackPtr - 1);
                                 break;
@@ -2569,7 +2569,7 @@ namespace dotnow.Runtime.CIL
                             fieldAccess = (CILFieldAccess)instruction.objectOperand;
 
                             // Check for direct access delegate
-                            if(fieldAccess.directWriteAccessDelegate != null)
+                            if (fieldAccess.directWriteAccessDelegate != null)
                             {
                                 fieldAccess.directWriteAccessDelegate(stack, stackPtr - 1);
                                 break;
@@ -2588,7 +2588,7 @@ namespace dotnow.Runtime.CIL
                             fieldAccess = (CILFieldAccess)instruction.objectOperand;
 
                             // Check for direct access deleate
-                            if(fieldAccess.directWriteAccessDelegate != null)
+                            if (fieldAccess.directWriteAccessDelegate != null)
                             {
                                 fieldAccess.directWriteAccessDelegate(stack, stackPtr - 2);
                                 break;
@@ -2621,9 +2621,9 @@ namespace dotnow.Runtime.CIL
                             }
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Object
+                    #region Object
                     case Code.Newobj:
                         {
                             methodInvoke = (CILMethodInvocation)instruction.objectOperand;
@@ -2666,12 +2666,12 @@ namespace dotnow.Runtime.CIL
                         {
                             CILFieldAccess access = instruction.objectOperand as CILFieldAccess;
                             CILMethodInvocation invocation = instruction.objectOperand as CILMethodInvocation;
-                            if(access != null)
+                            if (access != null)
                             {
                                 stack[stackPtr].refValue = access.targetField;
                                 stack[stackPtr++].type = StackData.ObjectType.Ref;
                             }
-                            else if(invocation != null)
+                            else if (invocation != null)
                             {
                                 stack[stackPtr].refValue = invocation.targetMethod;
                                 stack[stackPtr++].type = StackData.ObjectType.Ref;
@@ -2753,7 +2753,7 @@ namespace dotnow.Runtime.CIL
                         {
                             TypeCode code = instruction.typeOperand.typeCode;
 
-                            switch(code)
+                            switch (code)
                             {
                                 case TypeCode.Boolean:
                                 case TypeCode.Byte:
@@ -2881,7 +2881,7 @@ namespace dotnow.Runtime.CIL
                                 stackPtr = argOffset + ((signature.returnsValue == true) ? 1 : 0);
 
                                 // Copy return value
-                                if(signature.returnsValue == true)
+                                if (signature.returnsValue == true)
                                 {
                                     stack[stackPtr - 1] = callFrame.stack[callFrame.stackBaseIndex];
                                 }
@@ -3025,7 +3025,7 @@ namespace dotnow.Runtime.CIL
                             int leaveInstructionTarget = instructionPtr + instruction.operand.Int32 - 1;
 
                             // Run finally
-                            if(leaveHandler != null)
+                            if (leaveHandler != null)
                             {
                                 instructionPtr = leaveHandler.handlerStartIndex;
                                 stackPtr = frame.stackBaseIndex;
@@ -3056,9 +3056,9 @@ namespace dotnow.Runtime.CIL
                         {
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Stack
+                    #region Stack
                     case Code.Nop:
                         {
                             // Do nothing - no operation
@@ -3077,12 +3077,12 @@ namespace dotnow.Runtime.CIL
                             stack[stackPtr++] = temp;
                             break;
                         }
-#endregion
+                    #endregion
 
-#region Logical
+                    #region Logical
                     case Code.Not:
                         {
-                            switch(stack[stackPtr - 1].type)
+                            switch (stack[stackPtr - 1].type)
                             {
                                 case StackData.ObjectType.Int8:
                                 case StackData.ObjectType.Int16:
@@ -3179,7 +3179,7 @@ namespace dotnow.Runtime.CIL
                             stackPtr--;
                             break;
                         }
-#endregion
+                        #endregion
                 } // End Switch (opCode)
 
 

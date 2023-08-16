@@ -10,6 +10,21 @@ using TypeAttributes = System.Reflection.TypeAttributes;
 
 namespace dotnow
 {
+    public enum TypeID : byte
+    {
+        Int8 = 1,
+        Int16,
+        Int32,
+        Int64,
+        UInt8,
+        UInt16,
+        UInt32,
+        UInt64,
+        Single,
+        Double,
+        Object,
+    }
+
     public sealed class CLRType : Type, IJITOptimizable
     {
         // Types

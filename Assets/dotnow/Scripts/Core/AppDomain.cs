@@ -72,7 +72,7 @@ namespace dotnow
 
             // Run jit on interpreter method - This is a big method that takes a long time to JIT on demand - we don't want to see that time in the host application so we should do it at initialize time.
 #if DISABLE_JIT_PREWARM == false
-            MethodInfo method = typeof(CILInterpreter).GetMethod("ExecuteInterpreted", BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo method = typeof(CILInterpreterUnsafe).GetMethod("ExecuteInterpreted", BindingFlags.Static | BindingFlags.NonPublic);
             RuntimeHelpers.PrepareMethod(method.MethodHandle);
 #endif
 

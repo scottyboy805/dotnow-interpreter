@@ -1,10 +1,11 @@
 ﻿using dotnow.Reflection;
 using dotnow.Runtime.CIL;
+using System;
 using System.Reflection;
 
 namespace dotnow.Runtime
 {
-    public class ExecutionFrame
+    public unsafe class ExecutionFrame
     {
         // Private
         private AppDomain domain = null;
@@ -19,7 +20,7 @@ namespace dotnow.Runtime
         internal int stackBaseIndex = 0;
         internal int stackMin = 0;
         internal int stackMax = 0;
-        internal StackData[] stack = null;
+        internal byte[] stack = null;
         internal bool abort = false;
 
         // Properties
@@ -71,14 +72,15 @@ namespace dotnow.Runtime
                 // Allocate locals
                 for (int i = 0; i < locals.Length; i++)
                 {
-                    if (locals[i].isCLRValueType == true)
-                    {
-                        __internal.__stack_alloc_inst(ref stack[i + localAllocPtr + localAllocSize], ref domain, locals[i].localType, ref localAllocPtr);
-                    }
-                    else
-                    {
-                        stack[i + localAllocPtr + localAllocSize] = locals[i].defaultValue;
-                    }
+                    throw new NotImplementedException("Requires further work");
+                    //if (locals[i].isCLRValueType == true)
+                    //{
+                    //    __internal.__stack_alloc_inst(ref stack[i + localAllocPtr + localAllocSize], ref domain, locals[i].localType, ref localAllocPtr);
+                    //}
+                    //else
+                    //{
+                    //    stack[i + localAllocPtr + localAllocSize] = locals[i].defaultValue;
+                    //}
                 }
             }
 
