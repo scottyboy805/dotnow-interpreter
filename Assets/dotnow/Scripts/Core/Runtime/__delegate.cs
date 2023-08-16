@@ -10,6 +10,10 @@ namespace dotnow.Runtime
         private delegate object AutoActionDelegate(AppDomain domain, object instance, MethodBase target);
         private delegate object AutoFuncDelegate(AppDomain domain, object instance, MethodBase target);
 
+
+        private delegate void ActionMulticastDelegate();
+
+
         private static AutoActionDelegate[] action_T1 = Action_T1_Providers();
         private static AutoActionDelegate[,] action_T2 = Action_T2_Providers();
         private static AutoActionDelegate[,,] action_T3 = Action_T3_Providers();
@@ -157,6 +161,15 @@ namespace dotnow.Runtime
             }
 
             throw new NotSupportedException("A suitable AOT delegate could not be constructed for the given parameters. Please replace reference type parameters with System.object to ensure compatibility with interop calls");            
+        }
+
+        public static MulticastDelegate ActionMulticastInteropDelegate(AppDomain domain, object instance, MethodBase target)
+        {
+            return new ActionMulticastDelegate(() =>
+            {
+                // Invoke target method
+                target.Invoke(instance, null);
+            });
         }
 
         #region Action
