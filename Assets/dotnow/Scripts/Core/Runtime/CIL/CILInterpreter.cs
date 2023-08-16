@@ -97,6 +97,7 @@ namespace dotnow.Runtime.CIL
 
                                 case StackData.ObjectType.UInt64:
                                     stack[stackPtr - 2].value.Int64 = (long)unchecked((ulong)left.value.Int64 + (ulong)right.value.Int64);
+                                    stack[stackPtr - 2].type = right.type;
                                     break;
 
                                 case StackData.ObjectType.Single:
