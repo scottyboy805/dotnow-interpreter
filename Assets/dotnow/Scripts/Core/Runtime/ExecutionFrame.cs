@@ -72,15 +72,15 @@ namespace dotnow.Runtime
                 // Allocate locals
                 for (int i = 0; i < locals.Length; i++)
                 {
-                    throw new NotImplementedException("Requires further work");
-                    //if (locals[i].isCLRValueType == true)
-                    //{
-                    //    __internal.__stack_alloc_inst(ref stack[i + localAllocPtr + localAllocSize], ref domain, locals[i].localType, ref localAllocPtr);
-                    //}
-                    //else
-                    //{
-                    //    stack[i + localAllocPtr + localAllocSize] = locals[i].defaultValue;
-                    //}
+                    //throw new NotImplementedException("Requires further work");
+                    if (locals[i].isCLRValueType == true)
+                    {
+                        __internal.__stack_alloc_inst(ref stack[i + localAllocPtr + localAllocSize], ref domain, locals[i].localType, ref localAllocPtr);
+                    }
+                    else
+                    {
+                        stack[i + localAllocPtr + localAllocSize] = locals[i].defaultValue;
+                    }
                 }
             }
 
