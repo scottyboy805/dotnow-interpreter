@@ -291,6 +291,11 @@ namespace UnityEngine
         {
             cache.InvokeProxyMethod(10, nameof(OnCollisionExit), new object[] { collision });
         }
+
+        public void OnGUI()
+        {
+            cache.InvokeProxyMethod(11, nameof(OnGUI));
+        }
     }
 #endif
 }
