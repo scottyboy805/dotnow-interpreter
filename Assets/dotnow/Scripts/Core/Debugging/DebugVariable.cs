@@ -17,7 +17,7 @@ namespace dotnow.Debugging
 
         public object VariableValue
         {
-            get { return frame.stack[variableIndex]; }
+            get { return frame.stackMemory[variableIndex]; }
         }
 
         // Constructor

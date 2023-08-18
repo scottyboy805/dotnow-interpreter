@@ -2,6 +2,7 @@
 using dotnow.Runtime.CIL;
 using System;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace dotnow.Runtime
 {
@@ -20,8 +21,11 @@ namespace dotnow.Runtime
         internal int stackBaseIndex = 0;
         internal int stackMin = 0;
         internal int stackMax = 0;
-        internal byte[] stack = null;
+        internal StackData[] stack = null;
+        internal byte[] stackMemory = null;
         internal bool abort = false;
+
+        internal StackLocal[] locals; 
 
         // Properties
         public ExecutionFrame Parent
@@ -45,6 +49,7 @@ namespace dotnow.Runtime
         {
             this.domain = domain;
             this.engine = engine;
+            this.locals = locals;
 
             // Reset ptr
             instructionPtr = 0;
@@ -58,10 +63,14 @@ namespace dotnow.Runtime
 
             this.parent = parent;
             this.method = method;
+            this.stackMemory = engine.stackMemory;
             this.stack = engine.stack;
 
             int localAllocSize = 0;
             int localAllocPtr = (parent == null) ? 0 : parent.stackMax;
+
+
+            int countLocalBytes = 0;
 
             if (locals != null)
             {
@@ -81,6 +90,36 @@ namespace dotnow.Runtime
                     {
                         stack[i + localAllocPtr + localAllocSize] = locals[i].defaultValue;
                     }
+
+
+
+                    
+                }
+
+                fixed (byte* basePtr = &stackMemory[localAllocPtr])
+                {
+                    byte* stackPtr = basePtr;
+                    
+
+                    for (int i = 0; i < locals.Length; i++)
+                    {
+                        // NEW IMPLEMENTATION
+                        if (locals[i].isCLRValueType == true)
+                        {
+
+                        }
+                        else
+                        {
+                            for(int j = 0; j < localAllocSize; j++)
+                            {
+                                *stackPtr = 0;
+                                stackPtr++;
+                            }
+
+                            //stackPtr += localAllocSize;
+                            countLocalBytes += localAllocSize;
+                        }
+                    }
                 }
             }
 
@@ -90,6 +129,13 @@ namespace dotnow.Runtime
             this.stackBaseIndex = stackArgIndex + paramCount + ((method.IsStatic == true) ? 0 : 1);
             this.stackMin = localAllocPtr;
             this.stackMax = stackBaseIndex + maxStackDepth;
+
+
+
+            // Added after
+            this.stackIndex = localAllocPtr + countLocalBytes;
+            this.stackArgIndex = stackBaseIndex + countLocalBytes;
+            this.stackBaseIndex = localAllocPtr + countLocalBytes;
         }
 
         public bool GetCurrentOperation(out CILOperation op)

@@ -41,7 +41,8 @@ namespace dotnow.Runtime
         internal Dictionary<int, object[]> argumentCache = new Dictionary<int, object[]>();
 
         internal ExecutionFrame currentFrame = null;
-        internal byte[] stack = null;
+        internal StackData[] stack = null;
+        internal byte[] stackMemory = null;
 
         // Private        
         private static readonly FieldInfo exceptionStackTraceProperty = typeof(Exception).GetField("_stackTraceString", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -76,7 +77,8 @@ namespace dotnow.Runtime
             int stackSize = (maxStack > 0) ? maxStack : defaultStackSize;
 
             this.thread = thread;
-            this.stack = new byte[stackSize];
+            this.stack = new StackData[stackSize];
+            this.stackMemory = new byte[stackSize];
         }
 
         // Methods

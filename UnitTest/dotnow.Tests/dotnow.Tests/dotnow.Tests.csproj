@@ -48,6 +48,7 @@
     <Reference Include="Mono.Cecil">
       <HintPath>..\..\..\Assets\Trivial CLR\Plugin\Mono.Cecil.dll</HintPath>
     </Reference>
+    <Reference Include="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -55,6 +56,7 @@
     <Compile Include="Arithmetic\UnitTestAdd.cs" />
     <Compile Include="Arithmetic\UnitTestMultiply.cs" />
     <Compile Include="Arithmetic\UnitTestSubtract.cs" />
+    <Compile Include="Loops\UnitTestForLoop.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="UnitTestAction.cs" />
     <Compile Include="UnitTestArray.cs" />

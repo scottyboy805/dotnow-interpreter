@@ -16,7 +16,7 @@ namespace dotnow.Runtime.CIL
             
 
             // Pin the stack memory
-            fixed (byte* stackBasePtr = &engine.stack[frame.stackIndex])
+            fixed (byte* stackBasePtr = &engine.stackMemory[frame.stackIndex])
             {
                 byte* stackPtr = stackBasePtr;
 
@@ -40,6 +40,9 @@ namespace dotnow.Runtime.CIL
                         default:
                             throw new NotImplementedException("MSIL instruction is not implemented: " + instruction.opCode.ToString() + "\nAt method body: " + frame.Method);
 
+                        case Code.Nop: // Do nothing - used as a debug marker
+                            break;
+
 
                         #region Branch
                         case Code.Br:
@@ -54,7 +57,7 @@ namespace dotnow.Runtime.CIL
                         case Code.Brtrue_S:
                             {
                                 // Decrement stack pointer
-                                stackPtr -= I32.Size;
+                                stackPtr -= I32.SizeTyped;
 
                                 // Check for true
                                 if((*((I32*)stackPtr)).signed == 1)
@@ -69,7 +72,7 @@ namespace dotnow.Runtime.CIL
                         case Code.Brfalse_S:
                             {
                                 // Decrement stack pointer
-                                stackPtr -= I32.Size;
+                                stackPtr -= I32.SizeTyped;
 
                                 // Check for true
                                 if ((*((I32*)stackPtr)).signed == 0)
@@ -88,7 +91,7 @@ namespace dotnow.Runtime.CIL
                                 *((Obj*)stackPtr) = Obj.Null;
 
                                 // Increment stack pointer
-                                stackPtr += Obj.Size;
+                                stackPtr += Obj.SizeTyped;
                                 break;
                             }
 
@@ -102,7 +105,7 @@ namespace dotnow.Runtime.CIL
                                 *((I32*)stackPtr) = val;
 
                                 // Increment stack pointer
-                                stackPtr += I32.Size;
+                                stackPtr += I32.SizeTyped;
                                 break;
                             }
 
@@ -112,10 +115,30 @@ namespace dotnow.Runtime.CIL
                                 *((I32*)stackPtr) = I32.ZeroSigned;
 
                                 // Increment stack pointer
-                                stackPtr += I32.Size;
+                                stackPtr += I32.SizeTyped;
                                 break;
                             }
                         #endregion
+
+                        #region Local
+                        case Code.Ldloc_0:
+                            {
+                                // Get local size
+                                int size = frame.locals[0].clrValueTypeSize;
+
+                                // Handle size
+                                switch(size)
+                                {
+                                    case 4:
+                                        {
+                                            // Push 32 bit
+                                            *((int*)stackPtr) = *((int*)engine.stackMemory[frame.stackMin + 0]);
+                                            break;
+                                        }
+                                }
+                                break;
+                            }
+                            #endregion
                     } // End switch (OpCode)
 
 

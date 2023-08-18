@@ -2870,7 +2870,7 @@ namespace dotnow.Runtime.CIL
                                 int baseOffset = argSize + ((isStatic == true) ? 0 : 1);
 
                                 // Copy stack
-                                Array.Copy(stack, stackPtr - baseOffset, callFrame.stack, callFrame.stackArgIndex, baseOffset);
+                                Array.Copy(stack, stackPtr - baseOffset, callFrame.stackMemory, callFrame.stackArgIndex, baseOffset);
 
                                 callFrame.stackIndex += baseOffset;
 
