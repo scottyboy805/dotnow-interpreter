@@ -1,11 +1,10 @@
 ﻿#if !UNITY_DISABLE
 #if UNITY_EDITOR && NET_4_6
+using dotnow.Interop;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using dotnow.Interop;
 using UnityEngine;
 
 namespace dotnow.BindingGenerator.Emit
