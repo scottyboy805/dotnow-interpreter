@@ -22,12 +22,10 @@ namespace dotnow.BindingGenerator
         public long lastWriteTime = -1;
         public string outputPathRelative = "_Bindings-Generated";
 
-        // Constructor
-
         // Methods
         public void OnEnable()
         {
-            // Check for compiliation
+            // Check for compilation
             if(EditorApplication.isCompiling == false)
             {
                 RebuildBindingsForAsmDef();

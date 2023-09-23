@@ -96,7 +96,7 @@ namespace dotnow.BindingGenerator.Emit
                 // Process all monobehaviour events
                 if (typeof(MonoBehaviour).IsAssignableFrom(type) == true)
                 {
-                    foreach(MethodInfo monoBehaviourMethod in typeof(MagicMethod.MagicMonoBehaviour).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                    foreach(MethodInfo monoBehaviourMethod in typeof(Template.MonoBehaviourTemplate).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                     {
                         ProxyMethodBuilder methodBuilder = new ProxyMethodBuilder(monoBehaviourMethod, false, memberIndex++);
 
