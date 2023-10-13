@@ -119,14 +119,15 @@ namespace dotnow.BindingGenerator.Emit
                     ProxyPropertyBuilder propertyBuilder = new ProxyPropertyBuilder(property, false, memberIndex++);
 
                     // Build fields
-                    if(property.GetGetMethod() != null)
+                    if(propertyBuilder.GenerateGetter == true)
                         codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(MethodBase)), propertyBuilder.VariableNameGetter));
 
-                    if (property.GetSetMethod() != null)
+                    if (propertyBuilder.GenerateSetter == true)
                         codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(MethodBase)), propertyBuilder.VariableNameSetter));
 
                     // Build property
-                    codeType.Members.Add(propertyBuilder.BuildPropertyProxy());
+                    if(propertyBuilder.GenerateGetterOrSetter == true)
+                        codeType.Members.Add(propertyBuilder.BuildPropertyProxy());
                 }
             }
 
