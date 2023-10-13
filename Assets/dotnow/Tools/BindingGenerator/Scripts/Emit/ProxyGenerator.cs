@@ -66,7 +66,7 @@ namespace dotnow.BindingGenerator.Emit
                 {
                     using (TextWriter writer = new StreamWriter(outputFolderOrPath))
                     {
-                        // Generate the soruce code
+                        // Generate the source code
                         provider.GenerateCodeFromCompileUnit(root, writer, result.codeOptions);
                     }
                 }
@@ -100,7 +100,7 @@ namespace dotnow.BindingGenerator.Emit
                 // Get the target output path
                 string outputPath = isOutputFile == true
                     ? outputFolderOrPath 
-                    : Path.Combine(outputFolderOrPath, outputName);
+                    : Path.Combine(outputFolderOrPath, outputName + "-Proxy");
 
                 // Create directory if need
                 if (isOutputFile == false && Directory.Exists(outputFolderOrPath) == false)
@@ -123,8 +123,6 @@ namespace dotnow.BindingGenerator.Emit
         {
             // Create a proxy type builder
             ProxyTypeBuilder typeBuilder = new ProxyTypeBuilder(type);
-
-            UnityEngine.Debug.Log(type.Assembly.Location);
 
             // Create namespace node
             CodeNamespace namespaceNode = (string.IsNullOrEmpty(type.Namespace) == true)
@@ -151,11 +149,15 @@ namespace dotnow.BindingGenerator.Emit
             namespaceNode.Types.Add(typeBuilder.BuildTypeProxy());
 
             // Return output type name
-            return string.Concat(typeBuilder.GetTypeFlattenedName(), ".cs");
+            return string.Concat(typeBuilder.GetTypeFlattenedName(), "-Proxy.cs");
         }
 
         private static bool CanGenerateProxyForType(Type type)
         {
+            // Skip generated types
+            if (type.IsDefined(typeof(GeneratedAttribute)) == true)
+                return false;
+
             // Check for interfaces
             if (type.IsInterface == true)
                 return true;

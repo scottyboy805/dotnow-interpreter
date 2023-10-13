@@ -31,7 +31,10 @@ namespace dotnow.BindingGenerator.Emit
             codeType.Comments.Add(new CodeCommentStatement("Generated from type: " + type.AssemblyQualifiedName));
             codeType.Comments.Add(new CodeCommentStatement("Generated from assembly: " + type.Assembly.Location));
             codeType.Attributes = MemberAttributes.Public | MemberAttributes.Final;
-            
+
+            // Add generated attribute
+            codeType.CustomAttributes.Add(new CodeAttributeDeclaration(new CodeTypeReference(typeof(GeneratedAttribute))));
+
             // Create base type
             codeType.BaseTypes.Add(new CodeTypeReference(type));
             codeType.BaseTypes.Add(new CodeTypeReference(typeof(ICLRProxy)));
