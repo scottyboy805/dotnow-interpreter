@@ -46,10 +46,11 @@ namespace dotnow.BindingGenerator.Emit
             // Create instance field
             codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(CLRInstance)), instanceVar));
 
+            CodeMemberProperty instanceProperty = BuildCLRProxyImplementation_Instance();
+            CodeMemberMethod initializeMethod = BuildCLRProxyImplementation_InitializeProxy();
 
-            CodeMemberMethod initializeMethod = BuildCLRProxyImplementation();
-
-            // Implement method
+            // Implement interface
+            codeType.Members.Add(instanceProperty);
             codeType.Members.Add(initializeMethod);
 
 
@@ -143,7 +144,30 @@ namespace dotnow.BindingGenerator.Emit
             return string.Concat(type.Namespace.Replace('.', '_'), "_", type.Name);
         }
 
-        private CodeMemberMethod BuildCLRProxyImplementation()
+        private CodeMemberProperty BuildCLRProxyImplementation_Instance()
+        {
+            // Create the property
+            CodeMemberProperty codeProperty = new CodeMemberProperty();
+            codeProperty.Name = nameof(ICLRProxy.Instance);
+            codeProperty.Attributes = MemberAttributes.Public | MemberAttributes.Final;
+
+            // Type
+            codeProperty.Type = new CodeTypeReference(typeof(CLRInstance));
+
+            // Generate getter
+            CodeMemberMethod getter = new CodeMemberMethod();
+
+            // Emit getter body
+            getter.Statements.Add(new CodeMethodReturnStatement(
+                new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), instanceVar)));
+
+            // Add getter
+            codeProperty.GetStatements.AddRange(getter.Statements);
+
+            return codeProperty;
+        }
+
+        private CodeMemberMethod BuildCLRProxyImplementation_InitializeProxy()
         {
             // Create the method
             CodeMemberMethod codeMethod = new CodeMemberMethod();
