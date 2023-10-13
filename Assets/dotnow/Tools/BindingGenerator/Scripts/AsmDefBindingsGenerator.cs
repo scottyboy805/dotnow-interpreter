@@ -32,6 +32,7 @@ namespace dotnow.BindingGenerator
             }
         }
 
+        [ContextMenu("dotnow/Generate Bindings")]
         public void RebuildBindingsForAsmDef()
         {
             // Check for no asset
@@ -65,6 +66,10 @@ namespace dotnow.BindingGenerator
             if(string.IsNullOrEmpty(outputPathRelative) == false)
                 outputPath = string.Concat(outputPath, "/", outputPathRelative);
 
+            // Create directory
+            if(Directory.Exists(outputPath) == false)
+                Directory.CreateDirectory(outputPath);
+
             // Build assembly
             RebuildBindingsForAssembly(asm.outputPath, outputPath);
 
@@ -81,6 +86,11 @@ namespace dotnow.BindingGenerator
 
             // Generate bindings for assembly
             service.GenerateBindingsForAssembly(assemblyPath, outputFolder);
+
+#if UNITY_EDITOR
+            // Update asset database
+            AssetDatabase.Refresh();
+#endif
         }
     }
 }
