@@ -3,7 +3,6 @@
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -52,7 +51,7 @@ namespace dotnow.BindingGenerator.Emit
                         // Create the file stream
                         using(TextWriter writer = new StreamWriter(outputPath))
                         {
-                            // Generate the soruce code
+                            // Generate the source code
                             provider.GenerateCodeFromCompileUnit(root, writer, result.codeOptions);
                         }
 
@@ -109,7 +108,7 @@ namespace dotnow.BindingGenerator.Emit
                 // Create the file stream
                 using (TextWriter writer = new StreamWriter(outputPath))
                 {
-                    // Generate the soruce code
+                    // Generate the source code
                     provider.GenerateCodeFromCompileUnit(root, writer, result.codeOptions);
                 }
             }
