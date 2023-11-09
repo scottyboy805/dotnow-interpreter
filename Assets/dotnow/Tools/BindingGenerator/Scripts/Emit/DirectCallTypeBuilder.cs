@@ -44,6 +44,10 @@ namespace dotnow.BindingGenerator.Emit
                 if (method.IsSpecialName == true)
                     continue;
 
+                // Check for generic
+                if (method.ContainsGenericParameters == true)
+                    continue;
+
                 // Check for already added
                 if (definedMethodNames.Contains(method.ToString()) == true)
                     continue;
