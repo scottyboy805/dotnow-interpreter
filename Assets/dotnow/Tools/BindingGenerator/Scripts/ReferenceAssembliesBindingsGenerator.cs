@@ -13,7 +13,7 @@ namespace dotnow.BindingGenerator
         public string generatePath = "Assets/Bindings/Generated";
         public string[] assemblyNameOrPaths =
         {
-            "UnityEngine.CoreModule.dll",
+            "UnityEngine.CoreModule",
         };
 
         // Methods
