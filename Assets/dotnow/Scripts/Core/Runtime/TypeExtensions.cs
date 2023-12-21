@@ -226,5 +226,31 @@ namespace dotnow
             // Not convertable
             return false;
         }
+
+        internal static bool IsFieldAssignableSlow(FieldInfo destField, object targetValue)
+        {
+            // Check for null
+            if(targetValue == null)
+            {
+                // Check if we can store null
+                return destField.FieldType.IsValueType == false;
+            }
+
+            // Check for types assignable
+            return AreAssignable(destField.FieldType, targetValue.GetInterpretedType());
+        }
+
+        internal static bool IsPropertyAssignableSlow(PropertyInfo destProperty, object targetValue)
+        {
+            // Check for null
+            if (targetValue == null)
+            {
+                // Check if we can store null
+                return destProperty.PropertyType.IsValueType == false;
+            }
+
+            // Check for types assignable
+            return AreAssignable(destProperty.PropertyType, targetValue.GetInterpretedType());
+        }
     }
 }
