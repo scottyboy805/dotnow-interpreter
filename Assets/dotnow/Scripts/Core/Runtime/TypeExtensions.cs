@@ -202,12 +202,12 @@ namespace dotnow
                 return true;
 
             // Check for assignable
-            if (dest.IsAssignableFrom(source) == true)
+            if(source.IsSubclassOf(dest) == true)
                 return true;
 
             // Handle arrays
             if(dest.IsArray == true && source.IsArray == true && 
-                dest.GetArrayRank() == source.GetArrayRank() ||
+                dest.GetArrayRank() == source.GetArrayRank() &&
                 AreReferenceAssignable(dest.GetElementType(), source.GetElementType()) == true)
             {
                 return true;
