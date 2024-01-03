@@ -100,7 +100,7 @@ namespace dotnow.Runtime
 
         public static int SizeOfAllocated(CLRType type)
         {
-            
+            throw new NotImplementedException();
         }
     }
 }
