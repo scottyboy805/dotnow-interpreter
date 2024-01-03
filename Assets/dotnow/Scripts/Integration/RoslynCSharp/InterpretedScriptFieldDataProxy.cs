@@ -86,6 +86,10 @@ namespace RoslynCSharp
                 if ((info is CLRField) == false && instance.IsCLRInstance() == true)
                     instance = instance.Unwrap();
 
+                // Check assignable
+                if (TypeExtensions.IsFieldAssignableSlow(info, value) == false)
+                    throw new TargetException(string.Format("Cannot assign value `{0}` to field `{1}`. Incompatible type!", value, this));
+
                 // Attempt to set the value
                 info.SetValue(instance, value);
             }

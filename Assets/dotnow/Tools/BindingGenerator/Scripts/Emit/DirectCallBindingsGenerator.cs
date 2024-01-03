@@ -9,13 +9,13 @@ using System.Reflection;
 
 namespace dotnow.BindingGenerator.Emit
 {
-    public static class ProxyGenerator
+    internal class DirectCallBindingsGenerator
     {
         // Public
         public static string namespaceAppendName = "Generated";
 
         // Methods
-        public static void GenerateProxyDefinitionsForAssembly(Assembly assembly, string outputFolderOrPath, BindingsGeneratorResult result)
+        public static void GenerateDirectCallBindingsForAssembly(Assembly assembly, string outputFolderOrPath, BindingsGeneratorResult result)
         {
             // Validate
             if (assembly == null) throw new ArgumentNullException(nameof(assembly));
@@ -31,25 +31,25 @@ namespace dotnow.BindingGenerator.Emit
             CodeCompileUnit root = new CodeCompileUnit();
 
             // Get all types
-            foreach (Type type in assembly.GetTypes())
+            foreach(Type type in assembly.GetTypes())
             {
+                // Check if we can generate for type
                 if (CanGenerateProxyForType(type) == true)
                 {
-                    // Generate the type declaration 
-                    string outputName = GenerateProxyDefinitionsForType(root, type, result);
+                    // Generate the type declaration
+                    string outputName = GenerateDirectCallBindingsForType(root, type, result);
 
-                    // Write the output to individual file
-                    if(isOutputFile == false)
+                    if (isOutputFile == false)
                     {
-                        // Get the output file path
+                        // Get the target output path
                         string outputPath = Path.Combine(outputFolderOrPath, outputName);
 
-                        // Create directory if need
+                        // Create directory if needed
                         if (Directory.Exists(outputFolderOrPath) == false)
                             Directory.CreateDirectory(outputFolderOrPath);
 
                         // Create the file stream
-                        using(TextWriter writer = new StreamWriter(outputPath))
+                        using (TextWriter writer = new StreamWriter(outputPath))
                         {
                             // Generate the source code
                             provider.GenerateCodeFromCompileUnit(root, writer, result.codeOptions);
@@ -76,37 +76,38 @@ namespace dotnow.BindingGenerator.Emit
                 result.SetError("No suitable types found! Proxies will only be generated for interface, abstract or non-sealed types which define one or more virtual or abstract members");
         }
 
-        public static void GenerateProxyDefinitionsForType(Type type, string outputFolderOrPath, BindingsGeneratorResult result)
+        public static void GenerateDirectCallBindingsForType(Type type, string outputFolderOrPath, BindingsGeneratorResult result)
         {
             // Validate
             if (type == null) throw new ArgumentNullException(nameof(type));
-            if (string.IsNullOrEmpty(outputFolderOrPath) == true) throw new ArgumentException(nameof(outputFolderOrPath) + " cannot be null or empty");
+            if(string.IsNullOrEmpty(outputFolderOrPath) == true) throw new ArgumentException(nameof(outputFolderOrPath) + " cannot be null or empty");
 
-            // Check for extension - all source code will be emitted to the same file
-            bool isOutputFile = Path.HasExtension(outputFolderOrPath) == true;
+            // Check for extension
+            bool isOutputFile = Path.HasExtension(outputFolderOrPath);
 
             // Create a code provider
             CodeDomProvider provider = CodeDomProvider.CreateProvider("C#");
 
             // Get the compile unit
             CodeCompileUnit root = new CodeCompileUnit();
-            
-            if (CanGenerateProxyForType(type) == true)
+
+            // Check if we can generate for type
+            if(CanGenerateProxyForType(type) == true)
             {
-                // Generate the type declaration 
-                string outputName = GenerateProxyDefinitionsForType(root, type, result);
+                // Generate the type declaration
+                string outputName = GenerateDirectCallBindingsForType(root, type, result);
 
                 // Get the target output path
                 string outputPath = isOutputFile == true
-                    ? outputFolderOrPath 
-                    : Path.Combine(outputFolderOrPath, outputName + "-Proxy");
+                    ? outputFolderOrPath
+                    : Path.Combine(outputFolderOrPath, outputName + "-DirectCall");
 
-                // Create directory if need
+                // Create directory if needed
                 if (isOutputFile == false && Directory.Exists(outputFolderOrPath) == false)
                     Directory.CreateDirectory(outputFolderOrPath);
 
                 // Create the file stream
-                using (TextWriter writer = new StreamWriter(outputPath))
+                using(TextWriter writer = new StreamWriter(outputPath))
                 {
                     // Generate the source code
                     provider.GenerateCodeFromCompileUnit(root, writer, result.codeOptions);
@@ -115,13 +116,13 @@ namespace dotnow.BindingGenerator.Emit
 
             // Check for no types
             if (result.GeneratedSourceFileCount == 0)
-                result.SetError("No suitable types found! Proxies will only be generated for interface, abstract or non-sealed types which define one or more virtual or abstract members");
+                result.SetError("No suitable types found! Direct calls will only be generated for non-interface and non-enum types");
         }
 
-        private static string GenerateProxyDefinitionsForType(CodeCompileUnit root, Type type, BindingsGeneratorResult result)
+        internal static string GenerateDirectCallBindingsForType(CodeCompileUnit root, Type type, BindingsGeneratorResult result)
         {
-            // Create a proxy type builder
-            ProxyTypeBuilder typeBuilder = new ProxyTypeBuilder(type);
+            // Create a direct call type builder
+            DirectCallTypeBuilder typeBuilder = new DirectCallTypeBuilder(type);
 
             // Create namespace node
             CodeNamespace namespaceNode = (string.IsNullOrEmpty(type.Namespace) == true)
@@ -144,11 +145,11 @@ namespace dotnow.BindingGenerator.Emit
                 root.Namespaces.Add(namespaceNode);
             }
 
-            // Emit the proxy type declaration
-            namespaceNode.Types.Add(typeBuilder.BuildTypeProxy());
+            // Emit the type declaration
+            namespaceNode.Types.Add(typeBuilder.BuildTypeDirectCall());
 
             // Return output type name
-            return string.Concat(typeBuilder.GetTypeFlattenedName(), "-Proxy.cs");
+            return string.Concat(typeBuilder.GetTypeFlattenedName(), "-DirectCall.cs");
         }
 
         private static bool CanGenerateProxyForType(Type type)
@@ -157,36 +158,11 @@ namespace dotnow.BindingGenerator.Emit
             if (type.IsDefined(typeof(GeneratedAttribute)) == true)
                 return false;
 
-            // Check for interfaces
-            if (type.IsInterface == true)
-                return true;
-
-            // Check for sealed
-            if (type.IsSealed == true)
+            // Check for interfaces or enums
+            if (type.IsInterface == true || type.IsEnum == true)
                 return false;
 
-            // Check for virtual or abstract methods
-            foreach (MethodInfo method in type.GetMethods())
-            {
-                if (method.IsVirtual == true || method.IsAbstract == true)
-                    return true;
-            }
-
-            // Check for virtual or abstract properties
-            foreach (PropertyInfo property in type.GetProperties())
-            {
-                MethodInfo get = property.GetGetMethod();
-
-                if (get != null && (get.IsVirtual == true || get.IsAbstract == true))
-                    return true;
-
-                MethodInfo set = property.GetSetMethod();
-
-                if (set != null && (set.IsVirtual == true || set.IsAbstract == true))
-                    return true;
-            }
-
-            return false;
+            return true;
         }
     }
 }

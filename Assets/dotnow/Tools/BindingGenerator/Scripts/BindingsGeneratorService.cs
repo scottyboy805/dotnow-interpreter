@@ -10,6 +10,7 @@ namespace dotnow.BindingGenerator
     {
         // Public
         public bool generateProxyBindings = true;
+        public bool generateDirectCallBindings = true;
 
         // Methods
         public BindingsGeneratorResult GenerateBindingsForAssembly(string assemblyPath, string outputPathOrFolder)
@@ -34,6 +35,10 @@ namespace dotnow.BindingGenerator
             if (generateProxyBindings == true)
                 ProxyGenerator.GenerateProxyDefinitionsForAssembly(assembly, outputFolderOrPath, result);
 
+            // Check for direct call
+            if(generateDirectCallBindings == true)
+                DirectCallBindingsGenerator.GenerateDirectCallBindingsForAssembly(assembly, outputFolderOrPath, result);
+
             return result;
         }
 
@@ -45,6 +50,10 @@ namespace dotnow.BindingGenerator
             // Check for proxy bindings
             if (generateProxyBindings == true)
                 ProxyGenerator.GenerateProxyDefinitionsForType(type, outputFolderOrPath, result);
+
+            // Check for direct call
+            if (generateDirectCallBindings == true)
+                DirectCallBindingsGenerator.GenerateDirectCallBindingsForType(type, outputFolderOrPath, result);
 
             return result;
         }        

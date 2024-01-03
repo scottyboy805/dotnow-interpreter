@@ -25,6 +25,35 @@ namespace dotnow.BindingGenerator.Emit
             get { return variableNameSetter; }
         }
 
+        public bool GenerateGetterOrSetter
+        {
+            get { return GenerateGetter == true || GenerateSetter == true; }
+        }
+
+        public bool GenerateGetter
+        {
+            get
+            {
+                // Try to get getter
+                MethodInfo method = property.GetGetMethod(true);
+
+                // Only interested in properties that can be overridden
+                return method != null && (method.IsVirtual == true || method.IsAbstract == true);
+            }
+        }
+
+        public bool GenerateSetter
+        {
+            get
+            {
+                // Try to get setter
+                MethodInfo method = property.GetSetMethod(true);
+
+                // Only interested in properties that can be overridden
+                return method != null && (method.IsVirtual == true || method.IsAbstract == true);
+            }
+        }
+
         // Constructor
         public ProxyPropertyBuilder(PropertyInfo property, bool interfaceType, int memberIndex)
         {

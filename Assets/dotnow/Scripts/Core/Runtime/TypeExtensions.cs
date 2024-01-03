@@ -201,13 +201,23 @@ namespace dotnow
             if (dest == source)
                 return true;
 
-            // Check for assignable
-            if (dest.IsAssignableFrom(source) == true)
-                return true;
+            // Can't use IsAssignable check on clr types - causes hard crash in some cases
+            if (dest.IsCLRType() == true)
+            {
+                // Check for sub class - need further work to support interfaces??
+                if (source.IsSubclassOf(dest) == true)
+                    return true;
+            }
+            else
+            {
+                // Check for assignable
+                if (dest.IsAssignableFrom(source) == true)
+                    return true;
+            }
 
             // Handle arrays
             if(dest.IsArray == true && source.IsArray == true && 
-                dest.GetArrayRank() == source.GetArrayRank() ||
+                dest.GetArrayRank() == source.GetArrayRank() &&
                 AreReferenceAssignable(dest.GetElementType(), source.GetElementType()) == true)
             {
                 return true;
@@ -225,6 +235,32 @@ namespace dotnow
 
             // Not convertable
             return false;
+        }
+
+        internal static bool IsFieldAssignableSlow(FieldInfo destField, object targetValue)
+        {
+            // Check for null
+            if(targetValue == null)
+            {
+                // Check if we can store null
+                return destField.FieldType.IsValueType == false;
+            }
+
+            // Check for types assignable
+            return AreAssignable(destField.FieldType, targetValue.GetInterpretedType());
+        }
+
+        internal static bool IsPropertyAssignableSlow(PropertyInfo destProperty, object targetValue)
+        {
+            // Check for null
+            if (targetValue == null)
+            {
+                // Check if we can store null
+                return destProperty.PropertyType.IsValueType == false;
+            }
+
+            // Check for types assignable
+            return AreAssignable(destProperty.PropertyType, targetValue.GetInterpretedType());
         }
     }
 }

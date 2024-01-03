@@ -1,11 +1,10 @@
 ﻿#if !UNITY_DISABLE
 #if UNITY_EDITOR && NET_4_6
+using dotnow.Interop;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using dotnow.Interop;
 using UnityEngine;
 
 namespace dotnow.BindingGenerator.Emit
@@ -32,7 +31,10 @@ namespace dotnow.BindingGenerator.Emit
             codeType.Comments.Add(new CodeCommentStatement("Generated from type: " + type.AssemblyQualifiedName));
             codeType.Comments.Add(new CodeCommentStatement("Generated from assembly: " + type.Assembly.Location));
             codeType.Attributes = MemberAttributes.Public | MemberAttributes.Final;
-            
+
+            // Add generated attribute
+            codeType.CustomAttributes.Add(new CodeAttributeDeclaration(new CodeTypeReference(typeof(GeneratedAttribute))));
+
             // Create base type
             codeType.BaseTypes.Add(new CodeTypeReference(type));
             codeType.BaseTypes.Add(new CodeTypeReference(typeof(ICLRProxy)));
@@ -47,10 +49,11 @@ namespace dotnow.BindingGenerator.Emit
             // Create instance field
             codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(CLRInstance)), instanceVar));
 
+            CodeMemberProperty instanceProperty = BuildCLRProxyImplementation_Instance();
+            CodeMemberMethod initializeMethod = BuildCLRProxyImplementation_InitializeProxy();
 
-            CodeMemberMethod initializeMethod = BuildCLRProxyImplementation();
-
-            // Implement method
+            // Implement interface
+            codeType.Members.Add(instanceProperty);
             codeType.Members.Add(initializeMethod);
 
 
@@ -97,7 +100,7 @@ namespace dotnow.BindingGenerator.Emit
                 // Process all monobehaviour events
                 if (typeof(MonoBehaviour).IsAssignableFrom(type) == true)
                 {
-                    foreach(MethodInfo monoBehaviourMethod in typeof(MagicMethod.MagicMonoBehaviour).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                    foreach(MethodInfo monoBehaviourMethod in typeof(Template.MonoBehaviourTemplate).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                     {
                         ProxyMethodBuilder methodBuilder = new ProxyMethodBuilder(monoBehaviourMethod, false, memberIndex++);
 
@@ -120,14 +123,15 @@ namespace dotnow.BindingGenerator.Emit
                     ProxyPropertyBuilder propertyBuilder = new ProxyPropertyBuilder(property, false, memberIndex++);
 
                     // Build fields
-                    if(property.GetGetMethod() != null)
+                    if(propertyBuilder.GenerateGetter == true)
                         codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(MethodBase)), propertyBuilder.VariableNameGetter));
 
-                    if (property.GetSetMethod() != null)
+                    if (propertyBuilder.GenerateSetter == true)
                         codeType.Members.Add(new CodeMemberField(new CodeTypeReference(typeof(MethodBase)), propertyBuilder.VariableNameSetter));
 
                     // Build property
-                    codeType.Members.Add(propertyBuilder.BuildPropertyProxy());
+                    if(propertyBuilder.GenerateGetterOrSetter == true)
+                        codeType.Members.Add(propertyBuilder.BuildPropertyProxy());
                 }
             }
 
@@ -143,7 +147,30 @@ namespace dotnow.BindingGenerator.Emit
             return string.Concat(type.Namespace.Replace('.', '_'), "_", type.Name);
         }
 
-        private CodeMemberMethod BuildCLRProxyImplementation()
+        private CodeMemberProperty BuildCLRProxyImplementation_Instance()
+        {
+            // Create the property
+            CodeMemberProperty codeProperty = new CodeMemberProperty();
+            codeProperty.Name = nameof(ICLRProxy.Instance);
+            codeProperty.Attributes = MemberAttributes.Public | MemberAttributes.Final;
+
+            // Type
+            codeProperty.Type = new CodeTypeReference(typeof(CLRInstance));
+
+            // Generate getter
+            CodeMemberMethod getter = new CodeMemberMethod();
+
+            // Emit getter body
+            getter.Statements.Add(new CodeMethodReturnStatement(
+                new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), instanceVar)));
+
+            // Add getter
+            codeProperty.GetStatements.AddRange(getter.Statements);
+
+            return codeProperty;
+        }
+
+        private CodeMemberMethod BuildCLRProxyImplementation_InitializeProxy()
         {
             // Create the method
             CodeMemberMethod codeMethod = new CodeMemberMethod();

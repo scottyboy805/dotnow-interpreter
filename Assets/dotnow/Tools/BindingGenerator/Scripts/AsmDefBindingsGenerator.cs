@@ -3,6 +3,8 @@
 using UnityEngine;
 using System.Linq;
 using System.IO;
+using System;
+using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -17,23 +19,44 @@ namespace dotnow.BindingGenerator
     [CreateAssetMenu]
     public class AsmDefBindingsGenerator : ScriptableObject
     {
+        // Private
+        [NonSerialized]
+        private int enableCount = 0;
+
         // Public
         public Object asmDefAsset;
+        public bool autoGenerate = true;
         public long lastWriteTime = -1;
-        public string outputPathRelative = "_Bindings-Generated";
+        public string outputPathRelative = "";
 
-        // Constructor
 
         // Methods
-        public void OnEnable()
+        private void Reset()
         {
-            // Check for compiliation
-            if(EditorApplication.isCompiling == false)
+            // Make sure output path is valid
+            UpdateOutputPath();
+        }
+
+        private void OnValidate()
+        {
+            // Make sure output path is valid
+            UpdateOutputPath();
+        }
+
+        private void OnEnable()
+        {
+            // Make sure output path is valid
+            UpdateOutputPath();
+
+            // Check for compilation
+            if (EditorApplication.isCompiling == false && autoGenerate == true && enableCount == 0)
             {
                 RebuildBindingsForAsmDef();
+                enableCount++;
             }
         }
 
+        [ContextMenu("dotnow/Generate Bindings")]
         public void RebuildBindingsForAsmDef()
         {
             // Check for no asset
@@ -61,11 +84,15 @@ namespace dotnow.BindingGenerator
             // Get target folder
             string assetPath = AssetDatabase.GetAssetPath(asmDefAsset);
 
-            string outputPath = Path.ChangeExtension(assetPath, null);
+            string outputPath = FileUtil.GetProjectRelativePath(Directory.GetParent(assetPath).FullName.Replace('\\', '/'));// Path.ChangeExtension(assetPath, null);
 
             // Make path relative to this asset
             if(string.IsNullOrEmpty(outputPathRelative) == false)
                 outputPath = string.Concat(outputPath, "/", outputPathRelative);
+
+            // Create directory
+            if(Directory.Exists(outputPath) == false)
+                Directory.CreateDirectory(outputPath);
 
             // Build assembly
             RebuildBindingsForAssembly(asm.outputPath, outputPath);
@@ -79,10 +106,28 @@ namespace dotnow.BindingGenerator
             // Create builder
             BindingsGeneratorService service = new BindingsGeneratorService();
 
-            Debug.Log("Target output path: " + outputFolder);
+            Debug.LogFormat("Generate Bindings: From source = {0}, Target output = {1}", assemblyPath,  outputFolder);
 
             // Generate bindings for assembly
             service.GenerateBindingsForAssembly(assemblyPath, outputFolder);
+
+#if UNITY_EDITOR
+            // Update asset database
+            AssetDatabase.Refresh();
+#endif
+        }
+
+        private void UpdateOutputPath()
+        {
+            if (string.IsNullOrEmpty(outputPathRelative) == true)
+            {
+                if(asmDefAsset != null)
+                    outputPathRelative = asmDefAsset.name + "-Bindings";
+
+#if UNITY_EDITOR
+                EditorUtility.SetDirty(this);
+#endif
+            }
         }
     }
 }

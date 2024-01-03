@@ -2517,6 +2517,10 @@ namespace dotnow.Runtime.CIL
 
                             temp = stack[--stackPtr];       // inst
 
+                            // Check null
+                            if (StackData.NullCheck(temp) == true)
+                                throw new NullReferenceException();
+
                             if (fieldAccess.isClrField == true)
                             {
                                 if (temp.type == StackData.ObjectType.ByRef)
@@ -2555,6 +2559,10 @@ namespace dotnow.Runtime.CIL
                             fieldAccess = (CILFieldAccess)instruction.objectOperand;
 
                             temp = stack[--stackPtr];       // inst
+
+                            // Check null
+                            if (StackData.NullCheck(temp) == true)
+                                throw new NullReferenceException();
 
                             // Get address of field value
                             __internal.__gc_alloc_addr_fld(ref stack[stackPtr++], fieldAccess, temp);
@@ -2596,6 +2604,10 @@ namespace dotnow.Runtime.CIL
 
                             right = stack[--stackPtr];      // val
                             temp = stack[--stackPtr];       // inst
+
+                            // Check null
+                            if (StackData.NullCheck(temp) == true)
+                                throw new NullReferenceException();
 
                             StackData.ValueTypeCopy(ref right);
 

@@ -1,7 +1,7 @@
 ﻿
-namespace dotnow.BindingGenerator.MagicMethod
+namespace dotnow.BindingGenerator.Template
 {
-    public class MagicMonoBehaviour
+    public class MonoBehaviourTemplate
     {
         public void Awake() { }
         public void Start() { }
