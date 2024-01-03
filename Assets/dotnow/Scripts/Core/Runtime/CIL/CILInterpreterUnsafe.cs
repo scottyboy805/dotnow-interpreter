@@ -27,7 +27,7 @@ namespace dotnow.Runtime.CIL
                     CILOperation instruction = instructions[instructionPtr];
 
 
-                    /// ### WARNING - Only enable this for small snippets of non-looping (Or very shallow looping) code otherwise the performance and memory allocations will be horrific and likley cause an editor crash
+                    /// ### WARNING - Only enable this for small snippets of non-looping (Or very shallow looping) code otherwise the performance and memory allocations will be horrific and likely cause an editor crash
 #if !UNITY_DISABLE
 #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_PROFILE && UNITY_PROFILE_INSTRUCTIONS
                 //UnityEngine.Profiling.Profiler.BeginSample(instruction.instructionName);
@@ -43,6 +43,125 @@ namespace dotnow.Runtime.CIL
                         case Code.Nop: // Do nothing - used as a debug marker
                             break;
 
+
+                        #region LoadConstant
+                        case Code.Ldc_I4_0:
+                            {
+                                // Load constant
+                                *(I32*)stackPtr = I32.ZeroSigned;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I4_1:
+                            {
+                                // Load constant
+                                *(I32*)stackPtr = I32.OneSigned;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I4_2:
+                            {
+                                // Load constant
+                                *(I32*)stackPtr = I32.TwoSigned;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I4_3:
+                            {
+                                // Load constant
+                                *(I32*)stackPtr = I32.ThreeSigned;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I4_4:
+                            {
+                                // Load constant
+                                *(I32*)stackPtr = I32.FourSigned;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I4_5:
+                            {
+                                // Load constant
+                                *(I32*)stackPtr = I32.FiveSigned;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I4_6:
+                            {
+                                // Load constant
+                                *(I32*)stackPtr = I32.SixSigned;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I4_7:
+                            {
+                                // Load constant
+                                *(I32*)stackPtr = I32.SevenSigned;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I4_8:
+                            {
+                                // Load constant
+                                *(I32*)stackPtr = I32.EightSigned;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I4_M1:
+                            {
+                                // Load constant
+                                *(I32*)stackPtr = I32.MinusOne;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I4:
+                        case Code.Ldc_I4_S:
+                            {
+                                // Load constant
+                                (*(I32*)stackPtr).signed = instruction.operand.Int32;
+                                (*(I32*)stackPtr).type = TypeID.Int32;
+                                stackPtr += I32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_I8:
+                            {
+                                // Load constant
+                                (*(I64*)stackPtr).signed = instruction.operand.Int64;
+                                (*(I64*)stackPtr).type = TypeID.Int64;
+                                stackPtr += I64.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_R4:
+                            {
+                                // Load constant
+                                (*(F32*)stackPtr).value = instruction.operand.Single;
+                                (*(F32*)stackPtr).type = TypeID.Single;
+                                stackPtr += F32.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldc_R8:
+                            {
+                                // Load constant
+                                (*(F64*)stackPtr).value = instruction.operand.Double;
+                                (*(F64*)stackPtr).type = TypeID.Double;
+                                stackPtr += F64.SizeTyped;
+                                break;
+                            }
+                        #endregion
 
                         #region Branch
                         case Code.Br:

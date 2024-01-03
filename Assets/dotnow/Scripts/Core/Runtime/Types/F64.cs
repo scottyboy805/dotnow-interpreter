@@ -7,12 +7,12 @@ namespace dotnow.Runtime.Types
     {
         // Internal
         [FieldOffset(0)]
-        internal TypeID type;
-        [FieldOffset(1)]
         internal double value;
+        [FieldOffset(8)]
+        internal TypeID type;
 
         // Public
-        public static readonly int Size = sizeof(float);                // Sizeof double only
+        public static readonly int Size = sizeof(double);               // Sizeof double only
         public static readonly int SizeTyped = Marshal.SizeOf<F64>();   // Sizeof double + 1 byte type id
 
         // Methods

@@ -7,9 +7,9 @@ namespace dotnow.Runtime.Types
     {
         // Internal
         [FieldOffset(0)]
-        internal TypeID type;
-        [FieldOffset(1)]
         internal float value;
+        [FieldOffset(4)]
+        internal TypeID type;
 
         // Public
         public static readonly int Size = sizeof(float);                // Sizeof single only

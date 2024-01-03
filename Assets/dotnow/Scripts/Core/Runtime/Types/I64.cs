@@ -1,18 +1,17 @@
 ﻿using System.Runtime.InteropServices;
-using UnityEngine;
 
 namespace dotnow.Runtime.Types
 {
     [StructLayout(LayoutKind.Explicit)]
     internal struct I64
     {
-        // Internal
+        // Internal        
         [FieldOffset(0)]
-        internal TypeID type;
-        [FieldOffset(1)]
         internal long signed;
-        [FieldOffset(1)]
+        [FieldOffset(0)]
         internal ulong unsigned;
+        [FieldOffset(8)]
+        internal TypeID type;
 
         // Public
         public static readonly int Size = sizeof(long);                 // Sizeof int64 only

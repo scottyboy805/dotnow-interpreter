@@ -3,15 +3,15 @@
 namespace dotnow.Runtime.Types
 { 
     [StructLayout(LayoutKind.Explicit)]
-    internal struct I32
+    internal unsafe struct I32
     {
         // Internal
         [FieldOffset(0)]
-        internal TypeID type;
-        [FieldOffset(1)]
         internal int signed;
-        [FieldOffset(1)]
+        [FieldOffset(0)]
         internal uint unsigned;
+        [FieldOffset(4)]
+        internal TypeID type;
 
         // Public
         public static readonly int Size = sizeof(int);                  // Sizeof int32 only
@@ -36,6 +36,16 @@ namespace dotnow.Runtime.Types
                 return string.Format("{0}: {1}", type, signed);
 
             return string.Format("{0}: {1}", type, unsigned);
+        }
+
+        public static void Load(ref byte* stackPtr, int value)
+        {
+            // Load constant
+            (*(I32*)stackPtr).signed = value;
+            (*(I32*)stackPtr).type = TypeID.Int32;
+
+            // Advance pointer
+            stackPtr += SizeTyped;
         }
     }
 }
