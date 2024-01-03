@@ -201,9 +201,19 @@ namespace dotnow
             if (dest == source)
                 return true;
 
-            // Check for assignable
-            if(source.IsSubclassOf(dest) == true)
-                return true;
+            // Can't use IsAssignable check on clr types - causes hard crash in some cases
+            if (dest.IsCLRType() == true)
+            {
+                // Check for sub class - need further work to support interfaces??
+                if (source.IsSubclassOf(dest) == true)
+                    return true;
+            }
+            else
+            {
+                // Check for assignable
+                if (dest.IsAssignableFrom(source) == true)
+                    return true;
+            }
 
             // Handle arrays
             if(dest.IsArray == true && source.IsArray == true && 
