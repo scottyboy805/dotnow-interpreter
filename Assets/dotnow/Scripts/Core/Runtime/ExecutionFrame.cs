@@ -50,6 +50,9 @@ namespace dotnow.Runtime
 
         internal StackLocal[] locals;
         internal _CLRStackHandle[] stackLocals;
+        internal uint stackBaseOffset = 0;
+
+        internal byte* stackPtr = null;
 
         // Properties
         public ExecutionFrameOld Parent
@@ -123,14 +126,14 @@ namespace dotnow.Runtime
 
                 stackLocals = new _CLRStackHandle[locals.Length];
 
-                uint offset = 0;
+                stackBaseOffset = 0;
                 for(int i = 0; i < stackLocals.Length; i++)
                 {
                     // Create local
-                    stackLocals[i] = new _CLRStackHandle(locals[i].localType, offset, false);
+                    stackLocals[i] = new _CLRStackHandle(locals[i].localType, stackBaseOffset, false);
 
                     // Update offset
-                    offset += stackLocals[i].stackType.size;
+                    stackBaseOffset += stackLocals[i].stackType.size;
                 }
 
 

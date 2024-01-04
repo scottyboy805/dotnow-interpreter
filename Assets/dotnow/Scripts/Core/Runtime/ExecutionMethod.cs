@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using dotnow.Reflection;
 using dotnow.Runtime.CIL;
+using dotnow.Runtime.Types;
 
 namespace dotnow.Runtime
 {
@@ -79,14 +80,16 @@ namespace dotnow.Runtime
                     int returnSize = __memory.SizeOfTypedSlow(signature.returnType.type);
 
                     //fixed (byte* returnPtr = &frame.stackMemory[frame.stackIndex - returnSize + 1])
-                    byte* returnPtr = (byte*)frame.stackMemory;
+                    byte* returnPtr = //(byte*)(frame.stackMemory + (int)frame.stackBaseOffset + frame.stackIndex + 5);
+                        (byte*)(frame.stackPtr);// - returnSize);
                     {
                         // Get the value
 
                         // Release the frame
                         engine.FreeExecutionFrame(frame);
 
-                        return *(int*)returnPtr;
+                        return *(I32*)(returnPtr);
+                        return *(int*)(returnPtr - 1);
                     }
                 }
             }

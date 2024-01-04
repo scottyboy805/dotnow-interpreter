@@ -44,6 +44,7 @@ namespace dotnow.Runtime
         internal ExecutionFrameOld currentFrame = null;
         internal StackData[] stack = null;
         //internal byte[] stackMemory = null;
+        internal GCHandle stackHandle = default;
         internal IntPtr stackMemory = IntPtr.Zero;
 
         // Private        
@@ -81,12 +82,21 @@ namespace dotnow.Runtime
             this.thread = thread;
             this.stack = new StackData[stackSize];
             //this.stackMemory = new byte[stackSize];
+#if DEBUG
+            this.stackHandle = GCHandle.Alloc(new byte[stackSize], GCHandleType.Pinned);
+            this.stackMemory = stackHandle.AddrOfPinnedObject();
+#else
             this.stackMemory = Marshal.AllocHGlobal(stackSize);
+#endif
         }
 
         ~ExecutionEngine()
         {
+#if DEBUG
+            stackHandle.Free();
+#else
             Marshal.FreeHGlobal(stackMemory);
+#endif
         }
 
         // Methods

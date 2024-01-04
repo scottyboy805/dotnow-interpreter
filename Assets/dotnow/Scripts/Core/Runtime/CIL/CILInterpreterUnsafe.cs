@@ -19,7 +19,7 @@ namespace dotnow.Runtime.CIL
             // Pin the stack memory
             //fixed (byte* stackBasePtr = &engine.stackMemory[frame.stackIndex])
             {
-                byte* stackPtr = stackBasePtr;
+                byte* stackPtr = stackBasePtr + frame.stackBaseOffset;
 
                 // Main instruction loop
                 while (instructionPtr < instructionLength && frame.abort == false)
@@ -253,8 +253,35 @@ namespace dotnow.Runtime.CIL
                                     __memory.Copy(localPtr, stackPtr, local.stackType.size);
                                 }
 
+                                // Load type id
+                                *(TypeID*)(stackPtr + local.stackType.size) = local.stackType.typeID;
+
                                 // Advance stack ptr
                                 stackPtr += local.stackType.size + 1;
+
+                                I32 val = *(I32*)(stackPtr - I32.SizeTyped);
+                                break;
+                            }
+
+                        case Code.Ldloc_1:
+                            {
+                                // Get the local
+                                _CLRStackHandle local = frame.stackLocals[1];
+
+                                // Get the address of the local
+                                byte* localPtr = stackBasePtr + local.offset;
+                                {
+                                    // Copy from local to top of stack
+                                    __memory.Copy(localPtr, stackPtr, local.stackType.size);
+                                }
+
+                                // Load type id
+                                *(TypeID*)(stackPtr + local.stackType.size) = local.stackType.typeID;
+
+                                // Advance stack ptr
+                                stackPtr += local.stackType.size + 1;
+
+                                I32 val = *(I32*)(stackPtr - I32.SizeTyped);
                                 break;
                             }
 
@@ -271,7 +298,55 @@ namespace dotnow.Runtime.CIL
                                 }
 
                                 // Decrement stack ptr
-                                stackPtr -= local.stackType.size - 1;
+                                stackPtr -= local.stackType.size + 1;
+
+                                I32 val = *(I32*)localPtr;
+                                break;
+                            }
+
+                        case Code.Stloc_1:
+                            {
+                                // Get the local
+                                _CLRStackHandle local = frame.stackLocals[1];
+
+                                // Get the address of the local
+                                byte* localPtr = stackBasePtr + local.offset;
+                                {
+                                    // Copy from stack top to local
+                                    __memory.Copy(stackPtr - local.stackType.size - 1, localPtr, local.stackType.size);
+                                }
+
+                                // Decrement stack ptr
+                                stackPtr -= local.stackType.size + 1;
+
+                                I32 val = *(I32*)localPtr;
+                                break;
+                            }
+                        #endregion
+
+                        #region Arithmetic
+                        case Code.Add:
+                            {
+                                I32 val = *(I32*)(stackPtr - I32.SizeTyped);
+
+                                // Peek type id
+                                TypeID id = *(TypeID*)(stackPtr - 1);
+
+                                // Check for int32
+                                switch(id)
+                                {
+                                    case TypeID.Int32:
+                                        {
+                                            // Perform add
+                                            (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed = 
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed + 
+                                                (*(I32*)(stackPtr - I32.SizeTyped)).signed;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                }
                                 break;
                             }
                         #endregion
@@ -313,7 +388,9 @@ namespace dotnow.Runtime.CIL
                 } // End while
 
                 frame.instructionPtr = instructionPtr;
-                frame.stackIndex = (*stackBasePtr - *stackPtr);
+                frame.stackIndex = (*stackPtr - *stackBasePtr);
+
+                frame.stackPtr = stackPtr;
             }
         }
     }
