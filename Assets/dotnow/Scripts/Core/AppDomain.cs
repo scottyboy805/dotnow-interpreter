@@ -878,7 +878,7 @@ namespace dotnow
                 CLRType clrType = type as CLRType;
 
                 // Create instance
-                inst = CLRInstance.CreateAllocatedInstance(this, clrType);
+                inst = CLRInstanceOld.CreateAllocatedInstance(this, clrType);
             }
             else
             {
@@ -924,7 +924,7 @@ namespace dotnow
                         throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
 
                     // Create instance
-                    inst = CLRInstance.CreateAllocatedInstance(this, clrType, ctor, null);
+                    inst = CLRInstanceOld.CreateAllocatedInstance(this, clrType, ctor, null);
                 }
                 else
                 {
@@ -971,7 +971,7 @@ namespace dotnow
                         throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
 
                     // Create instance
-                    inst = CLRInstance.CreateAllocatedInstance(this, clrType, ctor, args);
+                    inst = CLRInstanceOld.CreateAllocatedInstance(this, clrType, ctor, args);
                 }
                 else
                 {
@@ -1045,7 +1045,7 @@ namespace dotnow
 
 
                     // Create instance
-                    inst = CLRInstance.CreateAllocatedInstance(this, clrType, ctor as ConstructorInfo, args);
+                    inst = CLRInstanceOld.CreateAllocatedInstance(this, clrType, ctor as ConstructorInfo, args);
                 }
                 else
                 {
@@ -1105,7 +1105,7 @@ namespace dotnow
                 throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
 
             // Create instance
-            return CLRInstance.CreateAllocatedInstanceWithProxy(this, clrType, ctor, null, proxy);
+            return CLRInstanceOld.CreateAllocatedInstanceWithProxy(this, clrType, ctor, null, proxy);
         }
 
         public object CreateInstanceFromProxy(Type type, ICLRProxy proxy, object[] args)
@@ -1129,7 +1129,7 @@ namespace dotnow
                 throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
 
             // Create instance
-            return CLRInstance.CreateAllocatedInstanceWithProxy(this, clrType, ctor, args, proxy);
+            return CLRInstanceOld.CreateAllocatedInstanceWithProxy(this, clrType, ctor, args, proxy);
         }
 
         private CLRConstructor GetRuntimeCLRCtor(CLRType type, object[] args)

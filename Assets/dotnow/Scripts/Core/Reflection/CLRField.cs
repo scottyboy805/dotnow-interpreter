@@ -132,13 +132,13 @@ namespace dotnow.Reflection
                 IByRef byRef = obj as IByRef;
                 if (byRef != null)
                 {
-                    CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
+                    CLRInstanceOld inst = byRef.GetReferenceValue().refValue as CLRInstanceOld;
 
                     return inst.GetFieldValue(this);
                 }
 
                 // Get value from the instance
-                return (obj as CLRInstance).GetFieldValue(this);
+                return (obj as CLRInstanceOld).GetFieldValue(this);
             }
 
             // Get static value
@@ -164,14 +164,14 @@ namespace dotnow.Reflection
                 IByRef byRef = obj.refValue as IByRef;
                 if (byRef != null)
                 {
-                    CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
+                    CLRInstanceOld inst = byRef.GetReferenceValue().refValue as CLRInstanceOld;
 
                     inst.GetFieldValueStack(this, ref value);
                     return;
                 }
 
                 // Get value from the instance
-                (obj.refValue as CLRInstance).GetFieldValueStack(this, ref value);
+                (obj.refValue as CLRInstanceOld).GetFieldValueStack(this, ref value);
                 return;
             }
 
@@ -194,14 +194,14 @@ namespace dotnow.Reflection
                 IByRef byRef = obj as IByRef;
                 if (byRef != null)
                 {
-                    CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
+                    CLRInstanceOld inst = byRef.GetReferenceValue().refValue as CLRInstanceOld;
 
                     inst.SetFieldValue(this, value);
                 }
                 else
                 {
                     // Get value from the instance
-                    (obj as CLRInstance).SetFieldValue(this, value);
+                    (obj as CLRInstanceOld).SetFieldValue(this, value);
                 }                
             }
             else

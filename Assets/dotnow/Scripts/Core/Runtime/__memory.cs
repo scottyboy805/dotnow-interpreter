@@ -1,4 +1,5 @@
-﻿using dotnow.Runtime.Types;
+﻿using dotnow.Runtime.Handle;
+using dotnow.Runtime.Types;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -16,31 +17,47 @@ namespace dotnow.Runtime
         }
 
         // Private
-        private List<TrackedMemory> heap = new List<TrackedMemory>(1024);
+        private static List<TrackedMemory> heap = new List<TrackedMemory>(1024);
+
+        // Constructor
+        ~__memory() 
+        {
+            heap.Clear();
+            heap = null;
+        }
 
         // Methods
-        public int Pin(object managedObject)
+        public static int PinManagedObject(object managedObject)
         {
             // Get address
             int addr = heap.Count;
 
-            // Push tracked object
-            heap.Add(new TrackedMemory
+            // Create tracked memory
+            TrackedMemory tracked = new TrackedMemory
             {
                 referenceCount = 1,
                 managedObject = managedObject,
-            });
+            };
+
+            // Push tracked object
+            lock (heap)
+            {
+                heap.Add(tracked);
+            }
 
             // Get the pinned address
             return addr;
         }
 
-        public void Free(int addr)
+        public static void FreeManagedObject(int addr)
         {
             if (heap[addr].referenceCount <= 1)
             {
-                // We can release the memory to GC
-                heap.RemoveAt(addr);
+                lock (heap)
+                {
+                    // We can release the memory to GC
+                    heap.RemoveAt(addr);
+                }
             }
             else
             {
@@ -50,9 +67,106 @@ namespace dotnow.Runtime
                 // Decrease references
                 mem.referenceCount--;
 
-                // Update heap collection
-                heap[addr] = mem;
+                lock (heap)
+                {
+                    // Update heap collection
+                    heap[addr] = mem;
+                }
             }
+        }
+
+        public static object GetManagedObject(int addr)
+        {
+            lock (heap)
+            {
+                return heap[addr].managedObject;
+            }
+        }
+
+        public static IntPtr Allocate(AppDomain domain, in _CLRTypeHandle type, bool forceStackAlloc, ref byte* stackAllocPtr)
+        {
+            // Check for interop
+            if ((type.flags & _CLRTypeFlags.Interop) != 0)
+                throw new NotSupportedException("Only CLR types can be allocated manually - Use activator for interop types");
+
+            // Resolve the type
+            Type allocType = domain.ResolveType(type.token);
+
+            // Get interfaces
+            Type[] baseInterfaces = allocType.GetInterfaces();
+
+            // Allocates a block or memory on the heap or stack to store a clr instance
+            // Instance data is structured as follows:
+            // -- Instance base addr
+            // [CLRInstance] structure metadata
+            // -- Instance addr - main ptr used at runtime
+            // [Raw data] raw memory where instance fields are located and is dynamically sized based on instance allocated
+
+            // Calculate allocate size
+            uint allocSize = (uint)CLRInstance.Size + type.size + (uint)((baseInterfaces.Length + 1) * sizeof(int));
+
+            // Store pointer
+            byte* ptr = null;
+
+            // Allocate CLR instance on heap or stack
+            if((type.flags & _CLRTypeFlags.ValueType) != 0 || forceStackAlloc == true)
+            {
+                // Allocate on the stack
+                ptr = stackAllocPtr;
+
+                // Advance ptr
+                stackAllocPtr += allocSize;
+            }
+            else
+            {
+                // Allocate on the heap
+                ptr = (byte*)Marshal.AllocHGlobal((int)allocSize);
+
+                // Zero memory
+                __memory.Zero(ptr, allocSize);
+            }
+
+            // Get main ptr
+            byte* instancePtr = ptr + CLRInstance.Size;
+
+            // Create instance metadata
+            *(CLRInstance*)ptr = new CLRInstance
+            {
+                type = type,
+                instancePointer = (IntPtr)instancePtr,
+                proxyCount = baseInterfaces.Length + 1,
+            };
+
+            // Allocate base proxy object
+            *(int*)instancePtr = __memory.PinManagedObject(domain.CreateCLRProxyBindingOrImplicitInteropInstance(allocType.BaseType));
+
+            // Allocate interface proxy objects
+            for (int i = 0; i < baseInterfaces.Length; i++)
+                *((int*)instancePtr + i + 1) = __memory.PinManagedObject(domain.CreateCLRProxyBinding(baseInterfaces[i]));
+
+            // Get address of object
+            return (*(CLRInstance*)ptr).instancePointer;
+        }
+
+        public static void Free(IntPtr ptr)
+        {
+            // Get the instance
+            CLRInstance inst = *((CLRInstance*)ptr - CLRInstance.Size);
+
+            // Check for stack allocated
+            if ((inst.type.flags & _CLRTypeFlags.ValueType) != 0)
+                throw new InvalidOperationException("Cannot free memory that was allocated on the stack");
+
+            // Check for referenced
+            if (inst.referenceCount > 0)
+                throw new InvalidOperationException("Cannot free memory because it is still being referenced");
+
+            // Free managed objects
+            for (int i = 0; i < inst.proxyCount; i++)
+                __memory.FreeManagedObject(*((int*)inst.instancePointer + i + i));
+
+            // Free the native memory
+            Marshal.FreeHGlobal(ptr);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

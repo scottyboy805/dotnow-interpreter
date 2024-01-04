@@ -7,16 +7,16 @@ namespace System
     public class AttributeProxy : Attribute, ICLRProxy
     {
         // Private
-        private CLRInstance instance;
+        private CLRInstanceOld instance;
 
         // Properties
-        public CLRInstance Instance
+        public CLRInstanceOld Instance
         {
             get { return instance; }
         }
 
         // Methods
-        public void InitializeProxy(dotnow.AppDomain domain, CLRInstance instance)
+        public void InitializeProxy(dotnow.AppDomain domain, CLRInstanceOld instance)
         {
             this.instance = instance;
         }

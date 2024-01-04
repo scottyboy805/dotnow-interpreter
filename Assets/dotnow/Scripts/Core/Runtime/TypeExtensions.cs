@@ -121,7 +121,7 @@ namespace dotnow
                     return type.GetEnumUnderlyingType().GetDefaultValue(domain);
 
                 // Create default struct instance
-                return CLRInstance.CreateAllocatedInstance(domain, type as CLRType);
+                return CLRInstanceOld.CreateAllocatedInstance(domain, type as CLRType);
             }
 
             // Create instance

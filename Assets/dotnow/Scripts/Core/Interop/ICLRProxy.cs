@@ -4,9 +4,9 @@ namespace dotnow.Interop
     public interface ICLRProxy
     {
         // Properties
-        CLRInstance Instance { get; } 
+        CLRInstanceOld Instance { get; } 
 
         // Methods
-        void InitializeProxy(AppDomain domain, CLRInstance instance);
+        void InitializeProxy(AppDomain domain, CLRInstanceOld instance);
     }
 }

@@ -7,9 +7,9 @@ namespace System.Collections
     public class IEnumeratorProxy : ICLRProxy, IEnumerator
     {
         // Private
-        private CLRInstance instance;
+        private CLRInstanceOld instance;
 
-        public CLRInstance Instance
+        public CLRInstanceOld Instance
         {
             get { return instance; }
         }
@@ -22,7 +22,7 @@ namespace System.Collections
             }
         }
 
-        public void InitializeProxy(dotnow.AppDomain domain, CLRInstance instance)
+        public void InitializeProxy(dotnow.AppDomain domain, CLRInstanceOld instance)
         {
             this.instance = instance;
         }

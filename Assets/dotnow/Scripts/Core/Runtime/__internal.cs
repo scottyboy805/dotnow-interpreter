@@ -25,7 +25,7 @@ namespace dotnow.Runtime
                 else
                 {
                     // Use clr instance
-                    arrType = typeof(CLRInstance);
+                    arrType = typeof(CLRInstanceOld);
                 }
             }
 
@@ -45,7 +45,7 @@ namespace dotnow.Runtime
             // Check for clr type - Must be stored as CLRInstance to avoid invalid cast exceptions
             if (arrType.IsCLRType() == true)
             {
-                arrType = typeof(CLRInstance);
+                arrType = typeof(CLRInstanceOld);
             }
 
             // Create the new instance
@@ -84,7 +84,7 @@ namespace dotnow.Runtime
             int allocSize = clrType.SizeOfInstance();
 
             // Create instance at stack ptr
-            CLRInstance instance = CLRInstance.CreateAllocatedInstance(domain, clrType);
+            CLRInstanceOld instance = CLRInstanceOld.CreateAllocatedInstance(domain, clrType);
             instance.fieldPtr = stackPtr;
 
             // Push to stack

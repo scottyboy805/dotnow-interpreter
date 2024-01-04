@@ -7,9 +7,9 @@ namespace System
     public class IDisposableProxy : ICLRProxy, IDisposable
     {
         // Private
-        private CLRInstance instance;
+        private CLRInstanceOld instance;
 
-        public CLRInstance Instance
+        public CLRInstanceOld Instance
         {
             get { return instance; }
         }
@@ -19,7 +19,7 @@ namespace System
             instance.Type.GetMethod("Dispose")?.Invoke(instance, null);
         }
 
-        public void InitializeProxy(dotnow.AppDomain domain, CLRInstance instance)
+        public void InitializeProxy(dotnow.AppDomain domain, CLRInstanceOld instance)
         {
             this.instance = instance;
         }

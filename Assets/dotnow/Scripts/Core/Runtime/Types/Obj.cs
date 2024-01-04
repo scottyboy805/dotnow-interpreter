@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace dotnow.Runtime.Types
@@ -8,6 +9,7 @@ namespace dotnow.Runtime.Types
     {
         ValueType = 1 << 1,
         BoxedPrimitive = 1 << 2,
+        Interop = 1 << 3,
     }
 
     [StructLayout(LayoutKind.Explicit)]
@@ -32,13 +34,37 @@ namespace dotnow.Runtime.Types
         // Properties
         public bool IsNull
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return ptr == IntPtr.Zero; }
         }
 
-        // Methods
-        public Type GetRuntimeType(AppDomain domain)
+        public unsafe CLRInstance CLRInstance
         {
-            throw new NotImplementedException();
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return *(CLRInstance*)ptr; }
+        }
+
+        public object ManagedObject
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return __memory.GetManagedObject((int)ptr); }
+        }
+
+        // Methods
+        public Type GetRuntimeType()
+        {
+            // Check null
+            if (IsNull == true)
+                throw new NullReferenceException();
+
+            // Check for interop
+            if((flags & ObjFlags.Interop) != 0)
+            {
+                // Get system type
+                return ManagedObject.GetType();
+            }
+
+            // Get instance type
         }
 
         public override string ToString()

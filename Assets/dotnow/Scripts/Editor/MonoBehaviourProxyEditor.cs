@@ -23,7 +23,7 @@ namespace dotnow
         };
 
         private MonoBehaviourProxy proxy = null;
-        private CLRInstance instance = null;
+        private CLRInstanceOld instance = null;
         private CLRType type = null;
 
         private MonoScript fakeScriptInfo = null;

@@ -14,7 +14,7 @@ namespace dotnow.Interop
                 return instance.ToString();
 
             // Get the clr type
-            CLRType instanceType = (instance as CLRInstance).Type;
+            CLRType instanceType = (instance as CLRInstanceOld).Type;
 
             // Check for cached tostring method
             if(instanceType.cachedToStringTarget != null)
@@ -32,14 +32,14 @@ namespace dotnow.Interop
                 return instance.Equals(args[0]);
 
             // Get the clr type
-            CLRType instanceType = (instance as CLRInstance).Type;
+            CLRType instanceType = (instance as CLRInstanceOld).Type;
 
             // Check for cached equals method
             if (instanceType.cachedEqualsTarget != null)
                 return instanceType.cachedEqualsTarget.Invoke(instance, args);
 
             // Fallback to standard behaviour
-            return (instance as CLRInstance).Equals(args[0]);
+            return (instance as CLRInstanceOld).Equals(args[0]);
         }
 
         [CLRMethodBinding(typeof(object), "GetHashCode")]
@@ -50,14 +50,14 @@ namespace dotnow.Interop
                 return instance.GetHashCode();
 
             // Get the clr type
-            CLRType instanceType = (instance as CLRInstance).Type;
+            CLRType instanceType = (instance as CLRInstanceOld).Type;
 
             // Check for cached gethashcode method
             if (instanceType.cachedGetHashCodeTarget != null)
                 return instanceType.cachedGetHashCodeTarget.Invoke(instanceType, null);
 
             // Fallback to standard behaviour
-            return (instance as CLRInstance).GetHashCode();
+            return (instance as CLRInstanceOld).GetHashCode();
         }
     }
 }

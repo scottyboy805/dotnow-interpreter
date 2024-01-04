@@ -168,18 +168,18 @@ namespace UnityEngine
         private string typeInfo = null;
 
         private CLRType instanceType = null;
-        private CLRInstance instance = null;
+        private CLRInstanceOld instance = null;
 
         private RuntimeBindingsCache cache = null;
 
         // Properties
-        public CLRInstance Instance
+        public CLRInstanceOld Instance
         {
             get { return instance; }
         }
 
         // Methods
-        public void InitializeProxy(AppDomain domain, CLRInstance instance)
+        public void InitializeProxy(AppDomain domain, CLRInstanceOld instance)
         {
             if(domainShared == null)
                 domainShared = domain;

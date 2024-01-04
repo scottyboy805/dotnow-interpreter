@@ -2730,7 +2730,7 @@ namespace dotnow.Runtime.CIL
 
                                 if (temp.refValue.IsCLRInstance() == true)
                                 {
-                                    instanceType = ((CLRInstance)temp.refValue).Type;
+                                    instanceType = ((CLRInstanceOld)temp.refValue).Type;
                                 }
                                 else
                                 {
@@ -2853,7 +2853,7 @@ namespace dotnow.Runtime.CIL
                                 {
                                     // Get the runtime type of the object - this is a little slow
                                     Type runtimeType = instance.IsCLRInstance() == true
-                                        ? ((CLRInstance)instance).Type
+                                        ? ((CLRInstanceOld)instance).Type
                                         : instance.GetType();
 
                                     // Get vtable

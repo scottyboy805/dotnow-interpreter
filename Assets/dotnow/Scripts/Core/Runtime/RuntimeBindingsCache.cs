@@ -9,11 +9,11 @@ namespace dotnow.Runtime
         // Private
         private static object nullMatchToken = new object();
 
-        private CLRInstance instance = null;
+        private CLRInstanceOld instance = null;
         private object[] proxyMemberCache = null;
 
         // Constructor
-        public RuntimeBindingsCache(CLRInstance instance, int memberCount)
+        public RuntimeBindingsCache(CLRInstanceOld instance, int memberCount)
         {
             this.instance = instance;
             this.proxyMemberCache = new object[memberCount];
