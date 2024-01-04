@@ -1,17 +1,40 @@
 ﻿using dotnow.Reflection;
 using dotnow.Runtime.CIL;
+using dotnow.Runtime.Handle;
 using System;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace dotnow.Runtime
 {
-    public unsafe class ExecutionFrame
+    //public unsafe struct ExecutionFrame
+    //{
+    //    // Private
+    //    private ExecutionFrame* parent;
+    //    private ExecutionEngine engine;
+    //    private MethodBase method;
+
+    //    // Internal
+    //    internal byte* instructionPtr;
+    //    internal byte* stackBasePtr;
+    //    internal _CLRStackHandle[] args;
+    //    internal _CLRStackHandle[] locals;
+    //    internal bool abort;
+
+    //    // Constructor
+    //    public ExecutionFrame(ExecutionFrame* parent, AppDomain domain, MethodBase method)
+    //    {
+    //        this.parent = parent;
+    //        this.engine = parent != null ? parent->engine : domain.GetExecutionEngine();
+    //        this.method = method;
+    //    }
+    //}
+
+    public unsafe class ExecutionFrameOld
     {
         // Private
         private AppDomain domain = null;
         private ExecutionEngine engine = null;
-        private ExecutionFrame parent = null;
+        private ExecutionFrameOld parent = null;
         private MethodBase method = null;
 
         // Internal
@@ -22,13 +45,14 @@ namespace dotnow.Runtime
         internal int stackMin = 0;
         internal int stackMax = 0;
         internal StackData[] stack = null;
-        internal byte[] stackMemory = null;
+        internal IntPtr stackMemory = IntPtr.Zero;
         internal bool abort = false;
 
-        internal StackLocal[] locals; 
+        internal StackLocal[] locals;
+        internal _CLRStackHandle[] stackLocals;
 
         // Properties
-        public ExecutionFrame Parent
+        public ExecutionFrameOld Parent
         {
             get { return parent; }
         }
@@ -39,13 +63,13 @@ namespace dotnow.Runtime
         }        
 
         // Constructor
-        public ExecutionFrame(AppDomain domain, ExecutionEngine engine, ExecutionFrame parent, MethodBase method, int maxStackDepth, int paramCount, StackLocal[] locals)
+        public ExecutionFrameOld(AppDomain domain, ExecutionEngine engine, ExecutionFrameOld parent, MethodBase method, int maxStackDepth, int paramCount, StackLocal[] locals)
         {
             SetupFrame(domain, engine, parent, method, maxStackDepth, paramCount, locals);
         }
 
         // Methods
-        public void SetupFrame(AppDomain domain, ExecutionEngine engine, ExecutionFrame parent, MethodBase method, int maxStackDepth, int paramCount, StackLocal[] locals)
+        public void SetupFrame(AppDomain domain, ExecutionEngine engine, ExecutionFrameOld parent, MethodBase method, int maxStackDepth, int paramCount, StackLocal[] locals)
         {
             this.domain = domain;
             this.engine = engine;
@@ -76,7 +100,7 @@ namespace dotnow.Runtime
             {
                 // Calcualte stack size required for value types
                 for (int i = 0; i < locals.Length; i++)
-                    localAllocSize += locals[i].clrValueTypeSize;
+                    localAllocSize += locals[i].localSize;
 
                 // Allocate locals
                 for (int i = 0; i < locals.Length; i++)
@@ -96,7 +120,22 @@ namespace dotnow.Runtime
                     
                 }
 
-                fixed (byte* basePtr = &stackMemory[localAllocPtr])
+
+                stackLocals = new _CLRStackHandle[locals.Length];
+
+                uint offset = 0;
+                for(int i = 0; i < stackLocals.Length; i++)
+                {
+                    // Create local
+                    stackLocals[i] = new _CLRStackHandle(locals[i].localType, offset, false);
+
+                    // Update offset
+                    offset += stackLocals[i].stackType.size;
+                }
+
+
+
+                byte* basePtr = (byte*)stackMemory; //&stackMemory[localAllocPtr])
                 {
                     byte* stackPtr = basePtr;
                     

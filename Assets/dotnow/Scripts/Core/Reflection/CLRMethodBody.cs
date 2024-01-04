@@ -16,6 +16,8 @@ namespace dotnow.Reflection
         private CILOperation[] instructions = null;
         private bool jitFailed = false;
 
+        private byte[] instructionsRaw = null;
+
         // Properties
         public override bool InitLocals
         {
@@ -65,6 +67,8 @@ namespace dotnow.Reflection
                         {
                             // Get the compiled method body instruction pointer
                             instructions = bodyCompiler.JITOptimizeInterpretedInstructionSet(domain);
+
+                            instructionsRaw = bodyCompiler.JITOptimizeInstructionsRaw();
                         }
                         catch
                         {

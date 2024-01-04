@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using dotnow.Debugging;
@@ -32,7 +33,7 @@ namespace dotnow.Runtime
         {
             // Public
             public AppDomain domain;
-            public ExecutionFrame frame;
+            public ExecutionFrameOld frame;
             public CILOperation[] instructions;
             public CLRExceptionHandler[] exceptionHandlers;
         }
@@ -40,14 +41,15 @@ namespace dotnow.Runtime
         // Internal
         internal Dictionary<int, object[]> argumentCache = new Dictionary<int, object[]>();
 
-        internal ExecutionFrame currentFrame = null;
+        internal ExecutionFrameOld currentFrame = null;
         internal StackData[] stack = null;
-        internal byte[] stackMemory = null;
+        //internal byte[] stackMemory = null;
+        internal IntPtr stackMemory = IntPtr.Zero;
 
         // Private        
         private static readonly FieldInfo exceptionStackTraceProperty = typeof(Exception).GetField("_stackTraceString", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        private Stack<ExecutionFrame> availableFrames = new Stack<ExecutionFrame>();
+        private Stack<ExecutionFrameOld> availableFrames = new Stack<ExecutionFrameOld>();
 
         private bool isDebuggerPaused = false;
         private ExecutionState debuggerPauseState = null;
@@ -78,7 +80,13 @@ namespace dotnow.Runtime
 
             this.thread = thread;
             this.stack = new StackData[stackSize];
-            this.stackMemory = new byte[stackSize];
+            //this.stackMemory = new byte[stackSize];
+            this.stackMemory = Marshal.AllocHGlobal(stackSize);
+        }
+
+        ~ExecutionEngine()
+        {
+            Marshal.FreeHGlobal(stackMemory);
         }
 
         // Methods
@@ -134,7 +142,7 @@ namespace dotnow.Runtime
             }
         }
 
-        internal void SaveExecutionState(AppDomain domain, ExecutionFrame frame, CILOperation[] instructions, CLRExceptionHandler[] exceptionHandlers)
+        internal void SaveExecutionState(AppDomain domain, ExecutionFrameOld frame, CILOperation[] instructions, CLRExceptionHandler[] exceptionHandlers)
         {
             isDebuggerPaused = true;
             debuggerPauseState = new ExecutionState
@@ -167,7 +175,7 @@ namespace dotnow.Runtime
             debugFlags &= ~DebugFlags.DebugStepOnce;
         }
 
-        internal void Execute(AppDomain domain, ExecutionFrame frame, CILOperation[] methodInstructions, CLRExceptionHandler[] exceptionHandlers, int initialInstructionIndex = 0, bool debuggerResume = false)
+        internal unsafe void Execute(AppDomain domain, ExecutionFrameOld frame, CILOperation[] methodInstructions, CLRExceptionHandler[] exceptionHandlers, int initialInstructionIndex = 0, bool debuggerResume = false)
         {
             // Check for paused execution
             if (isDebuggerPaused == true && debuggerResume == false)
@@ -178,7 +186,7 @@ namespace dotnow.Runtime
             {
                 try
                 {
-                    CILInterpreterUnsafe.ExecuteInterpreted(domain, this, ref frame, ref methodInstructions, ref exceptionHandlers, debugFlags);
+                    CILInterpreterUnsafe.ExecuteInterpreted(domain, this, ref frame, ref methodInstructions, (byte*)stackMemory, ref exceptionHandlers, debugFlags);
                     return;
                 }
                 catch (Exception e)
@@ -205,7 +213,7 @@ namespace dotnow.Runtime
             }
         }
 
-        private ExceptionHandlingResult HandleException(AppDomain domain, ExecutionFrame frame, CILOperation[] instructions, CLRExceptionHandler[] exceptionHandlers, Exception e)
+        private unsafe ExceptionHandlingResult HandleException(AppDomain domain, ExecutionFrameOld frame, CILOperation[] instructions, CLRExceptionHandler[] exceptionHandlers, Exception e)
         {
             // Goto exception handler body
             CLRExceptionHandler handler;
@@ -221,7 +229,7 @@ namespace dotnow.Runtime
             {
                 try
                 {
-                    CILInterpreterUnsafe.ExecuteInterpreted(domain, this, ref frame, ref instructions, ref exceptionHandlers, debugFlags);
+                    CILInterpreterUnsafe.ExecuteInterpreted(domain, this, ref frame, ref instructions, (byte*)stackMemory, ref exceptionHandlers, debugFlags);
                     
                     // Check for rethrow
                     if (frame.instructionPtr == rethrowOnReturn)
@@ -244,7 +252,7 @@ namespace dotnow.Runtime
             }
         }
 
-        internal int GotoHandler(ExecutionFrame frame, object exception, CLRExceptionHandler[] exceptionHandlers, out CLRExceptionHandler handler)
+        internal int GotoHandler(ExecutionFrameOld frame, object exception, CLRExceptionHandler[] exceptionHandlers, out CLRExceptionHandler handler)
         {
             // try to get best matching exception handler
             handler = GetBestHandler(frame.instructionPtr, exceptionHandlers, exception.GetType());
@@ -284,7 +292,7 @@ namespace dotnow.Runtime
             return null;
         }
 
-        internal void AllocExecutionFrame(out ExecutionFrame frame, AppDomain domain, ExecutionEngine engine, MethodBase method, int maxStack, int paramCount, StackLocal[] locals)
+        internal void AllocExecutionFrame(out ExecutionFrameOld frame, AppDomain domain, ExecutionEngine engine, MethodBase method, int maxStack, int paramCount, StackLocal[] locals)
         {
             if (availableFrames.Count > 0)
             {
@@ -294,14 +302,14 @@ namespace dotnow.Runtime
             }
             else
             {
-                frame = new ExecutionFrame(domain, engine, currentFrame, method, maxStack, paramCount, locals);
+                frame = new ExecutionFrameOld(domain, engine, currentFrame, method, maxStack, paramCount, locals);
             }
 
             // Set current
             currentFrame = frame;
         }
 
-        internal void FreeExecutionFrame(ExecutionFrame frame)
+        internal void FreeExecutionFrame(ExecutionFrameOld frame)
         {
             lock (availableFrames)
             {
@@ -346,7 +354,7 @@ namespace dotnow.Runtime
             return builder.ToString();
         }
 
-        private void BuildStackTrace(ExecutionFrame frame, StringBuilder builder, bool includeFileInfo)
+        private void BuildStackTrace(ExecutionFrameOld frame, StringBuilder builder, bool includeFileInfo)
         {
             // Get method from frame
             MethodBase currentMethod = frame.Method;

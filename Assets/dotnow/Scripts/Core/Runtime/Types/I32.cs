@@ -14,8 +14,8 @@ namespace dotnow.Runtime.Types
         internal TypeID type;
 
         // Public
-        public static readonly int Size = sizeof(int);                  // Sizeof int32 only
-        public static readonly int SizeTyped = Marshal.SizeOf<I32>();   // Sizeof int32 + 1 byte type id
+        public static readonly int Size = sizeof(int);              // Sizeof int32 only
+        public static readonly int SizeTyped = sizeof(int) + 1;     // Sizeof int32 + 1 byte type id
 
 
         public static readonly I32 ZeroSigned = new I32 { type = TypeID.Int32 };

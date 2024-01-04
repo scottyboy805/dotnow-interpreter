@@ -9,7 +9,7 @@ namespace dotnow.Debugging
     {
         // Private
         private MethodBase executingMethod = null;
-        private ExecutionFrame executingFrame = null;
+        private ExecutionFrameOld executingFrame = null;
         private CILOperation[] instructionSet = null;
         private int instructionPointer = 0;
 
@@ -22,7 +22,7 @@ namespace dotnow.Debugging
             get { return executingMethod; }
         }
 
-        public ExecutionFrame ExecutingFrame
+        public ExecutionFrameOld ExecutingFrame
         {
             get { return executingFrame; }
         }
@@ -58,7 +58,7 @@ namespace dotnow.Debugging
         }
 
         // Constructor
-        public DebugFrame(MethodBase executingMethod, ExecutionFrame frame, CILOperation[] instructionSet, int instructionPointer)
+        public DebugFrame(MethodBase executingMethod, ExecutionFrameOld frame, CILOperation[] instructionSet, int instructionPointer)
         {
             this.executingMethod = executingMethod;
             this.executingFrame = frame;

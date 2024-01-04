@@ -1,4 +1,6 @@
 ﻿using dotnow.Reflection;
+using dotnow.Runtime.Types;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -124,6 +126,30 @@ namespace dotnow
 
             // Create instance
             return Activator.CreateInstance(type);
+        }
+
+        public static TypeID GetTypeID(this Type type)
+        {
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.SByte: return TypeID.Int8;
+                case TypeCode.Byte: return TypeID.UInt8;                
+                case TypeCode.Int16: return TypeID.Int16;
+                case TypeCode.UInt16: return TypeID.UInt16;
+
+                case TypeCode.Boolean:
+                case TypeCode.Char:
+                case TypeCode.Int32: return TypeID.Int32;
+                case TypeCode.UInt32: return TypeID.UInt32;
+                case TypeCode.Int64: return TypeID.Int64;
+                case TypeCode.UInt64: return TypeID.UInt64;
+                case TypeCode.Single: return TypeID.Single;
+                case TypeCode.Double: return TypeID.Double;
+
+                case TypeCode.Object: return TypeID.Object;
+            }
+
+            throw new NotSupportedException("Unable to get type id information for unsupported type: " + type);
         }
 
         public static bool HasVirtualMembers(this Type type)

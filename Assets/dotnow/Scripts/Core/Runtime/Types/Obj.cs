@@ -25,7 +25,7 @@ namespace dotnow.Runtime.Types
         internal TypeID type;
 
         // Public
-        public static readonly int Size = Marshal.SizeOf<Obj>();
+        public static readonly int Size = Marshal.SizeOf<Obj>() - 1;
         public static readonly int SizeTyped = Marshal.SizeOf<Obj>();
         public static readonly Obj Null = default;
 

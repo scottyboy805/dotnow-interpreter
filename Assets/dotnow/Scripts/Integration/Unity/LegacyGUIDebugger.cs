@@ -127,31 +127,31 @@ namespace dotnow
 
                         GUILayout.Space(10);
                         GUILayout.Label("Index = " + debugFrame.ExecutingFrame.stackIndex);
-                        GUILayout.Label("Max Size = " + debugFrame.ExecutingFrame.stackMemory.Length);
+                        //GUILayout.Label("Max Size = " + debugFrame.ExecutingFrame.stackMemory.Length);
 
 
                         // Stack elements
                         GUILayout.Space(10);
                         GUILayout.Label("Stack data");
 
-                        Color old = GUI.contentColor;
-                        for (int i = 0; i < debugFrame.ExecutingFrame.stackMemory.Length; i++)
-                        {
-                            // Check for stack max
-                            if (i > debugFrame.ExecutingFrame.stackMax)
-                                break;
+                        //Color old = GUI.contentColor;
+                        //for (int i = 0; i < debugFrame.ExecutingFrame.stackMemory.Length; i++)
+                        //{
+                        //    // Check for stack max
+                        //    if (i > debugFrame.ExecutingFrame.stackMax)
+                        //        break;
 
-                            if (i == debugFrame.ExecutingFrame.stackIndex - 1)
-                            {
-                                GUI.contentColor = Color.red;
-                                GUILayout.Box("[" + i + "]: " + debugFrame.ExecutingFrame.stackMemory[i], labelStyle);
-                            }
-                            else
-                            {
-                                GUILayout.Label("[" + i + "]: " + debugFrame.ExecutingFrame.stackMemory[i], labelStyle);
-                            }
-                            GUI.contentColor = old;
-                        }
+                        //    if (i == debugFrame.ExecutingFrame.stackIndex - 1)
+                        //    {
+                        //        GUI.contentColor = Color.red;
+                        //        GUILayout.Box("[" + i + "]: " + debugFrame.ExecutingFrame.stackMemory[i], labelStyle);
+                        //    }
+                        //    else
+                        //    {
+                        //        GUILayout.Label("[" + i + "]: " + debugFrame.ExecutingFrame.stackMemory[i], labelStyle);
+                        //    }
+                        //    GUI.contentColor = old;
+                        //}
                     }
                     GUILayout.EndScrollView();
                 }

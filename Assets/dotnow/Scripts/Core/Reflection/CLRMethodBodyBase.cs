@@ -60,7 +60,7 @@ namespace dotnow.Reflection
         }
 
         // Methods
-        public void ExecuteMethodBody(ExecutionEngine engine, ExecutionFrame frame)
+        public void ExecuteMethodBody(ExecutionEngine engine, ExecutionFrameOld frame)
         {
             // Try to get the instructions
             if(cachedInstructions == null && getInstructionsFailed == false)

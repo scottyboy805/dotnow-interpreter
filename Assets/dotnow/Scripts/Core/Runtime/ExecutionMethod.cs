@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using dotnow.Reflection;
 using dotnow.Runtime.CIL;
 
@@ -39,7 +41,7 @@ namespace dotnow.Runtime
             int paramCount = (parameters != null) ? parameters.Length : 0;
 
             // Get method frame
-            ExecutionFrame frame;
+            ExecutionFrameOld frame;
             engine.AllocExecutionFrame(out frame, domain, engine, method, body.MaxStack, paramCount, locals);
 
 
@@ -64,14 +66,29 @@ namespace dotnow.Runtime
             // Load return type
             if(isCtor == false && signature.returnsValue == true)
             {
-                // Get return value from stack
-                StackData returnVal = frame.stack[--frame.stackIndex];
+                //// Get return value from stack
+                //StackData returnVal = frame.stack[--frame.stackIndex];
 
-                // Release the frame
-                engine.FreeExecutionFrame(frame);
+                //// Release the frame
+                //engine.FreeExecutionFrame(frame);
 
-                // Get return object
-                return returnVal.UnboxAsType(signature.returnType);
+                //// Get return object
+                //return returnVal.UnboxAsType(signature.returnType);
+                unsafe
+                {
+                    int returnSize = __memory.SizeOfTypedSlow(signature.returnType.type);
+
+                    //fixed (byte* returnPtr = &frame.stackMemory[frame.stackIndex - returnSize + 1])
+                    byte* returnPtr = (byte*)frame.stackMemory;
+                    {
+                        // Get the value
+
+                        // Release the frame
+                        engine.FreeExecutionFrame(frame);
+
+                        return *(int*)returnPtr;
+                    }
+                }
             }
 
 
@@ -92,7 +109,7 @@ namespace dotnow.Runtime
             int instanceCount = (isStatic == false) ? 1 : 0;
 
             // Get method frame
-            ExecutionFrame frame;
+            ExecutionFrameOld frame;
             engine.AllocExecutionFrame(out frame, domain, engine, method, body.MaxStack, 0, locals);
 
             // Push instance

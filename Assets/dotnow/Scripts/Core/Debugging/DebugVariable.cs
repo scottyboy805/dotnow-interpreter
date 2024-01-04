@@ -5,7 +5,7 @@ namespace dotnow.Debugging
     public class DebugVariable
     {
         // Private
-        private ExecutionFrame frame = null;
+        private ExecutionFrameOld frame = null;
         private string variableName = "";
         private int variableIndex = 0;
 
@@ -17,11 +17,11 @@ namespace dotnow.Debugging
 
         public object VariableValue
         {
-            get { return frame.stackMemory[variableIndex]; }
+            get { return null; }// frame.stackMemory[variableIndex]; }
         }
 
         // Constructor
-        public DebugVariable(ExecutionFrame frame, string variableName, int variableIndex)
+        public DebugVariable(ExecutionFrameOld frame, string variableName, int variableIndex)
         {
             this.frame = frame;
             this.variableName = variableName;

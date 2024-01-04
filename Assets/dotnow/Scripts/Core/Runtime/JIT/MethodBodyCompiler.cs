@@ -37,6 +37,11 @@ namespace dotnow.Runtime.JIT
             return operations;
         }
 
+        public byte[] JITOptimizeInstructionsRaw()
+        {
+            return il.GetExecutableInstructionsRaw();
+        }
+
         private ExecutableILGenerator EmitMonoInstructionSet(AppDomain domain, Collection<MonoInstruction> instructions)
         {
             int instructionSize = instructions.Count;

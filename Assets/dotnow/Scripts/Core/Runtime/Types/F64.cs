@@ -12,8 +12,8 @@ namespace dotnow.Runtime.Types
         internal TypeID type;
 
         // Public
-        public static readonly int Size = sizeof(double);               // Sizeof double only
-        public static readonly int SizeTyped = Marshal.SizeOf<F64>();   // Sizeof double + 1 byte type id
+        public static readonly int Size = sizeof(double);              // Sizeof double only
+        public static readonly int SizeTyped = sizeof(double) + 1;     // Sizeof double + 1 byte type id
 
         // Methods
         public override string ToString()

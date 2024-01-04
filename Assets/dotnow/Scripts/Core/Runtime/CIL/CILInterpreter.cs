@@ -10,7 +10,7 @@ namespace dotnow.Runtime.CIL
     {
         // Methods
 #if UNSAFE
-        internal unsafe static void ExecuteInterpreted(AppDomain domain, ExecutionEngine engine, ref ExecutionFrame frame, ref CILOperation[] instructions, ref CLRExceptionHandler[] exceptionHandlers, ExecutionEngine.DebugFlags debugFlags)
+        internal unsafe static void ExecuteInterpreted(AppDomain domain, ExecutionEngine engine, ref ExecutionFrameOld frame, ref CILOperation[] instructions, ref CLRExceptionHandler[] exceptionHandlers, ExecutionEngine.DebugFlags debugFlags)
 #else
 
         internal static void ExecuteInterpreted(AppDomain domain, ExecutionEngine engine, ref ExecutionFrame frame, ref CILOperation[] instructions, ref CLRExceptionHandler[] exceptionHandlers, ExecutionEngine.DebugFlags debugFlags)
@@ -2876,13 +2876,13 @@ namespace dotnow.Runtime.CIL
                                 CLRMethodBodyBase body = clrMethod.Body;
 
                                 // Create call frame
-                                ExecutionFrame callFrame;//= new ExecutionFrame(engine, targetMethod, body.MaxStack, argSize, body.Locals);
+                                ExecutionFrameOld callFrame;//= new ExecutionFrame(engine, targetMethod, body.MaxStack, argSize, body.Locals);
                                 engine.AllocExecutionFrame(out callFrame, domain, engine, targetMethod, body.MaxStack, argSize, body.Locals);
 
                                 int baseOffset = argSize + ((isStatic == true) ? 0 : 1);
 
                                 // Copy stack
-                                Array.Copy(stack, stackPtr - baseOffset, callFrame.stackMemory, callFrame.stackArgIndex, baseOffset);
+                                Array.Copy(stack, stackPtr - baseOffset, callFrame.stack, callFrame.stackArgIndex, baseOffset);
 
                                 callFrame.stackIndex += baseOffset;
 

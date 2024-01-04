@@ -1,4 +1,5 @@
 ﻿using dotnow.Reflection;
+using dotnow.Runtime.Handle;
 using dotnow.Runtime.Types;
 using Mono.Cecil.Cil;
 using System;
@@ -8,7 +9,7 @@ namespace dotnow.Runtime.CIL
     internal static class CILInterpreterUnsafe
     {
         // Methods
-        internal static unsafe void ExecuteInterpreted(AppDomain domain, ExecutionEngine engine, ref ExecutionFrame frame, ref CILOperation[] instructions, ref CLRExceptionHandler[] exceptionHandlers, ExecutionEngine.DebugFlags debugFlags)
+        internal static unsafe void ExecuteInterpreted(AppDomain domain, ExecutionEngine engine, ref ExecutionFrameOld frame, ref CILOperation[] instructions, byte* stackBasePtr, ref CLRExceptionHandler[] exceptionHandlers, ExecutionEngine.DebugFlags debugFlags)
         {
             int instructionPtr = frame.instructionPtr;
             int instructionLength = instructions.Length;
@@ -16,7 +17,7 @@ namespace dotnow.Runtime.CIL
             
 
             // Pin the stack memory
-            fixed (byte* stackBasePtr = &engine.stackMemory[frame.stackIndex])
+            //fixed (byte* stackBasePtr = &engine.stackMemory[frame.stackIndex])
             {
                 byte* stackPtr = stackBasePtr;
 
@@ -214,47 +215,75 @@ namespace dotnow.Runtime.CIL
                                 break;
                             }
 
-                        case Code.Ldc_I4:
-                        case Code.Ldc_I4_S:
-                            {
-                                // Read value
-                                I32 val = new I32 { type = TypeID.Int32, signed = (int)instruction.objectOperand };
+                        //case Code.Ldc_I4:
+                        //case Code.Ldc_I4_S:
+                        //    {
+                        //        // Read value
+                        //        I32 val = new I32 { type = TypeID.Int32, signed = (int)instruction.objectOperand };
 
-                                // Push to stack
-                                *((I32*)stackPtr) = val;
+                        //        // Push to stack
+                        //        *((I32*)stackPtr) = val;
 
-                                // Increment stack pointer
-                                stackPtr += I32.SizeTyped;
-                                break;
-                            }
+                        //        // Increment stack pointer
+                        //        stackPtr += I32.SizeTyped;
+                        //        break;
+                        //    }
 
-                        case Code.Ldc_I4_0:
-                            {
-                                // Push to stack
-                                *((I32*)stackPtr) = I32.ZeroSigned;
+                        //case Code.Ldc_I4_0:
+                        //    {
+                        //        // Push to stack
+                        //        *((I32*)stackPtr) = I32.ZeroSigned;
 
-                                // Increment stack pointer
-                                stackPtr += I32.SizeTyped;
-                                break;
-                            }
+                        //        // Increment stack pointer
+                        //        stackPtr += I32.SizeTyped;
+                        //        break;
+                        //    }
                         #endregion
 
                         #region Local
                         case Code.Ldloc_0:
                             {
-                                // Get local size
-                                int size = frame.locals[0].clrValueTypeSize;
+                                // Get the local
+                                _CLRStackHandle local = frame.stackLocals[0];
 
-                                // Handle size
-                                switch(size)
+                                // Get the address of the local
+                                byte* localPtr = stackBasePtr + local.offset;
                                 {
-                                    case 4:
-                                        {
-                                            // Push 32 bit
-                                            *((int*)stackPtr) = *((int*)engine.stackMemory[frame.stackMin + 0]);
-                                            break;
-                                        }
+                                    // Copy from local to top of stack
+                                    __memory.Copy(localPtr, stackPtr, local.stackType.size);
                                 }
+
+                                // Advance stack ptr
+                                stackPtr += local.stackType.size + 1;
+                                break;
+                            }
+
+                        case Code.Stloc_0:
+                            {
+                                // Get the local
+                                _CLRStackHandle local = frame.stackLocals[0];
+
+                                // Get the address of the local
+                                byte* localPtr = stackBasePtr + local.offset;
+                                {
+                                    // Copy from stack top to local
+                                    __memory.Copy(stackPtr - local.stackType.size - 1, localPtr, local.stackType.size);
+                                }
+
+                                // Decrement stack ptr
+                                stackPtr -= local.stackType.size - 1;
+                                break;
+                            }
+                        #endregion
+
+                        #region ObjectModel
+                        case Code.Ret:
+                            {
+                                frame.abort = true;
+
+                                // Reset call frame
+                                if (engine.currentFrame != null)
+                                    engine.currentFrame = (engine.currentFrame.Parent != null) ? engine.currentFrame.Parent : null;
                                 break;
                             }
                             #endregion
@@ -284,7 +313,7 @@ namespace dotnow.Runtime.CIL
                 } // End while
 
                 frame.instructionPtr = instructionPtr;
-                frame.stackIndex = *stackPtr;
+                frame.stackIndex = (*stackBasePtr - *stackPtr);
             }
         }
     }

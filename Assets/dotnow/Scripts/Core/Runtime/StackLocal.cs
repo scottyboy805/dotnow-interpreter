@@ -1,4 +1,5 @@
-﻿using System;
+﻿using dotnow.Runtime.Types;
+using System;
 
 namespace dotnow.Runtime
 {
@@ -10,7 +11,7 @@ namespace dotnow.Runtime
 
         // Internal
         internal bool isCLRValueType = false;
-        internal int clrValueTypeSize = 0;
+        internal int localSize = 0;
 
         // Constructor
         public StackLocal(AppDomain domain, Type localType)
@@ -25,12 +26,15 @@ namespace dotnow.Runtime
 
                 // Set value type flag
                 isCLRValueType = true;
-                clrValueTypeSize = type.SizeOfInstance();
+                localSize = type.SizeOfInstance();
             }
             else
             {
                 // Get default value
                 StackData.AllocTypedSlow(ref defaultValue, localType, localType.GetDefaultValue(domain));
+
+                // Get size required
+                localSize = __memory.SizeOfSlow(localType);
             }
         }
     }

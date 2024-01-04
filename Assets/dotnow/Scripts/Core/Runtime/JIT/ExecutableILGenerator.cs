@@ -5,6 +5,7 @@ using Mono.Cecil.Cil;
 using dotnow.Reflection;
 using dotnow.Runtime.CIL;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace dotnow.Runtime.JIT
 {
@@ -16,6 +17,9 @@ namespace dotnow.Runtime.JIT
         private CILOperation[] operationsStatic = null;
         private int emitPtr = 0;
         private bool dynamic = false;
+
+
+        private List<byte> instructions = new List<byte>();
 
         // Constructor
         public ExecutableILGenerator(AppDomain domain)
@@ -47,6 +51,11 @@ namespace dotnow.Runtime.JIT
             return operationsStatic;
         }
 
+        internal byte[] GetExecutableInstructionsRaw()
+        {
+            return instructions.ToArray();
+        }
+
         #region BuildMethod
         public MethodInfo BuildExecutableMethod(Type[] localTypes, int maxStack, Type returnType, params Type[] parameterTypes)
         {
@@ -57,41 +66,69 @@ namespace dotnow.Runtime.JIT
         #region Emit
         public void Emit(Code opCode)
         {
+            instructions.Add((byte)opCode);
+
             EmitOperation(new CILOperation(opCode, new StackData.Primitive { Int32 = 0 }, null));
         }
 
         public void Emit(Code opCode, int operand)
         {
+            instructions.Add((byte)opCode);
+            instructions.AddRange(BitConverter.GetBytes(operand));
+
             EmitOperation(new CILOperation(opCode, new StackData.Primitive { Int32 = operand }, null));
         }
 
         public void Emit(Code opCode, long operand)
         {
+            instructions.Add((byte)opCode);
+            instructions.AddRange(BitConverter.GetBytes(operand));
+
             EmitOperation(new CILOperation(opCode, new StackData.Primitive { Int64 = operand }, null));
         }
 
         public void Emit(Code opCode, float operand)
         {
+            instructions.Add((byte)opCode);
+            instructions.AddRange(BitConverter.GetBytes(operand));
+
             EmitOperation(new CILOperation(opCode, new StackData.Primitive { Single = operand }, null));
         }
 
         public void Emit(Code opCode, double operand)
         {
+            instructions.Add((byte)opCode);
+            instructions.AddRange(BitConverter.GetBytes(operand));
+
             EmitOperation(new CILOperation(opCode, new StackData.Primitive { Double = operand }, null));
         }
 
         public void Emit(Code opCode, string operand)
         {
+            instructions.Add((byte)opCode);
+            instructions.AddRange(Encoding.UTF8.GetBytes(operand));
+
             EmitOperation(new CILOperation(opCode, default(StackData.Primitive), operand));
         }
 
         public void Emit(Code opCode, int[] operand)
         {
+            instructions.Add((byte)opCode);
+            instructions.AddRange(BitConverter.GetBytes(operand.Length));
+
+            foreach(int element in operand)
+                instructions.AddRange(BitConverter.GetBytes(element));
+
             EmitOperation(new CILOperation(opCode, default(StackData.Primitive), operand));
         }
 
         public void Emit(Code opCode, Type type)
         {
+            //instructions.Add((byte)opCode);
+            //instructions.AddRange(BitConverter.GetBytes(operand));
+
+            
+
             CILOperation op = new CILOperation(opCode, default(StackData.Primitive), null);
             op.typeOperand = CLRTypeInfo.GetTypeInfo(type);
 
