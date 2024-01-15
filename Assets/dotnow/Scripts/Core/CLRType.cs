@@ -7,6 +7,7 @@ using dotnow.Interop;
 using dotnow.Reflection;
 using dotnow.Runtime.JIT;
 using TypeAttributes = System.Reflection.TypeAttributes;
+using dotnow.Runtime.Handle;
 
 namespace dotnow
 {
@@ -61,6 +62,8 @@ namespace dotnow
         private MethodBase staticTypeInitializer = null;
         private bool isStaticInitializing = false;
         private bool isStaticInitialized = false;
+
+        private _CLRTypeHandle typeHandle = default;
 
         // Internal
         internal MethodInfo cachedToStringTarget = null;
@@ -153,6 +156,16 @@ namespace dotnow
 #endif
         {
             get { return type.IsEnum; }
+        }
+
+        public override int MetadataToken
+        {
+            get { return type.MetadataToken.ToInt32(); }
+        }
+
+        internal _CLRTypeHandle Handle
+        {
+            get { return typeHandle; }
         }
 
         internal IEnumerable<MemberInfo> AllMembers
@@ -268,6 +281,9 @@ namespace dotnow
             cachedToStringTarget = GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
             cachedEqualsTarget = GetMethod("Equals", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(object) }, null);
             cachedGetHashCodeTarget = GetMethod("GetHashCode", BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
+
+            // Build type handles
+            BuildTypeHandles();
         }
 
         // Methods
@@ -280,6 +296,86 @@ namespace dotnow
             // Ensure all methods are optimized and ready to be invoked
             foreach (CLRMethod method in methods)
                 JITOptimize.EnsureJITOptimized(method);
+        }
+
+        private void BuildTypeHandles()
+        {
+            // Create field handles
+            uint instanceFieldOffset = (uint)(interfaceTypes.Value.Length + 1) * sizeof(int) + sizeof(int);
+            uint instanceSize = 0;
+            uint staticFieldOffset = 0;
+
+            // Get base CLR type
+            CLRType clrBase = this;
+            Stack<CLRType> baseCLRTypes = new Stack<CLRType>();
+            baseCLRTypes.Push(clrBase);
+
+            // Move to lowest base clr type
+            while (clrBase.baseType.Value is CLRType)
+            {
+                clrBase = (CLRType)clrBase.baseType.Value;
+                baseCLRTypes.Push(clrBase);
+            }
+
+            // Build fields
+            while(baseCLRTypes.Count > 0)
+            {
+                // Get current type
+                CLRType current = baseCLRTypes.Pop();
+
+                // Process all fields
+                foreach (FieldInfo field in current.fields)
+                {
+                    // Get offset
+                    uint offset = field.IsStatic == true
+                        ? staticFieldOffset : instanceFieldOffset;
+
+                    // Get field flags
+                    _CLRFieldFlags fieldFlags = 0;
+
+                    if (field.IsStatic == true) fieldFlags |= _CLRFieldFlags.Static;
+
+                    // Create fields handle
+                    _CLRFieldHandle fieldHandle = new _CLRFieldHandle
+                    {
+                        fieldType = new _CLRTypeHandle(field.FieldType),
+                        fieldToken = field.MetadataToken,
+                        offset = offset,           
+                        flags = fieldFlags,
+                    };
+
+                    // Update offset
+                    if(field.IsStatic == true)
+                    {
+                        staticFieldOffset += fieldHandle.fieldType.size;
+                    }
+                    else
+                    {
+                        instanceFieldOffset += fieldHandle.fieldType.size;
+                        instanceSize += fieldHandle.fieldType.size;
+                    }
+
+                    // Store field handle
+                    ((CLRField)field).fieldHandle = fieldHandle;
+                }
+            }
+
+            // Get type flags
+            _CLRTypeFlags typeFlags = 0;
+
+            if (IsAbstract == true) typeFlags |= _CLRTypeFlags.Abstract;
+            if (IsValueType == true) typeFlags |= _CLRTypeFlags.ValueType;
+            if (IsEnum == true) typeFlags |= _CLRTypeFlags.Enum;
+            if (IsArray == true) typeFlags |= _CLRTypeFlags.Array;
+
+            // Build type handle
+            typeHandle = new _CLRTypeHandle
+            {
+                typeToken = MetadataToken,
+                size = instanceSize,
+                typeID = TypeID.Object,
+                flags = typeFlags,
+            };
         }
 
         public override string ToString()

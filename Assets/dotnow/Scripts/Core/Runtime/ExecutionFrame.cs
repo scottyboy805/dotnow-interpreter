@@ -124,9 +124,14 @@ namespace dotnow.Runtime
                 }
 
 
-                stackLocals = new _CLRStackHandle[locals.Length];
+                int argSize = method.IsStatic == true ? paramCount : paramCount + 1;
+
+                stackLocals = new _CLRStackHandle[argSize + locals.Length];
 
                 stackBaseOffset = 0;
+                // Args
+
+                // Locals
                 for(int i = 0; i < stackLocals.Length; i++)
                 {
                     // Create local

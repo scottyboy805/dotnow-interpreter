@@ -4,6 +4,7 @@ using System.Reflection;
 using Mono.Cecil;
 using dotnow.Runtime;
 using FieldAttributes = System.Reflection.FieldAttributes;
+using dotnow.Runtime.Handle;
 
 namespace dotnow.Reflection
 {
@@ -21,6 +22,7 @@ namespace dotnow.Reflection
 
         // Internal
         internal bool isStatic = false;
+        internal _CLRFieldHandle fieldHandle = default;
 
         // Properties
         public FieldDefinition Definition
@@ -73,6 +75,11 @@ namespace dotnow.Reflection
             get { return field.FieldType.IsGenericParameter; }
         }
 
+        public override int MetadataToken
+        {
+            get { return field.MetadataToken.ToInt32(); }
+        }
+
         internal CLRTypeInfo FieldTypeInfo
         {
             get
@@ -82,6 +89,11 @@ namespace dotnow.Reflection
 
                 return fieldTypeInfo;
             }
+        }
+
+        internal _CLRFieldHandle Handle
+        {
+            get { return fieldHandle; }
         }
 
         // Constructor

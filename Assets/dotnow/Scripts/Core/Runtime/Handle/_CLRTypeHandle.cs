@@ -12,12 +12,14 @@ namespace dotnow.Runtime.Handle
         Enum = 1 << 2,
         Array = 1 << 3,
         Interop = 1 << 4,
+
+        StackAlloc = 1 << 15,
     }
 
     internal unsafe struct _CLRTypeHandle
     {
         // Public
-        public int token;               // Type token to resolve the System.Type
+        public int typeToken;           // Type token to resolve the System.Type
         public uint size;               // The allocation size of the type
         public _CLRTypeFlags flags;
         public TypeID typeID;
@@ -28,7 +30,7 @@ namespace dotnow.Runtime.Handle
         // Constructor
         public _CLRTypeHandle(Type fromType)
         {
-            this.token = fromType.MetadataToken;
+            this.typeToken = fromType.MetadataToken;
             this.size = (uint)__memory.SizeOfSlow(fromType);
             this.flags = GetTypeFlags(fromType);
             this.typeID = fromType.GetTypeID();

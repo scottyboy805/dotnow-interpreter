@@ -2,8 +2,10 @@
 using dotnow.Runtime.Types;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using UnityEditor.Build.Content;
 
 namespace dotnow.Runtime
 {
@@ -90,7 +92,7 @@ namespace dotnow.Runtime
                 throw new NotSupportedException("Only CLR types can be allocated manually - Use activator for interop types");
 
             // Resolve the type
-            Type allocType = domain.ResolveType(type.token);
+            Type allocType = domain.ResolveType(type.typeToken);
 
             // Get interfaces
             Type[] baseInterfaces = allocType.GetInterfaces();
@@ -99,17 +101,24 @@ namespace dotnow.Runtime
             // Instance data is structured as follows:
             // -- Instance base addr
             // [CLRInstance] structure metadata
+            // -- Reference Counter
             // -- Instance addr - main ptr used at runtime
             // [Raw data] raw memory where instance fields are located and is dynamically sized based on instance allocated
 
             // Calculate allocate size
-            uint allocSize = (uint)CLRInstance.Size + type.size + (uint)((baseInterfaces.Length + 1) * sizeof(int));
+            uint allocSize = (uint)CLRInstance.Size 
+                + type.size                                             // Size required by instance fields
+                + (uint)((baseInterfaces.Length + 1) * sizeof(int))     // Array of int indexes for base and interface proxies
+                + sizeof(int);                                          // Reference counter
 
             // Store pointer
             byte* ptr = null;
 
+            // Check for stack alloc
+            bool stackAlloc = (type.flags & _CLRTypeFlags.ValueType) != 0 || forceStackAlloc == true;
+
             // Allocate CLR instance on heap or stack
-            if((type.flags & _CLRTypeFlags.ValueType) != 0 || forceStackAlloc == true)
+            if (stackAlloc == true)
             {
                 // Allocate on the stack
                 ptr = stackAllocPtr;
@@ -127,7 +136,7 @@ namespace dotnow.Runtime
             }
 
             // Get main ptr
-            byte* instancePtr = ptr + CLRInstance.Size;
+            byte* instancePtr = ptr + CLRInstance.Size + sizeof(int);
 
             // Create instance metadata
             *(CLRInstance*)ptr = new CLRInstance
@@ -137,15 +146,28 @@ namespace dotnow.Runtime
                 proxyCount = baseInterfaces.Length + 1,
             };
 
+            // Stack alloc flag
+            if (stackAlloc == true)
+                (*(CLRInstance*)ptr).type.flags |= _CLRTypeFlags.StackAlloc;
+
             // Allocate base proxy object
-            *(int*)instancePtr = __memory.PinManagedObject(domain.CreateCLRProxyBindingOrImplicitInteropInstance(allocType.BaseType));
+            *((int*)instancePtr + 1) = __memory.PinManagedObject(domain.CreateCLRProxyBindingOrImplicitInteropInstance(allocType.BaseType));
 
             // Allocate interface proxy objects
             for (int i = 0; i < baseInterfaces.Length; i++)
-                *((int*)instancePtr + i + 1) = __memory.PinManagedObject(domain.CreateCLRProxyBinding(baseInterfaces[i]));
+                *((int*)instancePtr + i + 2) = __memory.PinManagedObject(domain.CreateCLRProxyBinding(baseInterfaces[i]));
 
             // Get address of object
             return (*(CLRInstance*)ptr).instancePointer;
+        }
+
+        public static IntPtr AllocateInterop(AppDomain domain, Type interopType, ConstructorInfo ctor, object[] args)
+        {
+            // Create instance
+            object instance = domain.CreateInstance(interopType, ctor, args);
+
+            // Pin managed object
+            return (IntPtr)__memory.PinManagedObject(instance);
         }
 
         public static void Free(IntPtr ptr)
@@ -154,16 +176,16 @@ namespace dotnow.Runtime
             CLRInstance inst = *((CLRInstance*)ptr - CLRInstance.Size);
 
             // Check for stack allocated
-            if ((inst.type.flags & _CLRTypeFlags.ValueType) != 0)
+            if ((inst.type.flags & _CLRTypeFlags.StackAlloc) != 0)
                 throw new InvalidOperationException("Cannot free memory that was allocated on the stack");
 
             // Check for referenced
-            if (inst.referenceCount > 0)
+            if (inst.IsReferenced == true)
                 throw new InvalidOperationException("Cannot free memory because it is still being referenced");
 
             // Free managed objects
             for (int i = 0; i < inst.proxyCount; i++)
-                __memory.FreeManagedObject(*((int*)inst.instancePointer + i + i));
+                __memory.FreeManagedObject(*((int*)inst.instancePointer + i + 1));
 
             // Free the native memory
             Marshal.FreeHGlobal(ptr);
@@ -189,16 +211,16 @@ namespace dotnow.Runtime
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
-            // Check for clr type
-            if (type.IsCLRType() == false)
-                return Marshal.SizeOf(type);
-
-            // Get allocated size
-            if (type.IsValueType == false)
+            // Get reference size
+            if (type.IsClass == true)
                 return Obj.Size;
 
+            // Check for user value type
+            if(type.IsValueType == true && type.IsCLRType() == true && type.IsPrimitive == false)
+                return (int)((CLRType)type).Handle.size;
+
             // Get allocation size of clr value type
-            return SizeOfAllocated((CLRType)type);
+            return SizeOf(Type.GetTypeCode(type));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -218,6 +240,28 @@ namespace dotnow.Runtime
                 case TypeID.Double: return F64.Size;
 
                 case TypeID.Object: return Obj.Size;
+            }
+
+            throw new NotSupportedException("Unable to get size information for unsupported type id: " + type);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int SizeOf(TypeCode type)
+        {
+            switch (type)
+            {
+                case TypeCode.SByte:
+                case TypeCode.Byte:
+                case TypeCode.Int16:
+                case TypeCode.UInt16: // Small primitives are always promoted to 32bit
+                case TypeCode.Int32:
+                case TypeCode.UInt32: return I32.Size;
+                case TypeCode.Int64:
+                case TypeCode.UInt64: return I64.Size;
+                case TypeCode.Single: return F32.Size;
+                case TypeCode.Double: return F64.Size;
+
+                case TypeCode.Object: return Obj.Size;
             }
 
             throw new NotSupportedException("Unable to get size information for unsupported type id: " + type);
@@ -283,7 +327,7 @@ namespace dotnow.Runtime
             throw new NotSupportedException("Unable to get size information for unsupported type id: " + type);
         }
 
-        public static int SizeOfAllocated(CLRType type)
+        public static int SizeOfInstance(CLRType type)
         {
             throw new NotImplementedException();
         }

@@ -3,6 +3,7 @@ using dotnow.Runtime.Handle;
 using dotnow.Runtime.Types;
 using Mono.Cecil.Cil;
 using System;
+using System.Reflection;
 
 namespace dotnow.Runtime.CIL
 {
@@ -324,6 +325,59 @@ namespace dotnow.Runtime.CIL
                             }
                         #endregion
 
+                        #region Field
+                        case Code.Stfld:
+                            {
+                                // Get field
+                                _CLRFieldHandle field = ((CLRField)((CILFieldAccess)instruction.objectOperand).targetField).Handle;
+
+                                // Pop value address
+                                byte* valuePtr = stackPtr - (field.fieldType.size + 1);
+
+                                int val = *(int*)valuePtr;
+                                int val2 = *(int*)(valuePtr - 1);
+
+                                // Pop instance
+                                Obj obj = *(Obj*)(valuePtr - Obj.SizeTyped);
+
+                                // Check for null
+                                if (obj.IsNull == true)
+                                    throw new NullReferenceException();
+
+                                // Store field
+                                field.WriteFieldMemory(obj.ptr, valuePtr);
+
+                                // Decrement stack ptr
+                                stackPtr -= (field.fieldType.size + 1 + Obj.SizeTyped);
+                                break;
+                            }
+
+                        case Code.Ldfld:
+                            {
+                                // Get field
+                                _CLRFieldHandle field = ((CLRField)((CILFieldAccess)instruction.objectOperand).targetField).Handle;
+
+                                // Pop instance
+                                Obj obj = *(Obj*)(stackPtr - Obj.SizeTyped);
+
+                                // Check for null
+                                if (obj.IsNull == true)
+                                    throw new NullReferenceException();
+
+                                // Decrement stack ptr
+                                stackPtr -= Obj.SizeTyped;
+
+                                // Read field
+                                field.ReadFieldMemoryTypeID(obj.ptr, stackPtr);
+
+                                int val = *(int*)stackPtr;
+                                TypeID id = *(TypeID*)(stackPtr + 4);
+                                // Increment stack ptr
+                                stackPtr += (field.fieldType.size + 1);
+                                break;
+                            }
+                        #endregion
+
                         #region Arithmetic
                         case Code.Add:
                             {
@@ -352,6 +406,39 @@ namespace dotnow.Runtime.CIL
                         #endregion
 
                         #region ObjectModel
+                        case Code.Newobj:
+                            {
+                                // Get method invoke
+                                CILMethodInvocation methodInvoke = (CILMethodInvocation)instruction.objectOperand;
+
+                                // Get target constructor
+                                ConstructorInfo ctor = (ConstructorInfo)methodInvoke.targetMethod;
+                                
+                                // Check for interop
+                                if ((instruction.typeOperand.type is CLRType) == false)
+                                {
+                                    object[] args = null;
+
+                                    // Allocate interop
+                                    IntPtr objPtr = __memory.AllocateInterop(domain, instruction.typeOperand.type, ctor, args);
+
+                                    // Push obj
+                                    *(Obj*)stackPtr = Obj.FromInteropObject(objPtr);
+                                }
+                                else
+                                {
+                                    // Allocate memory
+                                    IntPtr objPtr = __memory.Allocate(domain, ((CLRType)instruction.typeOperand.type).Handle, false, ref stackPtr);
+
+                                    // Push obj 
+                                    *(Obj*)stackPtr = Obj.FromCLRObject(objPtr);
+                                }
+
+                                // Increment ptr
+                                stackPtr += Obj.SizeTyped;
+                                break;
+                            }
+
                         case Code.Ret:
                             {
                                 frame.abort = true;
