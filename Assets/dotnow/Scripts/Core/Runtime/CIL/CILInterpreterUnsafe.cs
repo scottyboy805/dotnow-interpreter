@@ -163,6 +163,422 @@ namespace dotnow.Runtime.CIL
                                 stackPtr += F64.SizeTyped;
                                 break;
                             }
+
+                        case Code.Ldnull:
+                            {
+                                // Push to stack
+                                *((Obj*)stackPtr) = Obj.Null;
+
+                                // Increment stack pointer
+                                stackPtr += Obj.SizeTyped;
+                                break;
+                            }
+
+                        case Code.Ldstr:
+                            {
+                                // Create managed object
+                                *((Obj*)stackPtr) = Obj.FromInteropObject((IntPtr)__memory.PinManagedObject(instruction.objectOperand));
+
+                                // Increment stack pointer
+                                stackPtr += Obj.SizeTyped;
+                                break;
+                            }
+                        #endregion
+
+                        #region Arithmetic
+                        case Code.Add:
+                            {
+                                I32 val = *(I32*)(stackPtr - I32.SizeTyped);
+
+                                // Peek type id
+                                TypeID id = *(TypeID*)(stackPtr - 1);
+
+                                // Check for int32
+                                switch (id)
+                                {
+                                    case TypeID.Int32:
+                                        {
+                                            // Perform add
+                                            (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed =
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed +
+                                                (*(I32*)(stackPtr - I32.SizeTyped)).signed;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.UInt32:
+                                        {
+                                            // Perform add
+                                            (*(I32*)(stackPtr - I32.SizeTyped * 2)).unsigned =
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).unsigned +
+                                                (*(I32*)(stackPtr - I32.SizeTyped)).unsigned;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Int64:
+                                        {
+                                            // Perform add
+                                            (*(I64*)(stackPtr - I64.SizeTyped * 2)).signed =
+                                                (*(I64*)(stackPtr - I64.SizeTyped * 2)).signed +
+                                                (*(I64*)(stackPtr - I64.SizeTyped)).signed;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I64.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.UInt64:
+                                        {
+                                            // Perform add
+                                            (*(I64*)(stackPtr - I64.SizeTyped * 2)).unsigned =
+                                                (*(I64*)(stackPtr - I64.SizeTyped * 2)).unsigned +
+                                                (*(I64*)(stackPtr - I64.SizeTyped)).unsigned;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I64.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Single:
+                                        {
+                                            // Perform add
+                                            (*(F32*)(stackPtr - F32.SizeTyped * 2)).value =
+                                                (*(F32*)(stackPtr - F32.SizeTyped * 2)).value +
+                                                (*(F32*)(stackPtr - F32.SizeTyped)).value;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= F32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Double:
+                                        {
+                                            // Perform add
+                                            (*(F64*)(stackPtr - F64.SizeTyped * 2)).value =
+                                                (*(F64*)(stackPtr - F64.SizeTyped * 2)).value +
+                                                (*(F64*)(stackPtr - F64.SizeTyped)).value;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= F64.SizeTyped;
+                                            break;
+                                        }
+                                }
+                                throw new NotSupportedException("Add operation: " + id);
+                            }
+
+                        case Code.Add_Ovf:
+                            {
+                                // Peek type id
+                                TypeID id = *(TypeID*)(stackPtr - 1);
+
+                                // Check for int32
+                                switch (id)
+                                {
+                                    case TypeID.Int32:
+                                        {
+                                            checked
+                                            {
+                                                // Perform add
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed =
+                                                    (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed +
+                                                    (*(I32*)(stackPtr - I32.SizeTyped)).signed;
+                                            }
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Int64:
+                                        {
+                                            checked
+                                            {
+                                                // Perform add
+                                                (*(I64*)(stackPtr - I64.SizeTyped * 2)).signed =
+                                                    (*(I64*)(stackPtr - I64.SizeTyped * 2)).signed +
+                                                    (*(I64*)(stackPtr - I64.SizeTyped)).signed;
+                                            }
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I64.SizeTyped;
+                                            break;
+                                        }
+                                }
+                                throw new NotSupportedException("Add_Ovf operation: " + id);
+                            }
+
+                        case Code.Add_Ovf_Un:
+                            {
+                                // Peek type id
+                                TypeID id = *(TypeID*)(stackPtr - 1);
+
+                                // Check for int32
+                                switch (id)
+                                {
+                                    case TypeID.UInt32:
+                                        {
+                                            checked
+                                            {
+                                                // Perform add
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).unsigned =
+                                                    (*(I32*)(stackPtr - I32.SizeTyped * 2)).unsigned +
+                                                    (*(I32*)(stackPtr - I32.SizeTyped)).unsigned;
+                                            }
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.UInt64:
+                                        {
+                                            checked
+                                            {
+                                                // Perform add
+                                                (*(I64*)(stackPtr - I64.SizeTyped * 2)).unsigned =
+                                                    (*(I64*)(stackPtr - I64.SizeTyped * 2)).unsigned +
+                                                    (*(I64*)(stackPtr - I64.SizeTyped)).unsigned;
+                                            }
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I64.SizeTyped;
+                                            break;
+                                        }
+                                }
+                                throw new NotSupportedException("Add_Ovf_Un operation: " + id);
+                            }
+
+                        case Code.Sub:
+                            {
+                                // Peek type id
+                                TypeID id = *(TypeID*)(stackPtr - 1);
+
+                                // Check for int32
+                                switch (id)
+                                {
+                                    case TypeID.Int32:
+                                        {
+                                            // Perform sub
+                                            (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed =
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed -
+                                                (*(I32*)(stackPtr - I32.SizeTyped)).signed;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.UInt32:
+                                        {
+                                            // Perform sub
+                                            (*(I32*)(stackPtr - I32.SizeTyped * 2)).unsigned =
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).unsigned -
+                                                (*(I32*)(stackPtr - I32.SizeTyped)).unsigned;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Int64:
+                                        {
+                                            // Perform sub
+                                            (*(I64*)(stackPtr - I64.SizeTyped * 2)).signed =
+                                                (*(I64*)(stackPtr - I64.SizeTyped * 2)).signed -
+                                                (*(I64*)(stackPtr - I64.SizeTyped)).signed;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I64.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.UInt64:
+                                        {
+                                            // Perform sub
+                                            (*(I64*)(stackPtr - I64.SizeTyped * 2)).unsigned =
+                                                (*(I64*)(stackPtr - I64.SizeTyped * 2)).unsigned -
+                                                (*(I64*)(stackPtr - I64.SizeTyped)).unsigned;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I64.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Single:
+                                        {
+                                            // Perform sub
+                                            (*(F32*)(stackPtr - F32.SizeTyped * 2)).value =
+                                                (*(F32*)(stackPtr - F32.SizeTyped * 2)).value -
+                                                (*(F32*)(stackPtr - F32.SizeTyped)).value;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= F32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Double:
+                                        {
+                                            // Perform sub
+                                            (*(F64*)(stackPtr - F64.SizeTyped * 2)).value =
+                                                (*(F64*)(stackPtr - F64.SizeTyped * 2)).value -
+                                                (*(F64*)(stackPtr - F64.SizeTyped)).value;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= F64.SizeTyped;
+                                            break;
+                                        }
+                                }
+                                throw new NotSupportedException("Subtract operation: " + id);
+                            }
+
+                        case Code.Mul:
+                            {
+                                // Peek type id
+                                TypeID id = *(TypeID*)(stackPtr - 1);
+
+                                // Check for int32
+                                switch (id)
+                                {
+                                    case TypeID.Int32:
+                                        {
+                                            // Perform multiply
+                                            (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed =
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed *
+                                                (*(I32*)(stackPtr - I32.SizeTyped)).signed;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.UInt32:
+                                        {
+                                            // Perform multiply
+                                            (*(I32*)(stackPtr - I32.SizeTyped * 2)).unsigned =
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).unsigned *
+                                                (*(I32*)(stackPtr - I32.SizeTyped)).unsigned;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Int64:
+                                        {
+                                            // Perform multiply
+                                            (*(I64*)(stackPtr - I64.SizeTyped * 2)).signed =
+                                                (*(I64*)(stackPtr - I64.SizeTyped * 2)).signed *
+                                                (*(I64*)(stackPtr - I64.SizeTyped)).signed;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I64.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.UInt64:
+                                        {
+                                            // Perform multiply
+                                            (*(I64*)(stackPtr - I64.SizeTyped * 2)).unsigned =
+                                                (*(I64*)(stackPtr - I64.SizeTyped * 2)).unsigned *
+                                                (*(I64*)(stackPtr - I64.SizeTyped)).unsigned;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I64.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Single:
+                                        {
+                                            // Perform multiply
+                                            (*(F32*)(stackPtr - F32.SizeTyped * 2)).value =
+                                                (*(F32*)(stackPtr - F32.SizeTyped * 2)).value *
+                                                (*(F32*)(stackPtr - F32.SizeTyped)).value;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= F32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Double:
+                                        {
+                                            // Perform multiply
+                                            (*(F64*)(stackPtr - F64.SizeTyped * 2)).value =
+                                                (*(F64*)(stackPtr - F64.SizeTyped * 2)).value *
+                                                (*(F64*)(stackPtr - F64.SizeTyped)).value;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= F64.SizeTyped;
+                                            break;
+                                        }
+                                }
+                                throw new NotSupportedException("Multiply operation: " + id);
+                            }
+
+                        case Code.Div:
+                            {
+                                // Peek type id
+                                TypeID id = *(TypeID*)(stackPtr - 1);
+
+                                // Check for int32
+                                switch (id)
+                                {
+                                    case TypeID.Int32:
+                                        {
+                                            // Perform divide
+                                            (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed =
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed /
+                                                (*(I32*)(stackPtr - I32.SizeTyped)).signed;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.UInt32:
+                                        {
+                                            // Perform divide
+                                            (*(I32*)(stackPtr - I32.SizeTyped * 2)).unsigned =
+                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).unsigned /
+                                                (*(I32*)(stackPtr - I32.SizeTyped)).unsigned;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Int64:
+                                        {
+                                            // Perform divide
+                                            (*(I64*)(stackPtr - I64.SizeTyped * 2)).signed =
+                                                (*(I64*)(stackPtr - I64.SizeTyped * 2)).signed /
+                                                (*(I64*)(stackPtr - I64.SizeTyped)).signed;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I64.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.UInt64:
+                                        {
+                                            // Perform divide
+                                            (*(I64*)(stackPtr - I64.SizeTyped * 2)).unsigned =
+                                                (*(I64*)(stackPtr - I64.SizeTyped * 2)).unsigned /
+                                                (*(I64*)(stackPtr - I64.SizeTyped)).unsigned;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= I64.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Single:
+                                        {
+                                            // Perform divide
+                                            (*(F32*)(stackPtr - F32.SizeTyped * 2)).value =
+                                                (*(F32*)(stackPtr - F32.SizeTyped * 2)).value /
+                                                (*(F32*)(stackPtr - F32.SizeTyped)).value;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= F32.SizeTyped;
+                                            break;
+                                        }
+                                    case TypeID.Double:
+                                        {
+                                            // Perform divide
+                                            (*(F64*)(stackPtr - F64.SizeTyped * 2)).value =
+                                                (*(F64*)(stackPtr - F64.SizeTyped * 2)).value /
+                                                (*(F64*)(stackPtr - F64.SizeTyped)).value;
+
+                                            // Decrement stack ptr
+                                            stackPtr -= F64.SizeTyped;
+                                            break;
+                                        }
+                                }
+                                throw new NotSupportedException("Divide operation: " + id);
+                            }
                         #endregion
 
                         #region Branch
@@ -204,43 +620,7 @@ namespace dotnow.Runtime.CIL
                                 break;
                             }
                         #endregion
-
-                        #region Constant
-                        case Code.Ldnull:
-                            {
-                                // Push to stack
-                                *((Obj*)stackPtr) = Obj.Null;
-
-                                // Increment stack pointer
-                                stackPtr += Obj.SizeTyped;
-                                break;
-                            }
-
-                        //case Code.Ldc_I4:
-                        //case Code.Ldc_I4_S:
-                        //    {
-                        //        // Read value
-                        //        I32 val = new I32 { type = TypeID.Int32, signed = (int)instruction.objectOperand };
-
-                        //        // Push to stack
-                        //        *((I32*)stackPtr) = val;
-
-                        //        // Increment stack pointer
-                        //        stackPtr += I32.SizeTyped;
-                        //        break;
-                        //    }
-
-                        //case Code.Ldc_I4_0:
-                        //    {
-                        //        // Push to stack
-                        //        *((I32*)stackPtr) = I32.ZeroSigned;
-
-                        //        // Increment stack pointer
-                        //        stackPtr += I32.SizeTyped;
-                        //        break;
-                        //    }
-                        #endregion
-
+                        
                         #region Local
                         case Code.Ldloc_0:
                             {
@@ -376,31 +756,92 @@ namespace dotnow.Runtime.CIL
                                 stackPtr += (field.fieldType.size + 1);
                                 break;
                             }
+
+                        case Code.Ldflda:
+                            {
+                                // Get field
+                                _CLRFieldHandle field = ((CLRField)((CILFieldAccess)instruction.objectOperand).targetField).Handle;
+
+                                // Pop instance
+                                Obj obj = *(Obj*)(stackPtr - Obj.SizeTyped);
+
+                                // Check for null
+                                if (obj.IsNull == true)
+                                    throw new NullReferenceException();
+
+                                // Decrement stack ptr
+                                stackPtr -= Obj.SizeTyped;
+
+                                // Push field address as int ptr
+                                *(IntPtr*)stackPtr = (IntPtr)((byte*)obj.ptr + field.offset);
+
+                                // Increment stack ptr - No typeid for intptr
+                                stackPtr += sizeof(IntPtr);
+                                break;
+                            }
                         #endregion
 
-                        #region Arithmetic
-                        case Code.Add:
+                        #region Indirect
+                        case Code.Ldind_I1:
                             {
-                                I32 val = *(I32*)(stackPtr - I32.SizeTyped);
+                                // Get address
+                                IntPtr addr = *(IntPtr*)(stackPtr - sizeof(IntPtr));
 
-                                // Peek type id
-                                TypeID id = *(TypeID*)(stackPtr - 1);
+                                // Load value onto stack and promote to 32bit
+                                (*(I32*)(stackPtr - sizeof(IntPtr))).signed = *(sbyte*)addr;
+                                (*(I32*)(stackPtr - I32.Size)).type = TypeID.Int32;
 
-                                // Check for int32
-                                switch(id)
-                                {
-                                    case TypeID.Int32:
-                                        {
-                                            // Perform add
-                                            (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed = 
-                                                (*(I32*)(stackPtr - I32.SizeTyped * 2)).signed + 
-                                                (*(I32*)(stackPtr - I32.SizeTyped)).signed;
+                                // Update stack ptr
+                                stackPtr -= (sizeof(IntPtr) - I32.SizeTyped);
+                                break;
+                            }
 
-                                            // Decrement stack ptr
-                                            stackPtr -= I32.SizeTyped;
-                                            break;
-                                        }
-                                }
+                        case Code.Ldind_I2:
+                            {
+                                // Get address
+                                IntPtr addr = *(IntPtr*)(stackPtr - sizeof(IntPtr));
+
+                                // Load value onto stack and promote to 32bit
+                                (*(I32*)(stackPtr - sizeof(IntPtr))).signed = *(short*)addr;
+                                (*(I32*)(stackPtr - I32.Size)).type = TypeID.Int32;
+
+                                // Update stack ptr
+                                stackPtr -= (sizeof(IntPtr) - I32.SizeTyped);
+                                break;
+                            }
+
+                        case Code.Ldind_I4:
+                            {
+                                // Get address
+                                IntPtr addr = *(IntPtr*)(stackPtr - sizeof(IntPtr));
+
+                                // Load value onto stack and promote to 32bit
+                                (*(I32*)(stackPtr - sizeof(IntPtr))).signed = *(int*)addr;
+                                (*(I32*)(stackPtr - I32.Size)).type = TypeID.Int32;
+
+                                // Update stack ptr
+                                stackPtr -= (sizeof(IntPtr) - I32.SizeTyped);
+                                break;
+                            }
+
+                        case Code.Ldind_I8:
+                            {
+                                // Get address
+                                IntPtr addr = *(IntPtr*)(stackPtr - sizeof(IntPtr));
+
+                                // Load value onto stack and promote to 32bit
+                                (*(I64*)(stackPtr - sizeof(IntPtr))).signed = *(long*)addr;
+                                (*(I64*)(stackPtr - I64.Size)).type = TypeID.Int64;
+
+                                // Update stack ptr
+                                stackPtr -= (sizeof(IntPtr) - I64.SizeTyped);
+                                break;
+                            }
+                        #endregion
+
+                        #region Array
+                        case Code.Newarr:
+                            {
                                 break;
                             }
                         #endregion
