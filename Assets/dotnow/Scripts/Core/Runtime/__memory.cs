@@ -170,6 +170,27 @@ namespace dotnow.Runtime
             return (IntPtr)__memory.PinManagedObject(instance);
         }
 
+        public static IntPtr AllocateArray(AppDomain domain, in _CLRTypeHandle elementType, long length, bool stackAlloc, ref byte* stackPtr)
+        {
+            // Check for interop
+            if ((elementType.flags & _CLRTypeFlags.Interop) != 0)
+                throw new NotSupportedException("Only CLR arrays can be allocated manually - Use activator for interop types");
+
+            // Resolve the type
+            Type allocType = domain.ResolveType(elementType.typeToken);
+
+            // Get interfaces
+            Type[] baseInterfaces = allocType.GetInterfaces();
+
+            // Calculate allocate size
+            //uint allocSize = (uint)CLRInstance.Size
+            //    + (elementType.size * length)                           // Size required by instance fields
+            //    + (uint)((baseInterfaces.Length + 1) * sizeof(int))     // Array of int indexes for base and interface proxies
+            //    + sizeof(int);
+
+            return IntPtr.Zero;
+        }
+
         public static void Free(IntPtr ptr)
         {
             // Get the instance
