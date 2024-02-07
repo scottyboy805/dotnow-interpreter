@@ -346,6 +346,7 @@ namespace dotnow
 
                     return CreateFinalType(reference, resolvedType);
                 }
+                // Check for generic argument method
                 else if(mainTypeFullName.Length >= 3 && mainTypeFullName[0] == '!' && mainTypeFullName[1] == '!' && char.IsNumber(mainTypeFullName[2]) == true)
                 {
                     // Check for no type context
@@ -358,11 +359,13 @@ namespace dotnow
                     // Get as numerical value
                     int genericIndex = (int)char.GetNumericValue(numberChar);
 
-                    // These types have already been resolved
-                    Type[] resolvedGenericTypes = typeContext.GetGenericArguments();
+                    //// These types have already been resolved
+                    //Type[] resolvedGenericTypes = typeContext.GetGenericArguments();
 
-                    // Get the generic at the specified index
-                    resolvedType = resolvedGenericTypes[genericIndex];
+                    //// Get the generic at the specified index
+                    //resolvedType = resolvedGenericTypes[genericIndex];
+
+                    resolvedType = accessContext[genericIndex];
 
                     // Cache the result
                     //if (resolvedType != null)
@@ -745,7 +748,7 @@ namespace dotnow
                 Type[] genericArguments = Type.EmptyTypes;
 
                 // Check for member access generics
-                if(reference.ContainsGenericParameter == true)
+                if (reference.ContainsGenericParameter == true)
                 {
                     GenericInstanceMethod genericMethod = (reference as GenericInstanceMethod);
 
@@ -762,16 +765,47 @@ namespace dotnow
 
                 if (genericArguments.Length > 0)
                 {
-                    // Get all potentail methods
+                    // Get all potential methods
                     MethodInfo[] methods = resolvedDeclaringType.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
 
-                    // Select generic method
-                    resolvedMethod = methods.Where(m => m.Name == reference.Name && m.IsGenericMethod == true && m.GetParameters().Length == reference.Parameters.Count)
-                        .SingleOrDefault();
+                    // Find all closely matching methods
+                    IEnumerable<MethodInfo> potentialMethods = methods.Where(m => m.Name == reference.Name && m.IsGenericMethod == true && m.GetParameters().Length == reference.Parameters.Count);
 
-                    // Make method generic
-                    if(resolvedMethod != null)
-                        resolvedMethod = resolvedMethod.MakeGenericMethod(genericArguments);
+                    try
+                    {
+                        // Try to get only match
+                        resolvedMethod = potentialMethods.SingleOrDefault();
+
+                        // Make method generic
+                        if (resolvedMethod != null)
+                            resolvedMethod = resolvedMethod.MakeGenericMethod(genericArguments);
+                    }
+                    // Ambiguous match detected - further work required to validate generic arguments
+                    catch(InvalidOperationException)
+                    {
+                        // Create parameter types
+                        Type[] parameters = Type.EmptyTypes;
+
+                        // Check if the method has types
+                        if (reference.Parameters.Count > 0)
+                        {
+                            parameters = new Type[reference.Parameters.Count];
+
+                            // Resolve all parameters
+                            for (int i = 0; i < parameters.Length; i++)
+                                parameters[i] = ResolveType(reference.Parameters[i].ParameterType, resolvedDeclaringType, genericArguments);
+                        }
+
+                        // Get short list array of potential methods that could be matched
+                        MethodInfo[] methodList = potentialMethods.ToArray();
+
+                        // Convert to generic methods with correct generic arguments for binder to work with
+                        for(int i = 0; i < methodList.Length; i++)
+                            methodList[i] = methodList[i].MakeGenericMethod(genericArguments);
+
+                        // Use binder to select correct method based on argument types provided
+                        resolvedMethod = (MethodInfo)Type.DefaultBinder.SelectMethod(BindingFlags.Default, methodList, parameters, null);
+                    }
                 }
                 else
                 {
