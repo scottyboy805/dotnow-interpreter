@@ -308,7 +308,23 @@ namespace dotnow
             }
             else
             {
-                /// ######## Need to parse the full name and resolve generic types separatley
+                // Handle array types - type must be resolved for multidimensional arrays
+                if(reference.IsArray == true)
+                {
+                    ArrayType arrayReference = (ArrayType)reference;
+
+                    // Get element type
+                    Type elementType = ResolveType(arrayReference.ElementType, typeContext, accessContext);
+
+                    // Get array rank
+                    int rank = arrayReference.Rank;
+
+                    // Create array
+                    return elementType.MakeArrayType(rank);
+                }
+
+
+                /// ######## Need to parse the full name and resolve generic types separately
                 /// 
 
                 string mainTypeFullName = reference.FullName.Replace("/", "+");
