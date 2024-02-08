@@ -2643,7 +2643,8 @@ namespace dotnow.Runtime.CIL
                             // Get target ctor
                             ConstructorInfo ctor = (ConstructorInfo)methodInvoke.targetMethod;
 
-                            int argumentCount = ctor.GetParameters().Length;
+                            ParameterInfo[] parameters = ctor.GetParameters();
+                            int argumentCount = parameters.Length;
                             int first = stackPtr - argumentCount;
 
                             // Create argument array
@@ -2651,7 +2652,7 @@ namespace dotnow.Runtime.CIL
 
                             for (int i = 0; i < args.Length; i++)
                             {
-                                args[i] = stack[first + i].Box();
+                                args[i] = stack[first + i].BoxAsTypeSlow(parameters[i].ParameterType);
                             }
 
                             // Get declaring type
