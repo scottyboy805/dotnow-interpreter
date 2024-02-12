@@ -23,6 +23,7 @@ namespace dotnow
 
         // Private
         private static List<MemberInfo> memberArrayBuilder = new List<MemberInfo>();
+        private static Stack<CLRField> fieldMembersBuilder = new Stack<CLRField>();
 
         private List<CLRField> instanceFields = null;
 
@@ -301,14 +302,21 @@ namespace dotnow
                     {
                         if (fieldSlot.IsStatic == false)
                         {
-                            // Add the field slot
-                            instanceFields.Add(fieldSlot);
+                            // Push the field to stack
+                            // IMPORTANT - We need to add base fields as instance fields first to allow inheritance to work properly, so we use a stack to reverse the order
+                            fieldMembersBuilder.Push(fieldSlot);
                         }
                     }
 
                     // Move down the hierarchy
                     current = current.BaseType;
                 }                
+
+                // Add fields starting with base types then move up the hierarchy
+                while(fieldMembersBuilder.Count > 0)
+                {
+                    instanceFields.Add(fieldMembersBuilder.Pop());
+                }
             }
 
             return instanceFields;
