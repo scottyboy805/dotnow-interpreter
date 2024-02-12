@@ -309,7 +309,7 @@ namespace dotnow
             else
             {
                 // Handle array types - type must be resolved for multidimensional arrays
-                if(reference.IsArray == true)
+                if(reference.IsArray == true && ((ArrayType)reference).Rank > 1)
                 {
                     ArrayType arrayReference = (ArrayType)reference;
 
