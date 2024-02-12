@@ -108,7 +108,7 @@ namespace dotnow
         public static object GetDefaultValue(this Type type, AppDomain domain)
         {
             // Check for class
-            if (type.IsClass == true || type.IsArray == true)
+            if (type.IsClass == true || type.IsArray == true || type.IsAbstract == true)
                 return null;
 
             // Check for CLR struct
