@@ -658,6 +658,10 @@ namespace dotnow.Runtime
                 case ObjectType.Null: 
                     return true;
 
+                // Check by ref
+                case ObjectType.ByRef:
+                    return ((IByRef)val.refValue).Instance == null;
+
                     // Check reference null
                 case ObjectType.Ref:
                 case ObjectType.RefBoxed:
