@@ -90,6 +90,28 @@ namespace dotnow.Runtime
             return refValue;
         }
 
+        public object BoxAsTypeSlow(Type asType)
+        {
+            // Get type code
+            TypeCode code = Type.GetTypeCode(asType);
+
+            // Check for enum type
+            if (code == TypeCode.Object && asType.IsEnum == true && asType.IsArray == false)
+                return BoxAsTypeSlow(asType.GetEnumUnderlyingType());
+
+            switch(type)
+            {
+                case ObjectType.Null:
+                case ObjectType.Ref:
+                case ObjectType.ByRef:
+                case ObjectType.RefBoxed:
+                    return Box();
+            }
+
+            // Convert to type
+            return Convert.ChangeType(Box(), asType);
+        }
+
         public object UnboxAsTypeSlow(Type asType)
         {
             // Get type code
@@ -635,6 +657,10 @@ namespace dotnow.Runtime
                     // Check explicit null
                 case ObjectType.Null: 
                     return true;
+
+                // Check by ref
+                case ObjectType.ByRef:
+                    return ((IByRef)val.refValue).Instance == null;
 
                     // Check reference null
                 case ObjectType.Ref:
