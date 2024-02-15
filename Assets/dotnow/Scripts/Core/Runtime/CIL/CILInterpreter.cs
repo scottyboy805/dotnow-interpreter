@@ -3105,7 +3105,7 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr - 1].value.Int32 = ~stack[stackPtr - 1].value.Int32;
-                                        stack[stackPtr - 2].type = StackData.ObjectType.Int32;
+                                        stack[stackPtr - 1].type = StackData.ObjectType.Int32;
                                         break;
                                     }
 
