@@ -29,6 +29,7 @@ namespace dotnow.Runtime.CIL
             CILMethodInvocation methodInvoke;
             CILSignature signature;
 
+            char[] charArrImpl;
             bool[] boolArrImpl;
             sbyte[] int8ArrImpl;
             byte[] uint8ArrImpl;
@@ -1931,20 +1932,42 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int16ArrImpl = (short[])left.refValue;    // arr impl
+                            // Handle char case
+                            if (left.refValue is char[])
+                            {
+                                charArrImpl = (char[])left.refValue; // arr impl
 
-                            if ((int)temp.type <= 32)
-                            {
-                                stack[stackPtr].value.Int16 = int16ArrImpl[temp.value.Int32];
-                                stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                if ((int)temp.type <= 32)
+                                {
+                                    stack[stackPtr].value.Int16 = (short)charArrImpl[temp.value.Int32];
+                                    stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                }
+                                else if ((int)temp.type <= 64)
+                                {
+                                    stack[stackPtr].value.Int16 = (short)charArrImpl[temp.value.Int64];
+                                    stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                }
+                                else
+                                    throw new NotSupportedException();
                             }
-                            else if ((int)temp.type <= 64)
-                            {
-                                stack[stackPtr].value.Int16 = int16ArrImpl[temp.value.Int64];
-                                stack[stackPtr++].type = StackData.ObjectType.Int16;
-                            }
+                            // Fallback to standard i16
                             else
-                                throw new NotSupportedException();
+                            {
+                                int16ArrImpl = (short[])left.refValue;    // arr impl
+
+                                if ((int)temp.type <= 32)
+                                {
+                                    stack[stackPtr].value.Int16 = int16ArrImpl[temp.value.Int32];
+                                    stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                }
+                                else if ((int)temp.type <= 64)
+                                {
+                                    stack[stackPtr].value.Int16 = int16ArrImpl[temp.value.Int64];
+                                    stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                }
+                                else
+                                    throw new NotSupportedException();
+                            }
                             break;
                         }
 
@@ -2302,18 +2325,38 @@ namespace dotnow.Runtime.CIL
                             if (left.type == StackData.ObjectType.Null)
                                 throw new NullReferenceException();
 
-                            int16ArrImpl = (short[])left.refValue;  // arr impl
+                            // Handle char case
+                            if(left.refValue is char[])
+                            {
+                                charArrImpl = (char[])left.refValue; // arr impl
 
-                            if ((int)temp.type <= 32)
-                            {
-                                int16ArrImpl[temp.value.Int32] = right.value.Int16;
+                                if ((int)temp.type <= 32)
+                                {
+                                    charArrImpl[temp.value.Int32] = (char)right.value.Int16;
+                                }
+                                else if ((int)temp.type <= 64)
+                                {
+                                    charArrImpl[temp.value.Int64] = (char)right.value.Int16;
+                                }
+                                else
+                                    throw new NotSupportedException();
                             }
-                            else if ((int)temp.type <= 64)
-                            {
-                                int16ArrImpl[temp.value.Int64] = right.value.Int16;
-                            }
+                            // Fallback to standard i16
                             else
-                                throw new NotSupportedException();
+                            {
+                                int16ArrImpl = (short[])left.refValue;  // arr impl
+
+                                if ((int)temp.type <= 32)
+                                {
+                                    int16ArrImpl[temp.value.Int32] = right.value.Int16;
+                                }
+                                else if ((int)temp.type <= 64)
+                                {
+                                    int16ArrImpl[temp.value.Int64] = right.value.Int16;
+                                }
+                                else
+                                    throw new NotSupportedException();
+                            }
                             break;
                         }
 
