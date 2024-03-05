@@ -11,9 +11,10 @@ namespace dotnow
         // Internal
         internal AppDomain domain = null;
         internal Dictionary<Type, Type> clrProxyBindings = new Dictionary<Type, Type>();                              // System type, Proxy type (MonoBehaviour, MonoBehaviourProxy)
-        internal Dictionary<MethodBase, MethodBase> clrMethodBindings = new Dictionary<MethodBase, MethodBase>();     // Method to reroute, New taregt method (AddComponent(Type), AddComponentOverride(AppDomain, object, object[]))
+        internal Dictionary<MethodBase, MethodBase> clrMethodBindings = new Dictionary<MethodBase, MethodBase>();     // Method to reroute, New target method (AddComponent(Type), AddComponentOverride(AppDomain, object, object[]))
         internal Dictionary<Type, MethodBase> clrCreateInstanceBindings = new Dictionary<Type, MethodBase>();         // Constructor to reroute, New target method to handle construction of object
         internal Dictionary<ConstructorInfo, MethodBase> clrCreateInstanceConstructorBindings = new Dictionary<ConstructorInfo, MethodBase>();
+        internal Dictionary<Type, MethodBase> clrCreateDelegateBindings = new Dictionary<Type, MethodBase>();                                       // Delegate system type, Create method
         internal Dictionary<MethodBase, AppDomain.MethodDirectCallDelegate> clrMethodDirectCallBindings = new Dictionary<MethodBase, AppDomain.MethodDirectCallDelegate>();
         internal Dictionary<FieldInfo, AppDomain.FieldDirectAccessDelegate> clrFieldDirectAccessReadBindings = new Dictionary<FieldInfo, AppDomain.FieldDirectAccessDelegate>();
         internal Dictionary<FieldInfo, AppDomain.FieldDirectAccessDelegate> clrFieldDirectAccessWriteBindings = new Dictionary<FieldInfo, AppDomain.FieldDirectAccessDelegate>();
@@ -71,6 +72,7 @@ namespace dotnow
                     InitializeFieldDirectAccessBindings(type);
 #endif
                     InitializeCreateInstanceBindings(type);
+                    InitializeCreateDelegateBindings(type);
                 }
             }
         }
@@ -568,6 +570,93 @@ namespace dotnow
                 }
             }
         }
-#endregion
+
+
+        private void InitializeCreateDelegateBindings(Type type)
+        {
+            // Check for proxy methods
+            foreach (MethodBase method in type.GetMethods())
+            {
+                if (method.IsDefined(typeof(CLRCreateDelegateBindingAttribute), false) == true)
+                {
+                    // Check for static correct
+                    if (method.IsStatic == false)
+                    {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                        UnityEngine.Debug.LogErrorFormat("Create delegate binding {0} must be declared as static", method);
+                        continue;
+#else
+                        throw new CLRBindingException("Create delegate binding {0} must be declared as static", method);
+#endif
+                    }
+
+                    // Check for correct parameters
+                    ParameterInfo[] parameterTypes = method.GetParameters();
+
+                    if (parameterTypes.Length != 4 ||
+                        parameterTypes[0].ParameterType != typeof(AppDomain) ||
+                        parameterTypes[1].ParameterType != typeof(Type) ||
+                        parameterTypes[2].ParameterType != typeof(MethodBase) ||
+                        parameterTypes[3].ParameterType != typeof(object))
+                    {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                        UnityEngine.Debug.LogErrorFormat("Create delegate binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
+                            typeof(AppDomain),
+                            typeof(Type),
+                            typeof(MethodBase),
+                            typeof(object));
+
+                        continue;
+#else
+                        throw new CLRBindingException("Create delegate binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
+                            typeof(AppDomain),
+                            typeof(Type),
+                            typeof(MethodBase),
+                            typeof(object));
+#endif
+                    }
+
+                    // Get the attribute
+                    CLRCreateDelegateBindingAttribute attribute = method.GetCustomAttribute<CLRCreateDelegateBindingAttribute>();
+                    
+                    // Check attribute type is delegate
+                    if(typeof(Delegate).IsAssignableFrom(attribute.DelegateType) == false)
+                    {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                        UnityEngine.Debug.LogErrorFormat("Create delegate binding {0} must specify a delegate type via attribute", method);
+                        continue;
+#else
+                        throw new CLRBindingException("Create delegate binding {0} must specify a delegate type via attribute", method);
+#endif
+                    }
+
+                    // Check return type
+                    if (((MethodInfo)method).ReturnType != attribute.DelegateType)
+                    {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                        UnityEngine.Debug.LogErrorFormat("Create delegate binding {0} must have a return type of '{1}'", method, attribute.DelegateType);
+                        continue;
+#else
+                        throw new CLRBindingException("Create delegate binding {0} must have a return type of '{1}'", method, attribute.DelegateType);
+#endif
+                    }
+
+                    // Check for already exists
+                    if (clrCreateDelegateBindings.ContainsKey(attribute.DelegateType) == true)
+                    {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                        UnityEngine.Debug.LogErrorFormat("An override create delegate binding already exists for the target delegate '{0}'", attribute.DelegateType);
+                        continue;
+#else
+                        throw new CLRBindingException("An override create delegate binding already exists for the target delegate '{0}'", attribute.DelegateType);
+#endif
+                    }
+
+                    // Register method
+                    clrCreateDelegateBindings.Add(attribute.DelegateType, method);                    
+                }
+            }
+        }
+        #endregion
     }
 }

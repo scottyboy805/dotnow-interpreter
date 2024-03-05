@@ -1463,6 +1463,10 @@ namespace dotnow
 
             MethodBase target;
 
+            // Check for delegate with override binding provided
+            if (typeof(Delegate).IsAssignableFrom(createInstanceType) == true && (target = GetOverrideCreateDelegateBinding(createInstanceType)) != null)
+                return target;
+
             lock (bindings.clrCreateInstanceConstructorBindings)
             {
                 if (ctor != null && bindings.clrCreateInstanceConstructorBindings.TryGetValue(ctor, out target) == true)
@@ -1480,6 +1484,22 @@ namespace dotnow
             if (createInstanceType.BaseType == typeof(MulticastDelegate))
                 return GetOverrideCreateInstanceBinding(createInstanceType.BaseType);
 
+            return null;
+        }
+
+        public MethodBase GetOverrideCreateDelegateBinding(Type delegateType)
+        {
+            MethodBase target;
+
+            // Try to get method
+            lock(bindings.clrCreateDelegateBindings)
+            {
+                // Check for cached method redirect
+                if (bindings.clrCreateDelegateBindings.TryGetValue(delegateType, out target) == true)
+                    return target;
+            }
+
+            // None found
             return null;
         }
 
@@ -1508,6 +1528,19 @@ namespace dotnow
 
             // Add ctor
             bindings.clrCreateInstanceConstructorBindings.Add(createInstanceCtor, createInstanceMethod);
+        }
+
+        public void AddOverrideCreateDelegateBinding(Type delegateType, MethodBase createDelegateMethod)
+        {
+            if (delegateType == null) throw new ArgumentNullException("delegateType");
+            if (createDelegateMethod == null) throw new ArgumentNullException("createDelegateMethod");
+
+            // Check for already added
+            if (bindings.clrCreateDelegateBindings.ContainsKey(delegateType) == true)
+                throw new CLRBindingException("A create delegate override binding already exists for the target delegate `{0}`", delegateType);
+
+            // Add binding
+            bindings.clrCreateDelegateBindings.Add(delegateType, createDelegateMethod);
         }
 #endregion
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace dotnow.Runtime
@@ -26,7 +26,7 @@ namespace dotnow.Runtime
         public static object AutoAnyInteropDelegateFromParametersAsType(AppDomain domain, Type delegateType, object instance, MethodBase target)
         {
             // Try to get action or func delegate
-            object targetDelegate = AutoAnyInteropDelegateFromParameters(domain, instance, target);
+            object targetDelegate = AutoAnyInteropDelegateFromParameters(domain, delegateType, instance, target);
 
             // Check for null
             if (targetDelegate == null)
@@ -39,27 +39,41 @@ namespace dotnow.Runtime
             return Delegate.CreateDelegate(delegateType, inst.Target, inst.Method);
         }
 
-        public static object AutoAnyInteropDelegateFromParameters(AppDomain domain, object instance, MethodBase target)
+        public static object AutoAnyInteropDelegateFromParameters(AppDomain domain, Type delegateType, object instance, MethodBase target)
         {
             if(target is MethodInfo && ((MethodInfo)target).ReturnType != typeof(void))
             {
                 // Create func delegate
-                return AutoFuncInteropDelegateFromParameters(domain, instance, target);
+                return AutoFuncInteropDelegateFromParameters(domain, delegateType, instance, target);
             }
 
             // Create action delegate
-            return AutoActionInteropDelegateFromParameters(domain, instance, target);
+            return AutoActionInteropDelegateFromParameters(domain, delegateType, instance, target);
         }
 
-        public static object AutoActionInteropDelegateFromParameters(AppDomain domain, object instance, MethodBase target)
+        public static object AutoActionInteropDelegateFromParameters(AppDomain domain, Type delegateType, object instance, MethodBase target)
         {
             // Important - this method does slow lookup for a suitable AOT delegate that can be used for interop calls
             // For the moment there is no other way and unfortunately it will not support passing reference types explicitly for interop calls. 
-            // Instead you must use 'System.object' in those cases and cast at the receivng end. 
+            // Instead you must use 'System.object' in those cases and cast at the receiving end. 
 
             // Check for cached
             if (domain.delegateCache.ContainsKey(target) == true)
                 return domain.delegateCache[target];
+
+            // Check for delegate override
+            MethodBase delegateOverride;
+            if((delegateOverride = domain.GetOverrideCreateDelegateBinding(delegateType)) != null)
+            {
+                // Try to invoke
+                object delegateInstance = delegateOverride.Invoke(null, new object[] { domain, delegateType, target, instance });
+
+                // Update cache
+                if(delegateInstance != null)
+                    domain.delegateCache[target] = delegateInstance;
+
+                return delegateInstance;
+            }
 
             // Get parameters
             ParameterInfo[] parameters = target.GetParameters();
@@ -78,6 +92,11 @@ namespace dotnow.Runtime
                 {
                     case 1:
                         {
+                        //    targetDelegate = (AppDomain d, object inst, MethodBase call) =>
+                        //    {
+                        //        return ((MethodInfo)target).CreateDelegate(typeof(Action<>).MakeGenericType(parameters[0].ParameterType));
+                        //    };
+                        //    break;
                             targetDelegate = action_T1[(int)Type.GetTypeCode(parameters[0].ParameterType)];
                             break;
                         }
@@ -110,15 +129,29 @@ namespace dotnow.Runtime
             }
         }
 
-        public static object AutoFuncInteropDelegateFromParameters(AppDomain domain, object instance, MethodBase target)
+        public static object AutoFuncInteropDelegateFromParameters(AppDomain domain, Type delegateType, object instance, MethodBase target)
         {
             // Important - this method does slow lookup for a suitable AOT delegate that can be used for interop calls
             // For the moment there is no other way and unfortunately it will not support passing reference types explicitly for interop calls. 
-            // Instead you must use 'System.object' in those cases and cast at the receivng end. 
+            // Instead you must use 'System.object' in those cases and cast at the receiving end. 
 
             // Check for cached
             if (domain.delegateCache.ContainsKey(target) == true)
                 return domain.delegateCache[target];
+
+            // Check for delegate override
+            MethodBase delegateOverride;
+            if ((delegateOverride = domain.GetOverrideCreateDelegateBinding(delegateType)) != null)
+            {
+                // Try to invoke
+                object delegateInstance = delegateOverride.Invoke(null, new object[] { domain, delegateType, target, instance });
+
+                // Update cache
+                if (delegateInstance != null)
+                    domain.delegateCache[target] = delegateInstance;
+
+                return delegateInstance;
+            }
 
             // Get return
             Type returnType = ((MethodInfo)target).ReturnType;
