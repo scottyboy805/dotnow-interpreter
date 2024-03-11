@@ -29,7 +29,7 @@ namespace dotnow
         internal static event Action<AppDomain> OnDomainCreated;
 
         internal Thread mainThread = null;
-        internal Dictionary<MethodBase, object> delegateCache = new Dictionary<MethodBase, object>();
+        internal Dictionary<(MethodBase, object), object> delegateCache = new Dictionary<(MethodBase, object), object>();       // <Tuple:(Method, Instance [or null]), delegate>
 
         // Private
         private Bindings bindings = null;

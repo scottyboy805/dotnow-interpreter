@@ -58,19 +58,20 @@ namespace dotnow.Runtime
             // Instead you must use 'System.object' in those cases and cast at the receiving end. 
 
             // Check for cached
-            if (domain.delegateCache.ContainsKey(target) == true)
-                return domain.delegateCache[target];
+            object delegateInstance;
+            if (domain.delegateCache.TryGetValue((target, instance), out delegateInstance) == true)
+                return delegateInstance;
 
             // Check for delegate override
             MethodBase delegateOverride;
             if((delegateOverride = domain.GetOverrideCreateDelegateBinding(delegateType)) != null)
             {
                 // Try to invoke
-                object delegateInstance = delegateOverride.Invoke(null, new object[] { domain, delegateType, target, instance });
+                delegateInstance = delegateOverride.Invoke(null, new object[] { domain, delegateType, target, instance });
 
                 // Update cache
                 if(delegateInstance != null)
-                    domain.delegateCache[target] = delegateInstance;
+                    domain.delegateCache[(target, instance)] = delegateInstance;
 
                 return delegateInstance;
             }
@@ -92,11 +93,6 @@ namespace dotnow.Runtime
                 {
                     case 1:
                         {
-                        //    targetDelegate = (AppDomain d, object inst, MethodBase call) =>
-                        //    {
-                        //        return ((MethodInfo)target).CreateDelegate(typeof(Action<>).MakeGenericType(parameters[0].ParameterType));
-                        //    };
-                        //    break;
                             targetDelegate = action_T1[(int)Type.GetTypeCode(parameters[0].ParameterType)];
                             break;
                         }
@@ -120,7 +116,7 @@ namespace dotnow.Runtime
                     object delegateImplicit = targetDelegate(domain, instance, target);
 
                     // Cache delegate
-                    domain.delegateCache[target] = delegateImplicit;
+                    domain.delegateCache[(target, instance)] = delegateImplicit;
 
                     return delegateImplicit;
                 }
@@ -136,19 +132,20 @@ namespace dotnow.Runtime
             // Instead you must use 'System.object' in those cases and cast at the receiving end. 
 
             // Check for cached
-            if (domain.delegateCache.ContainsKey(target) == true)
-                return domain.delegateCache[target];
+            object delegateInstance;
+            if (domain.delegateCache.TryGetValue((target, instance), out delegateInstance) == true)
+                return delegateInstance;
 
             // Check for delegate override
             MethodBase delegateOverride;
             if ((delegateOverride = domain.GetOverrideCreateDelegateBinding(delegateType)) != null)
             {
                 // Try to invoke
-                object delegateInstance = delegateOverride.Invoke(null, new object[] { domain, delegateType, target, instance });
+                delegateInstance = delegateOverride.Invoke(null, new object[] { domain, delegateType, target, instance });
 
                 // Update cache
                 if (delegateInstance != null)
-                    domain.delegateCache[target] = delegateInstance;
+                    domain.delegateCache[(target, instance)] = delegateInstance;
 
                 return delegateInstance;
             }
@@ -188,7 +185,7 @@ namespace dotnow.Runtime
                 object delegateImplicit = targetDelegate(domain, instance, target);
 
                 // Add to cache
-                domain.delegateCache[target] = delegateImplicit;
+                domain.delegateCache[(target, instance)] = delegateImplicit;
 
                 return delegateImplicit;
             }
@@ -209,14 +206,15 @@ namespace dotnow.Runtime
         public static object AutoActionInteropDelegate(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (domain.delegateCache.ContainsKey(target) == true)
-                return domain.delegateCache[target];
+            object call;
+            if (domain.delegateCache.TryGetValue((target, instance), out call) == true)
+                return call;
 
             // Create delegate
-            object call = ActionInteropDelegate(domain, instance, target);
+            call = ActionInteropDelegate(domain, instance, target);
 
             // Cache delegate
-            domain.delegateCache[target] = call;
+            domain.delegateCache[(target, instance)] = call;
 
             return call;
         }
@@ -235,16 +233,17 @@ namespace dotnow.Runtime
         public static object AutoActionInteropDelegate<T>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (domain.delegateCache.ContainsKey(target) == true)
-                return domain.delegateCache[target];
+            object call;
+            if (domain.delegateCache.TryGetValue((target, instance), out call) == true)
+                return call;
 
-            Type t = typeof(T);
-            object val = ActionInteropDelegate<T>(domain, instance, target);
+            // Create delegate
+            call = ActionInteropDelegate<T>(domain, instance, target);
 
             // Cache delegate
-            domain.delegateCache[target] = val;
+            domain.delegateCache[(target, instance)] = call;
 
-            return val;
+            return call;
         }
 
         public static Action<T> ActionInteropDelegate<T>(AppDomain domain, object instance, MethodBase target)
@@ -286,14 +285,15 @@ namespace dotnow.Runtime
         public static object AutoActionInteropDelegate<T0, T1>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (domain.delegateCache.ContainsKey(target) == true)
-                return domain.delegateCache[target];
+            object call;
+            if (domain.delegateCache.TryGetValue((target, instance), out call) == true)
+                return call;
 
             // Get call
-            object call = ActionInteropDelegate<T0, T1>(domain, instance, target);
+            call = ActionInteropDelegate<T0, T1>(domain, instance, target);
 
             // Add to cache
-            domain.delegateCache[target] = call;
+            domain.delegateCache[(target, instance)] = call;
 
             return call;
         }
@@ -579,14 +579,15 @@ namespace dotnow.Runtime
         public static object AutoActionInteropDelegate<T0, T1, T2>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (domain.delegateCache.ContainsKey(target) == true)
-                return domain.delegateCache[target];
+            object call;
+            if (domain.delegateCache.TryGetValue((target, instance), out call) == true)
+                return call;
 
             // Get call
-            object call = ActionInteropDelegate<T0, T1, T2>(domain, instance, target);
+            call = ActionInteropDelegate<T0, T1, T2>(domain, instance, target);
 
             // Add to cache
-            domain.delegateCache[target] = call;
+            domain.delegateCache[(target, instance)] = call;
 
             return call;
         }
@@ -4711,14 +4712,15 @@ namespace dotnow.Runtime
         public static object AutoActionInteropDelegate<T0, T1, T2, T3>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (domain.delegateCache.ContainsKey(target) == true)
-                return domain.delegateCache[target];
+            object call;
+            if (domain.delegateCache.TryGetValue((target, instance), out call) == true)
+                return call;
 
             // Get call
-            object call = ActionInteropDelegate<T0, T1, T2, T3>(domain, instance, target);
+            call = ActionInteropDelegate<T0, T1, T2, T3>(domain, instance, target);
 
             // Add to cache
-            domain.delegateCache[target] = call;
+            domain.delegateCache[(target, instance)] = call;
 
             return call;
         }
@@ -4738,14 +4740,15 @@ namespace dotnow.Runtime
         public static object AutoFuncInteropDelegate<T>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (domain.delegateCache.ContainsKey(target) == true)
-                return domain.delegateCache[target];
+            object call;
+            if (domain.delegateCache.TryGetValue((target, instance), out call) == true)
+                return call;
 
             // Get call
-            object call = FuncInteropDelegate<T>(domain, instance, target);
+            call = FuncInteropDelegate<T>(domain, instance, target);
 
             // Add to cache
-            domain.delegateCache[target] = call;
+            domain.delegateCache[(target, instance)] = call;
 
             return call;
         }
@@ -4789,14 +4792,15 @@ namespace dotnow.Runtime
         public static object AutoFuncInteropDelegate<T0, TR>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (domain.delegateCache.ContainsKey(target) == true)
-                return domain.delegateCache[target];
+            object call;
+            if (domain.delegateCache.TryGetValue((target, instance), out call) == true)
+                return call;
 
             // Get call
-            object call = FuncInteropDelegate<T0, TR>(domain, instance, target);
+            call = FuncInteropDelegate<T0, TR>(domain, instance, target);
 
             // Add to cache
-            domain.delegateCache[target] = call;
+            domain.delegateCache[(target, instance)] = call;
 
             return call;
         }
@@ -5082,14 +5086,15 @@ namespace dotnow.Runtime
         public static object AutoFuncInteropDelegate<T0, T1, TR>(AppDomain domain, object instance, MethodBase target)
         {
             // Get cached delegate
-            if (domain.delegateCache.ContainsKey(target) == true)
-                return domain.delegateCache[target];
+            object call;
+            if (domain.delegateCache.TryGetValue((target, instance), out call) == true)
+                return call;
 
             // Get call
-            object call = FuncInteropDelegate<T0, T1, TR>(domain, instance, target);
+            call = FuncInteropDelegate<T0, T1, TR>(domain, instance, target);
 
             // Add to cache
-            domain.delegateCache[target] = call;
+            domain.delegateCache[(target, call)] = call;
 
             return call;
         }
