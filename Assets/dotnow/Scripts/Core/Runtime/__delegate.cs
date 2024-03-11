@@ -5094,7 +5094,7 @@ namespace dotnow.Runtime
             call = FuncInteropDelegate<T0, T1, TR>(domain, instance, target);
 
             // Add to cache
-            domain.delegateCache[(target, call)] = call;
+            domain.delegateCache[(target, instance)] = call;
 
             return call;
         }
