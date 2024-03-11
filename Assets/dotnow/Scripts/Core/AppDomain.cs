@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading;
 using Mono.Cecil;
@@ -12,7 +13,6 @@ using dotnow.Interop;
 using dotnow.Reflection;
 using dotnow.Runtime;
 using dotnow.Runtime.CIL;
-using System.Runtime.CompilerServices;
 using dotnow.Runtime.JIT;
 
 [assembly: InternalsVisibleTo("dotnow.Integration")]
@@ -144,7 +144,12 @@ namespace dotnow
                 if (threadEngines.TryGetValue(executingThread, out context) == true)
                     return context.engine;
 
-                throw new CLRRuntimeException("Execution context is not valid or initialized for the current thread. Execution cannot continue!");
+                // Create new interpreted thread engine on demand - call is likely coming from interop created thread or maybe threadpool
+                context = new CLRThreadContext(this, ExecutionEngine.defaultStackSize);
+                threadEngines[executingThread] = context;
+
+                engine = context.engine;
+                //throw new CLRRuntimeException("Execution context is not valid or initialized for the current thread. Execution cannot continue!");
             }
 
             return engine;

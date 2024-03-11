@@ -25,9 +25,28 @@ namespace dotnow.Runtime
             this.maxStack = maxStack;
         }
 
+        public CLRThreadContext(AppDomain domain, int maxStack)
+        {
+            this.domain = domain;
+            this.maxStack = maxStack;
+
+            // Make sure we are not on main
+            if (domain.mainThread == Thread.CurrentThread)
+                throw new InvalidOperationException("Thread context cannot be created from main thread. Make sure you are calling from worker thread or use `CreateThreadInstanceOverride_ThreadStart`/`CreateThreadInstanceOverride_ParameterizedThreadStart`");
+
+            // Store thread state
+            thread = Thread.CurrentThread;
+
+            // Create engine and thread context - we must already be on worker thread
+            engine = new ExecutionEngine(thread, maxStack);
+        }
+
         // Methods
         internal void __ThreadMainBridge()
         {
+            // Get thread
+            thread = Thread.CurrentThread;
+
             // Create engine
             engine = new ExecutionEngine(thread, maxStack);
 
@@ -35,7 +54,7 @@ namespace dotnow.Runtime
             domain.CreateThreadExecutionContext(this);
 
 
-            // ### This method is called by 'Thread' when 'Start' is called in interpteted or interop code
+            // ### This method is called by 'Thread' when 'Start' is called in interpreted or interop code
             // Execute the method on the thread
             // Interpreted methods will go through CLRMethod -> CLRMethodBody -> GetExecutionEngine (For current thread) -> Interpret on this thread
             targetMethod.Invoke(targetInstance, null);
