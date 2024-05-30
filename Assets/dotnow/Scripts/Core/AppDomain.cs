@@ -1139,6 +1139,18 @@ namespace dotnow
             return inst;
         }
 
+        public object CreateArrayInstance(Type type, long length)
+        {
+            // Check for CLR type
+            if(type.IsCLRType() == true)
+            {
+                // Create using interpreted type - must wrap as object to support all cases
+                return Array.CreateInstance(typeof(object), length);
+            }
+            // Create using primitive or interop type
+            return Array.CreateInstance(type, length);
+        }
+
         public object CreateInstanceFromProxy(Type type, ICLRProxy proxy)
         {
             // Check for clr type
