@@ -889,8 +889,21 @@ namespace dotnow
                     // Standard behaviour for normal methods
                     else
                     {
-                        // Try to resolve the field
-                        resolvedMethod = resolvedDeclaringType.GetMethod(reference.Name, parameters);
+                        try
+                        {
+                            
+                            // Try to resolve the field
+                            resolvedMethod = resolvedDeclaringType.GetMethod(reference.Name, parameters);
+                        }
+                        catch(AmbiguousMatchException)
+                        {
+                            // Todo - this should work in 99% of cases, but is probably slow and inefficient due to excess use of Linq
+                            resolvedMethod = resolvedDeclaringType.GetMethods()
+                                .FirstOrDefault(m => m.Name == reference.Name
+                                    && m.IsGenericMethod == false
+                                    && m.GetParameters().Select(p => p.ParameterType)
+                                        .SequenceEqual(parameters));
+                        }
                     }
                 }
 
