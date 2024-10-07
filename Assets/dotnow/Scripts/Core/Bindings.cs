@@ -2,6 +2,7 @@
 using dotnow.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace dotnow
@@ -158,7 +159,121 @@ namespace dotnow
             // Check for proxy methods
             foreach (MethodBase method in type.GetMethods())
             {
-                if (method.IsDefined(typeof(CLRMethodBindingAttribute), false) == true)
+                if (method.IsDefined(typeof(CLRGenericMethodBindingAttribute), false) == true)
+                {
+                    // Check for static correct
+                    if (method.IsStatic == false)
+                    {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                        UnityEngine.Debug.LogErrorFormat("Method binding {0} must be declared as static", method);
+                        continue;
+#else
+                        throw new CLRBindingException("Method binding {0} must be declared as static", method);
+#endif
+                    }
+
+                    // Check for correct parameters
+                    ParameterInfo[] parameterTypes = method.GetParameters();
+
+                    if (parameterTypes.Length < 5 ||
+                        parameterTypes[0].ParameterType != typeof(AppDomain) ||
+                        parameterTypes[1].ParameterType != typeof(MethodInfo) ||
+                        parameterTypes[2].ParameterType != typeof(object) ||
+                        parameterTypes[3].ParameterType != typeof(object[]) ||
+                        parameterTypes[4].ParameterType != typeof(Type[]))
+                    {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                        UnityEngine.Debug.LogErrorFormat("Method binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
+                            typeof(AppDomain),
+                            typeof(MethodInfo),
+                            typeof(object),
+                            typeof(object[]),
+                            typeof(Type[]));
+
+                        continue;
+#else
+                        throw new CLRBindingException("Method binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
+                            typeof(AppDomain),
+                            typeof(MethodInfo),
+                            typeof(object),
+                            typeof(object[]),
+                            typeof(Type[]));
+#endif
+                    }
+
+                    // Get the attribute
+                    CLRGenericMethodBindingAttribute attribute = method.GetCustomAttribute<CLRGenericMethodBindingAttribute>();
+
+                    // Resolve method
+                    MethodInfo rerouteMethod = attribute.DeclaringType.GetMethods()
+                        .FirstOrDefault(m => 
+                            m.Name == attribute.MethodName
+                            && m.IsGenericMethod == true
+                            && m.GetGenericArguments().Length == attribute.GenericArgumentCount
+                            && m.GetParameters().Select(p => p.ParameterType).SequenceEqual(attribute.ParameterTypes));
+
+                    // Check for missing method
+                    if (rerouteMethod == null)
+                    {
+                        string parameterString = "";
+
+                        for (int i = 0; i < attribute.ParameterTypes.Length; i++)
+                        {
+                            parameterString += attribute.ParameterTypes[i];
+
+                            if (i < attribute.ParameterTypes.Length - 1)
+                                parameterString += ", ";
+                        }
+
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                        UnityEngine.Debug.LogErrorFormat("Method binding {0} targets a method that could not be resolved: {1}.{2}{3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
+                        continue;
+#else
+                        throw new CLRBindingException("Method binding {0} targets a method that could not be resolved: {1}.{2}(3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
+#endif
+                    }
+                    else
+                        rerouteMethod = rerouteMethod.GetGenericMethodDefinition();
+
+                    // Check return type
+                    if (rerouteMethod is MethodInfo)
+                    {
+                        if ((rerouteMethod).ReturnType == typeof(void) && ((MethodInfo)method).ReturnType != typeof(void))
+                        {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                            UnityEngine.Debug.LogErrorFormat("Method binding {0} must have a return type of '{1}'", method, typeof(void));
+                            continue;
+#else
+                            throw new CLRBindingException("Method binding {0} must have a return type of '{1}'", method, typeof(void));
+#endif
+                        }
+                        else if ((rerouteMethod).ReturnType != typeof(void) && ((MethodInfo)method).ReturnType != typeof(object))
+                        {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                            UnityEngine.Debug.LogErrorFormat("Method binding {0} must have a return type of '{1}'", method, typeof(object));
+                            continue;
+#else
+                            throw new CLRBindingException("Method binding {0} must have a return type of '{1}'", method, typeof(object));
+#endif
+                        }
+                    }
+
+                    // Check for already added
+                    if (clrMethodBindings.ContainsKey(rerouteMethod) == true)
+                    {
+#if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
+                        UnityEngine.Debug.LogErrorFormat("An override method binding already exists for the target method '{0}'", rerouteMethod);
+                        continue;
+#else
+                        throw new CLRBindingException("An override method binding already exists for the taret method '{0}'", rerouteMethod);
+#endif
+                    }
+
+                    // Register the method
+                    clrMethodBindings.Add(rerouteMethod, new CLRMethodBindingCallSite(domain, rerouteMethod, method));
+                }
+
+                else if (method.IsDefined(typeof(CLRMethodBindingAttribute), false) == true)
                 {
                     // Check for static correct
                     if (method.IsStatic == false)
@@ -222,7 +337,7 @@ namespace dotnow
 #else
                         throw new CLRBindingException("Method binding {0} targets a method that could not be resolved: {1}.{2}(3}", method, attribute.DeclaringType, attribute.MethodName, parameterString);
 #endif
-                    }
+                    }                
 
                     // Check return type
                     if (rerouteMethod is MethodInfo)
@@ -251,7 +366,7 @@ namespace dotnow
                     if (clrMethodBindings.ContainsKey(rerouteMethod) == true)
                     {
 #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
-                        UnityEngine.Debug.LogErrorFormat("An override method binding already exists for the taret method '{0}'", rerouteMethod);
+                        UnityEngine.Debug.LogErrorFormat("An override method binding already exists for the target method '{0}'", rerouteMethod);
                         continue;
 #else
                         throw new CLRBindingException("An override method binding already exists for the taret method '{0}'", rerouteMethod);

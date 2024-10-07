@@ -6,10 +6,11 @@ namespace dotnow.Interop
 {
     internal class CLRMethodBindingCallSite : MethodInfo
     {
-        // Private
-        private AppDomain domain = null;
-        private MethodBase originalMethod = null;
-        private MethodBase target = null;
+        // Protected
+        protected AppDomain domain = null;
+        protected MethodBase originalMethod = null;
+        protected MethodBase target = null;
+        protected object[] args = null;
 
         // Properties
         public override string Name
@@ -58,6 +59,16 @@ namespace dotnow.Interop
             get { throw new NotImplementedException(); }
         }
 
+        public MethodBase OriginalMethod
+        {
+            get { return originalMethod; }
+        }
+
+        public MethodBase TargetMethod
+        {
+            get { return target; }
+        }
+
         // Constructor
         internal CLRMethodBindingCallSite(AppDomain domain, MethodBase originalMethod, MethodBase target)
         {
@@ -94,11 +105,17 @@ namespace dotnow.Interop
 
         public override object Invoke(object obj, BindingFlags invokeAttr, Binder binder, object[] parameters, CultureInfo culture)
         {
-            object[] args = new object[4];
+            // Create cached args
+            if(args == null)
+            {
+                args = new object[4];
+
+                // Fill out persistent args
+                args[0] = domain;
+                args[1] = originalMethod;
+            }
 
             // Fill out ordered parameters
-            args[0] = domain;
-            args[1] = originalMethod;
             args[2] = obj;
             args[3] = parameters;
 
