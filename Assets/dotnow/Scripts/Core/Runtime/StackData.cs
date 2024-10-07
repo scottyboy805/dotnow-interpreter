@@ -71,6 +71,29 @@ namespace dotnow.Runtime
         }
 
         // Methods
+        public T GetRefValue<T>()
+        {
+            switch (type)
+            {
+                case ObjectType.Ref:
+                case ObjectType.RefBoxed:
+                    {
+                        // Check for null
+                        if (refValue == null)
+                            throw new NullReferenceException();
+
+                        // Get reference value
+                        return (T)refValue;
+                    }
+                case ObjectType.ByRef:
+                    {
+                        // Get byref reference value
+                        return ((IByRef)refValue).GetReferenceValue().GetRefValue<T>();
+                    }
+            }
+            throw new NotSupportedException("Not a reference or boxed struct type");
+        }
+
         public object Box()
         {
             switch(type)
@@ -109,15 +132,12 @@ namespace dotnow.Runtime
             }
 
             // Convert to type
-            if (!asType.IsEnum)
+            if (asType.IsEnum == false)
             {
                 return Convert.ChangeType(Box(), asType);
             }
-            else
-            {
-                // If we somehow reached here with an enum type, use Enum.ToObject
-                return Enum.ToObject(asType, Box());
-            }
+            // If we somehow reached here with an enum type, use Enum.ToObject
+            return Enum.ToObject(asType, Box());
         }
 
         public object UnboxAsTypeSlow(Type asType)

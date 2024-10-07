@@ -817,7 +817,17 @@ namespace dotnow
 
                         // Make method generic
                         if (resolvedMethod != null)
-                            resolvedMethod = resolvedMethod.MakeGenericMethod(genericArguments);
+                        {
+                            // Check for override generic binding
+                            MethodBase overrideMethod;
+                            if(bindings.clrMethodBindings.TryGetValue(resolvedMethod, out overrideMethod) == true)
+                            {
+                                CLRMethodBindingCallSite overrideCallSite = overrideMethod as CLRMethodBindingCallSite;
+                                resolvedMethod = new CLRGenericMethodBindingCallSite(this, overrideCallSite.OriginalMethod, overrideCallSite.TargetMethod, genericArguments);
+                            }
+                            else
+                                resolvedMethod = resolvedMethod.MakeGenericMethod(genericArguments);
+                        }
                     }
                     // Ambiguous match detected - further work required to validate generic arguments
                     catch(InvalidOperationException)

@@ -59,6 +59,16 @@ namespace dotnow.Interop
             get { throw new NotImplementedException(); }
         }
 
+        public MethodBase OriginalMethod
+        {
+            get { return originalMethod; }
+        }
+
+        public MethodBase TargetMethod
+        {
+            get { return target; }
+        }
+
         // Constructor
         internal CLRMethodBindingCallSite(AppDomain domain, MethodBase originalMethod, MethodBase target)
         {
