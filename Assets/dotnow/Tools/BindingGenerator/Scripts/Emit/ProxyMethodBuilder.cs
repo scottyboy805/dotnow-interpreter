@@ -1,5 +1,5 @@
 ﻿#if !UNITY_DISABLE
-#if UNITY_EDITOR && NET_4_6
+#if UNITY_EDITOR 
 using System.Reflection;
 using System.CodeDom;
 using System.Runtime.InteropServices;
@@ -12,6 +12,7 @@ namespace dotnow.BindingGenerator.Emit
         private MethodInfo method = null;
         private bool interfaceType = false;
         private string variableName = "";
+        private bool isOverride = false;
 
         // Properties
         public string VariableName
@@ -20,11 +21,12 @@ namespace dotnow.BindingGenerator.Emit
         }
 
         // Constructor
-        public ProxyMethodBuilder(MethodInfo method, bool interfaceType, int memberIndex)
+        public ProxyMethodBuilder(MethodInfo method, bool interfaceType, int memberIndex, bool isOverride = false)
         {
             this.method = method;
             this.interfaceType = interfaceType;
             this.variableName = string.Concat("clrTarget_", method.Name + memberIndex + 1);
+            this.isOverride = isOverride;
         }
 
         // Methods
@@ -41,13 +43,13 @@ namespace dotnow.BindingGenerator.Emit
             {
                 MemberAttributes attributes = 0;
 
-                //attributes |= MemberAttributes.Final;
                 if (method.IsPublic == true) attributes |= MemberAttributes.Public;
-                if (method.IsVirtual == true || method.IsAbstract == true) attributes |= MemberAttributes.Override;
+                if (method.IsVirtual == true || method.IsAbstract == true || isOverride) attributes |= MemberAttributes.Override;
 
                 codeMethod.Attributes = attributes;
             }
 
+            // Rest of the method remains the same...
             // Return type
             codeMethod.ReturnType = new CodeTypeReference(method.ReturnType);
 
@@ -107,7 +109,6 @@ namespace dotnow.BindingGenerator.Emit
             args[1] = new CodeArrayCreateExpression(
                 new CodeTypeReference(typeof(object)), argList);
 
-
             // Null check before invoke
             codeMethod.Statements.Add(new CodeConditionStatement(
                     new CodeBinaryOperatorExpression(
@@ -123,7 +124,6 @@ namespace dotnow.BindingGenerator.Emit
                     new CodeMethodInvokeExpression(new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), VariableName),
                     nameof(MethodBase.Invoke),
                     args))));
-
             }
             else
             {

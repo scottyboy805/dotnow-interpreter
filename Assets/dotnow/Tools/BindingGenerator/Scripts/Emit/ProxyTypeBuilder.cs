@@ -1,5 +1,5 @@
 ﻿#if !UNITY_DISABLE
-#if UNITY_EDITOR && NET_4_6
+#if UNITY_EDITOR 
 using dotnow.Interop;
 using System;
 using System.CodeDom;
@@ -27,7 +27,8 @@ namespace dotnow.BindingGenerator.Emit
         // Methods
         public CodeTypeDeclaration BuildTypeProxy()
         {
-            CodeTypeDeclaration codeType = new CodeTypeDeclaration(type.Name + "_ProxyBinding");
+            
+            CodeTypeDeclaration codeType = new CodeTypeDeclaration(GetSafeTypeName(type) + "_ProxyBinding");
             codeType.Comments.Add(new CodeCommentStatement("Generated from type: " + type.AssemblyQualifiedName));
             codeType.Comments.Add(new CodeCommentStatement("Generated from assembly: " + type.Assembly.Location));
             codeType.Attributes = MemberAttributes.Public | MemberAttributes.Final;
@@ -56,6 +57,7 @@ namespace dotnow.BindingGenerator.Emit
             codeType.Members.Add(instanceProperty);
             codeType.Members.Add(initializeMethod);
 
+            ProcessConstructors(codeType);
 
             // Implement methods
             if(type.IsInterface == true)
@@ -116,10 +118,10 @@ namespace dotnow.BindingGenerator.Emit
                 foreach (PropertyInfo property in type.GetProperties())
                 {
                     // Skip object methods
-                    if (property.DeclaringType == typeof(object) || property.DeclaringType == typeof(MarshalByRefObject))
+                    if (property.DeclaringType == typeof(object) || property.DeclaringType == typeof(MarshalByRefObject) || property.DeclaringType != property.ReflectedType)
                         continue;
 
-                    // TODO - check if property is virtual or abstract
+                    
                     ProxyPropertyBuilder propertyBuilder = new ProxyPropertyBuilder(property, false, memberIndex++);
 
                     // Build fields
@@ -137,7 +139,21 @@ namespace dotnow.BindingGenerator.Emit
 
             return codeType;
         }
+        
 
+        private void ProcessConstructors(CodeTypeDeclaration codeType)
+        {
+            foreach (ConstructorInfo constructor in type.GetConstructors(BindingFlags.Public | BindingFlags.Instance))
+            {
+                ProxyConstructorBuilder constructorBuilder = new ProxyConstructorBuilder(constructor, type);
+                CodeConstructor proxyConstructor = constructorBuilder.BuildConstructorProxy();
+                codeType.Members.Add(proxyConstructor);
+            }
+        }
+        private bool ShouldProcessConstructor(ConstructorInfo constructor)
+        {
+            return !constructor.IsStatic && constructor.DeclaringType != typeof(object);
+        }
         public string GetTypeFlattenedName()
         {
             // Check for namespace
@@ -196,6 +212,21 @@ namespace dotnow.BindingGenerator.Emit
                 new CodeVariableReferenceExpression(implementMethodParameters[1].Name)));
 
             return codeMethod;
+        }
+        
+        private string GetSafeTypeName(Type type)
+        {
+            string name = type.IsNested 
+                ? $"{GetSafeTypeName(type.DeclaringType)}_{type.Name}"
+                : type.Name;
+
+            if (type.IsGenericType)
+            {
+                name = name.Split('`')[0];
+                name += $"_{type.GetGenericArguments().Length}";
+            }
+
+            return name;
         }
     }
 }

@@ -10,7 +10,8 @@ namespace dotnow.Interop
         private AppDomain domain = null;
         private MethodBase originalMethod = null;
         private MethodBase target = null;
-
+        private bool isGeneric;
+        private Type[] genericTypes;
         // Properties
         public override string Name
         {
@@ -65,7 +66,46 @@ namespace dotnow.Interop
             this.originalMethod = originalMethod;
             this.target = target;
         }
+        CLRMethodBindingCallSite(AppDomain domain, MethodBase originalMethod, MethodBase target, Type[] genericTypes)
+        {
+            this.domain = domain;
+            this.originalMethod = originalMethod;
+            this.target = target;
 
+            isGeneric = true;
+            this.genericTypes = genericTypes;
+        }
+
+        public override object Invoke(object obj, BindingFlags invokeAttr, Binder binder, object[] parameters, CultureInfo culture)
+        {
+            if (!isGeneric)
+            {
+                object[] args = new object[4];
+
+                // Fill out ordered parameters
+                args[0] = domain;
+                args[1] = originalMethod;
+                args[2] = obj;
+                args[3] = parameters;
+
+                // Invoke with mapped configuration
+                return target.Invoke(null, args);
+            }
+            else
+            {
+                object[] args = new object[5];
+
+                // Fill out ordered parameters
+                args[0] = domain;
+                args[1] = originalMethod;
+                args[2] = obj;
+                args[3] = parameters;
+                args[4] = genericTypes;
+
+                // Invoke with mapped configuration
+                return target.Invoke(null, args);
+            }
+        }
         // Methods
         public override MethodInfo GetBaseDefinition()
         {
@@ -90,20 +130,6 @@ namespace dotnow.Interop
         public override ParameterInfo[] GetParameters()
         {
             return originalMethod.GetParameters();
-        }
-
-        public override object Invoke(object obj, BindingFlags invokeAttr, Binder binder, object[] parameters, CultureInfo culture)
-        {
-            object[] args = new object[4];
-
-            // Fill out ordered parameters
-            args[0] = domain;
-            args[1] = originalMethod;
-            args[2] = obj;
-            args[3] = parameters;
-
-            // Invoke with mapped configuration
-            return target.Invoke(null, args);
         }
 
         public override bool IsDefined(Type attributeType, bool inherit)

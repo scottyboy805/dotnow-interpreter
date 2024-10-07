@@ -109,7 +109,15 @@ namespace dotnow.Runtime
             }
 
             // Convert to type
-            return Convert.ChangeType(Box(), asType);
+            if (!asType.IsEnum)
+            {
+                return Convert.ChangeType(Box(), asType);
+            }
+            else
+            {
+                // If we somehow reached here with an enum type, use Enum.ToObject
+                return Enum.ToObject(asType, Box());
+            }
         }
 
         public object UnboxAsTypeSlow(Type asType)

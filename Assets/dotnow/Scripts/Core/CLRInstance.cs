@@ -29,13 +29,88 @@ namespace dotnow
         {
             get { return baseProxy as ICLRProxy; }
         }
-
+        public static bool ImplementsInterface(Type type, Type interfaceType)
+        {
+            return interfaceType.IsAssignableFrom(type);
+        }
         // Constructor
         public CLRInstance(CLRType type)
         {
             this.type = type;
         }
+        public void Allocate(AppDomain domain, object[] args, ICLRProxy proxy = null)
+        {
+            Type currentBase = type.BaseType;
 
+            // Move down the hierarchy until we have a valid system base type
+            while (currentBase.IsCLRType() == true)
+                currentBase = currentBase.BaseType;
+
+            // Check for object
+            if(currentBase == null || currentBase == typeof(object) || currentBase == typeof(ValueType) || currentBase == typeof(Enum))
+            {
+                // Use this instance for intercepting object methods such as ToString
+                baseProxy = this;
+            }
+            else
+            {
+                if (proxy == null)
+                {
+                    // Initialize base object
+                    baseProxy = CreateBaseProxyInstance(domain, args, currentBase);
+                }
+                else
+                {
+                    baseProxy = proxy;
+                }
+            }
+
+            // Initialize interface bases
+            baseInterfaceProxies = CreateInterfaceProxyInstances(domain, type.GetInterfaces());
+
+            // Get instance fields
+            List<CLRField> instanceFields = type.GetInstanceFields();
+
+            // Allocate reference type
+            if (type.IsValueType == false)
+            {
+                // Allocate instance fields
+                fields = new StackData[instanceFields.Count];
+            }
+            // Allocate value type
+            else
+            {
+                // Get engine 
+                ExecutionEngine engine = domain.GetExecutionEngine();
+
+                // Get current stack
+                fields = engine.stack;
+            }
+
+            for (int i = 0; i < instanceFields.Count; i++)
+            {
+                Type fieldType = instanceFields[i].FieldType;
+
+                //StackData.AllocTypedSlow(ref fields[i + fieldPtr], fieldType, fieldType.GetDefaultValue(domain));
+                StackData.AllocTyped(ref fields[i + fieldPtr], instanceFields[i].FieldTypeInfo, fieldType.GetDefaultValue(domain));
+            }
+
+            // Setup proxy
+            if (InteropProxy != null)
+                InteropProxy.InitializeProxy(domain, this);
+
+            // Setup interface proxy
+            if(baseInterfaceProxies != null)
+            {
+                for (int i = 0; i < baseInterfaceProxies.Length; i++)
+                {
+                    if (baseInterfaceProxies[i] != null)
+                    {
+                        baseInterfaceProxies[i].InitializeProxy(domain, this);
+                    }
+                }
+            }
+        }
         // Methods
         public void Allocate(AppDomain domain, ICLRProxy proxy = null)
         {
@@ -137,7 +212,9 @@ namespace dotnow
             // Check for identical type
             if (type == unwrapType)
                 return baseProxy;
-
+            // Check for subclass
+            if(TypeExtensions.AreAssignable(unwrapType, Type.BaseType) == true)
+                return baseProxy;
             if(unwrapType.IsInterface == true && baseInterfaceProxies != null)
             {
                 for(int i = 0; i < baseInterfaceProxies.Length; i++)
@@ -152,9 +229,7 @@ namespace dotnow
                 }
             }
 
-            // Check for subclass
-            if(TypeExtensions.AreAssignable(unwrapType, Type.BaseType) == true)
-                return baseProxy;
+           
 
             return null;
         }
@@ -196,7 +271,11 @@ namespace dotnow
         {
             return string.Format("{0}({1})", "CLRInstance", type);
         }
-
+        private object CreateBaseProxyInstance(AppDomain domain, object[] args, Type baseType)
+        {
+            // Create a proxy
+            return domain.CreateCLRProxyBindingOrImplicitInteropInstance(baseType, args);
+        }
         private object CreateBaseProxyInstance(AppDomain domain, Type baseType)
         {
             // Create a proxy
@@ -232,12 +311,22 @@ namespace dotnow
 
             return instance;
         }
-
         internal static CLRInstance CreateAllocatedInstance(AppDomain domain, CLRType type, ConstructorInfo ctor, object[] args)
         {
+            
             // Create instance
             CLRInstance instance = new CLRInstance(type);
             instance.Allocate(domain);
+            instance.Construct(ctor, args);
+
+            return instance;
+        }
+        internal static CLRInstance CreateAllocatedInstance(AppDomain domain, CLRType type, ConstructorInfo ctor, object[] args, object[] baseArgs)
+        {
+            
+            // Create instance
+            CLRInstance instance = new CLRInstance(type);
+            instance.Allocate(domain, baseArgs);
             instance.Construct(ctor, args);
 
             return instance;
@@ -261,5 +350,6 @@ namespace dotnow
 
             return instance;
         }
+
     }
 }
