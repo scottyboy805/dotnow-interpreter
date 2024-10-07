@@ -6,6 +6,11 @@ using System.Reflection;
 
 namespace dotnow
 {
+    public sealed class MakeByRef<T>
+    {
+        // Empty class
+    }
+
     internal class Bindings
     {
         // Internal
@@ -658,5 +663,26 @@ namespace dotnow
             }
         }
         #endregion
+
+        internal static Type[] GetBindingParameters(Type[] parameterTypes)
+        {
+            // Check for any parameters
+            if (parameterTypes != null && parameterTypes.Length > 0)
+            {
+                // Check for by ref
+                for(int i = 0; i < parameterTypes.Length; i++)
+                {
+                    // Resolve by ref
+                    if (parameterTypes[i].IsGenericType == true && parameterTypes[i].GetGenericTypeDefinition() == typeof(MakeByRef<>))
+                    {
+                        // Convert to by ref type
+                        parameterTypes[i] = parameterTypes[i]
+                            .GetGenericArguments()[0]
+                            .MakeByRefType();
+                    }
+                }
+            }
+            return parameterTypes;
+        }
     }
 }

@@ -31,7 +31,7 @@ namespace dotnow
         {
             this.declaringType = declaringType;
             this.methodName = methodName;
-            this.parameterTypes = parameterTypes;
+            this.parameterTypes = Bindings.GetBindingParameters(parameterTypes);
 
             if (parameterTypes == null || parameterTypes.Length == 0)
                 this.parameterTypes = Type.EmptyTypes;

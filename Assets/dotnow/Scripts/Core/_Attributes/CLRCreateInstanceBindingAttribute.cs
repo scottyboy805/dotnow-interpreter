@@ -23,7 +23,7 @@ namespace dotnow
         public CLRCreateInstanceBindingAttribute(Type declaringType, Type[] parameterTypes = null)
         {
             this.declaringType = declaringType;
-            this.parameterTypes = parameterTypes;
+            this.parameterTypes = Bindings.GetBindingParameters(parameterTypes);
         }
     }
 }
