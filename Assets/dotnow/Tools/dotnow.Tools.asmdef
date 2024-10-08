@@ -1,5 +1,6 @@
 {
     "name": "dotnow.Tools",
+    "rootNamespace": "",
     "references": [
         "GUID:f656afbb727c4e8418169dff952bc121"
     ],
@@ -7,8 +8,10 @@
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
+    "precompiledReferences": [
+        "System.CodeDom.dll"
+    ],
+    "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

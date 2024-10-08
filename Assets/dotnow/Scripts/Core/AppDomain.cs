@@ -1060,14 +1060,29 @@ namespace dotnow
                     CLRType clrType = type as CLRType;
 
                     // Get ctor
-                    CLRConstructor ctor = GetRuntimeCLRCtor(clrType, args);
-
+                    CLRConstructor ctor = GetConstructorHelper.GetRuntimeCLRCtor(this, clrType, args);
+                    
+                    // Get arguments for base constructor.
+                    // Create methods for each argument that is passed to the base constructor of the CLRType, that will perform the operations of the constructor and returns one of the arguments
+                    List <MethodDefinition> argumentMethods = MonoCecilBaseConstructorAnalyzer.GenerateArgumentMethods(ctor.Definition);
+                    List <object> baseArgs = new List<object>();
+                    
+                    // Execute the created methods on a phantom object, this will only work if the object isn't used in the constructor.
+                    object phantom = new CLRInstance(clrType);
+                    foreach (MethodDefinition method in argumentMethods)
+                    {
+                        CLRMethod meth = new CLRMethod(this, clrType, method);
+                        baseArgs.Add(meth.Invoke(phantom, args));
+                    }
+                    // Reverse the arguments for the base constructor.
+                    baseArgs.Reverse();
+                    
                     // Check for constructor
                     if (ctor == null)
                         throw new MissingMethodException("Failed to resolve suitable ctor object initializer");
 
-                    // Create instance
-                    inst = CLRInstance.CreateAllocatedInstance(this, clrType, ctor, args);
+                    // Create instance with the base constructor arguments
+                    inst = CLRInstance.CreateAllocatedInstance(this, clrType, ctor, args, baseArgs.ToArray());
                 }
                 else
                 {
@@ -1248,7 +1263,7 @@ namespace dotnow
                 // Get default constructor
                 return type.GetConstructor(Type.EmptyTypes) as CLRConstructor;
             }
-
+            
             // Find best matching constructor
             CLRConstructor[] constructors = type.GetConstructors() as CLRConstructor[];
             CLRConstructor bestMatch = null;
@@ -1289,6 +1304,8 @@ namespace dotnow
 
             return bestMatch;
         }
+        
+        
 #endregion
 
 #region ProxyBinding
@@ -1309,7 +1326,37 @@ namespace dotnow
             // Generate error
             throw new Exception("Failed to find suitable proxy binding for type: " + type);
         }
+        public object CreateCLRProxyBindingOrImplicitInteropInstance(Type type, object[] args)
+        {
+            Type bindingProxy;
 
+            // Create instance
+            if (bindings.clrProxyBindings.TryGetValue(type, out bindingProxy) == true)
+            {
+                GetConstructorHelper.ConstructorMatch constructorMatch = GetConstructorHelper.FindBaseConstructor(bindingProxy, args);
+                if (constructorMatch != null)
+                {
+                    return constructorMatch.Constructor.Invoke(constructorMatch.Arguments);
+                }
+                // Create instance of proxy
+                //object proxyInstance = Activator.CreateInstance(bindingProxy, args);
+
+                // Get as instance
+                return null;
+            }
+
+
+            // Check if type has public accessible constructor and no virtual or abstract methods - we can create the instance automatically in that case with out requiring a a proxy implementation
+            if(IsProxyBindingRequiredForType(type) == false)
+            {
+                // Create uninitialized instance
+                // Ctor will be run when CLRInstance is initialized
+                return FormatterServices.GetUninitializedObject(type);
+            }
+
+            // Generate error
+            throw new Exception("Failed to find suitable proxy binding for type and an implicit interop instance could not be created automatically: " + type);
+        }
         public object CreateCLRProxyBindingOrImplicitInteropInstance(Type type)
         {
             Type bindingProxy;

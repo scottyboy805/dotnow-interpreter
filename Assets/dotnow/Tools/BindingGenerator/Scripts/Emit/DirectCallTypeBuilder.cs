@@ -1,24 +1,22 @@
 ﻿#if !UNITY_DISABLE
-#if UNITY_EDITOR && NET_4_6
+#if UNITY_EDITOR 
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 namespace dotnow.BindingGenerator.Emit
 {
     internal sealed class DirectCallTypeBuilder
     {
-        // Private
         private Type type = null;
 
-        // Constructor
         public DirectCallTypeBuilder(Type type)
         {
             this.type = type;
         }
 
-        // Methods
         public CodeTypeDeclaration BuildTypeDirectCall()
         {
             CodeTypeDeclaration codeType = new CodeTypeDeclaration(type.Name + "_DirectCallBindings");
@@ -26,53 +24,34 @@ namespace dotnow.BindingGenerator.Emit
             codeType.Comments.Add(new CodeCommentStatement("Generated from assembly: " + type.Assembly.Location));
             codeType.Attributes = MemberAttributes.Assembly | MemberAttributes.Static | MemberAttributes.Final;
 
-            // Add generated attribute
             codeType.CustomAttributes.Add(new CodeAttributeDeclaration(new CodeTypeReference(typeof(GeneratedAttribute))));
 
-            HashSet<string> definedMethodNames = new HashSet<string>();
+            var methodGroups = CollectMethodGroups();
 
-            // Todo - Process all properties
-
-            // Process all methods
-            foreach (MethodInfo method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            foreach (var methodGroup in methodGroups)
             {
-                // Skip object methods
-                if (method.DeclaringType == typeof(object) || method.DeclaringType == typeof(MarshalByRefObject))
-                    continue;
-
-                // Check for property - these will be handled by ProxyPropertyBuilder
-                if (method.IsSpecialName == true)
-                    continue;
-
-                // Check for generic
-                if (method.ContainsGenericParameters == true)
-                    continue;
-
-                // Check for already added
-                if (definedMethodNames.Contains(method.ToString()) == true)
-                    continue;
-
-                if (method.IsAbstract == false)
-                {
-                    DirectCallMethodBuilder methodBuilder = new DirectCallMethodBuilder(method);
-
-                    // Build method
-                    codeType.Members.Add(methodBuilder.BuildMethodDirectCall());
-
-                    definedMethodNames.Add(method.Name);
-                }
+                DirectCallMethodBuilder methodBuilder = new DirectCallMethodBuilder(methodGroup.ToArray());
+                codeType.Members.AddRange(methodBuilder.BuildMethodDirectCall());
             }
 
             return codeType;
         }
 
+        private IEnumerable<IGrouping<string, MethodInfo>> CollectMethodGroups()
+        {
+            return type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Where(m => m.DeclaringType != typeof(object) && m.DeclaringType != typeof(MarshalByRefObject))
+                .Where(m => !m.IsSpecialName)
+                .Where(m => !m.ContainsGenericParameters)
+                .Where(m => !m.IsAbstract && !m.IsConstructor)
+                .GroupBy(m => m.Name);
+        }
+
         public string GetTypeFlattenedName()
         {
-            // Check for namespace
-            if (string.IsNullOrEmpty(type.Namespace) == true)
-                return type.Name;
-
-            return string.Concat(type.Namespace.Replace('.', '_'), "_", type.Name);
+            return string.IsNullOrEmpty(type.Namespace)
+                ? type.Name
+                : string.Concat(type.Namespace.Replace('.', '_').Replace('<', '_').Replace('>', '_'), "_", type.Name);
         }
     }
 }

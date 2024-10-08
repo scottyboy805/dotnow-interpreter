@@ -1,9 +1,12 @@
 ﻿#if !UNITY_DISABLE
-#if UNITY_EDITOR && NET_4_6
+#if UNITY_EDITOR
 using dotnow.Runtime;
 using System;
 using System.CodeDom;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
+using System.Text;
 
 namespace dotnow.BindingGenerator.Emit
 {
@@ -11,8 +14,9 @@ namespace dotnow.BindingGenerator.Emit
     {
         // Private
         private MethodInfo method = null;
+        private MethodInfo[] methods = null;
 
-        // Public
+        // Constants
         public const string stackArg = "stack";
         public const string offsetArg = "offset";
 
@@ -22,75 +26,280 @@ namespace dotnow.BindingGenerator.Emit
             this.method = method;
         }
 
+        public DirectCallMethodBuilder(MethodInfo[] methods)
+        {
+            this.methods = methods;
+        }
+
         // Methods
-        public CodeMemberMethod BuildMethodDirectCall()
+        public CodeTypeMember[] BuildMethodDirectCall()
+        {
+            if (methods == null)
+            {
+                return new CodeTypeMember[]
+                {
+                    BuildSingleMethod(method)
+                };
+            }
+            else
+            {
+                return methods.Select(BuildSingleMethod).ToArray<CodeTypeMember>();
+            }
+        }
+
+        private CodeMemberMethod BuildSingleMethod(MethodInfo methodInfo)
         {
             CodeMemberMethod codeMethod = new CodeMemberMethod();
-            codeMethod.Name = (method.DeclaringType.Namespace != null)
-                ? method.DeclaringType.Namespace.Replace('.', '_') + "_" + method.DeclaringType.Name + "_" + method.Name
-                : method.DeclaringType.Name + "_" + method.Name;
+            codeMethod.Name = GenerateMethodName(methodInfo);
             codeMethod.Attributes = MemberAttributes.Assembly | MemberAttributes.Static | MemberAttributes.Final;
 
             // Prevent Unity code stripping
             codeMethod.CustomAttributes.Add(new CodeAttributeDeclaration(new CodeTypeReference(typeof(PreserveAttribute))));
-            
-            // Register binding with dotnow
-            codeMethod.CustomAttributes.Add(new CodeAttributeDeclaration(new CodeTypeReference(typeof(CLRMethodDirectCallBindingAttribute)),
-                new CodeAttributeArgument(new CodeTypeOfExpression(method.DeclaringType)), new CodeAttributeArgument(new CodeSnippetExpression("\"" + method.Name + "\""))));
 
-            // Stack parameter
-            codeMethod.Parameters.Add(new CodeParameterDeclarationExpression(
-                new CodeTypeReference(typeof(StackData[])), stackArg));
+            // Add CLRMethodDirectCallBindingAttribute
+            AddDirectCallBindingAttribute(codeMethod, methodInfo);
 
-            // Offset parameter
-            codeMethod.Parameters.Add(new CodeParameterDeclarationExpression(
-                new CodeTypeReference(typeof(int)), offsetArg));
+            // Add parameters
+            codeMethod.Parameters.Add(new CodeParameterDeclarationExpression(new CodeTypeReference(typeof(StackData[])), stackArg));
+            codeMethod.Parameters.Add(new CodeParameterDeclarationExpression(new CodeTypeReference(typeof(int)), offsetArg));
 
-
-            // TODO - method body impl
-            BuildMethodBody(codeMethod);
+            // Build method body
+            try
+            {
+                BuildMethodBody(codeMethod, methodInfo);
+            }
+            catch (Exception ex)
+            {
+                codeMethod.Comments.Add(new CodeCommentStatement($"An error occurred while generating this method: {ex.Message}"));
+            }
 
             return codeMethod;
         }
 
-        private void BuildMethodBody(CodeMemberMethod codeMethod)
+        private void AddDirectCallBindingAttribute(CodeMemberMethod codeMethod, MethodInfo methodInfo)
         {
-            bool errorGeneratingArgs = false;
-
-            // Check for static
-            bool isStatic = method.IsStatic;
-
-            // Generate access expression
-            CodeExpression accessExpression = isStatic == false
-                ?  BuildMethodArgument(method.DeclaringType, 0)
-                : new CodeTypeReferenceExpression(new CodeTypeReference(method.DeclaringType));
-
-            // Build the arguments
-            ParameterInfo[] parameter = method.GetParameters();
-
-            // Create array
-            CodeExpression[] argExpressions = new CodeExpression[parameter.Length];
-
-            for(int i = 0; i < parameter.Length; i++)
+            List<CodeAttributeArgument> attributeArgs = new List<CodeAttributeArgument>
             {
-                argExpressions[i] = BuildMethodArgument(parameter[i].ParameterType, i + (isStatic == false ? 1 : 0));
+                new CodeAttributeArgument(new CodeTypeOfExpression(methodInfo.DeclaringType)),
+                new CodeAttributeArgument(new CodePrimitiveExpression(methodInfo.Name)),
+                new CodeAttributeArgument(new CodePrimitiveExpression(methodInfo.IsGenericMethod))
+            };
 
-                // Check for error
-                if (argExpressions[i] is CodeDefaultValueExpression)
-                    errorGeneratingArgs = true;
+            var genericTypes = methodInfo.GetGenericArguments();
+            CodeExpression[] genericTypeExpressions = genericTypes.Select(t => new CodeTypeOfExpression(t)).ToArray<CodeExpression>();
+            attributeArgs.Add(new CodeAttributeArgument(new CodeArrayCreateExpression(typeof(Type), genericTypeExpressions)));
+
+            var parameterTypes = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
+            CodeExpression[] parameterTypeExpressions = parameterTypes.Select(t => new CodeTypeOfExpression(t)).ToArray<CodeExpression>();
+            attributeArgs.Add(new CodeAttributeArgument(new CodeArrayCreateExpression(typeof(Type), parameterTypeExpressions)));
+
+            codeMethod.CustomAttributes.Add(new CodeAttributeDeclaration(
+                new CodeTypeReference(typeof(CLRMethodDirectCallBindingAttribute)),
+                attributeArgs.ToArray()));
+        }
+
+        private string GenerateMethodName(MethodInfo methodInfo)
+        {
+            StringBuilder nameBuilder = new StringBuilder();
+
+            if (methodInfo.DeclaringType != null)
+            {
+                if (methodInfo.DeclaringType.Namespace != null)
+                {
+                    nameBuilder.Append(methodInfo.DeclaringType.Namespace.Replace('.', '_'));
+                    nameBuilder.Append("_");
+                }
+                nameBuilder.Append(methodInfo.DeclaringType.Name.Replace('.', '_').Replace('<', '_').Replace('>', '_'));
+                nameBuilder.Append("_");
             }
 
-            // Build the method invoke
-            CodeMethodInvokeExpression invokeExpression = new CodeMethodInvokeExpression(
-                new CodeMethodReferenceExpression(accessExpression, method.Name),
-                argExpressions);
+            nameBuilder.Append(methodInfo.Name.Replace('.', '_').Replace('<', '_').Replace('>', '_'));
 
-            // Check for error
-            if (errorGeneratingArgs == true)
-                codeMethod.Comments.Add(new CodeCommentStatement("An error occurred while generating this method: Unknown/unsupported arg type"));
+            var parameters = methodInfo.GetParameters();
+            if (parameters.Length > 0)
+            {
+                nameBuilder.Append("_");
+                nameBuilder.Append(string.Join("_", parameters.Select(p => GetTypeAlias(p.ParameterType))));
+            }
 
-            // Add to method body
-            codeMethod.Statements.Add(invokeExpression);
+            if (methodInfo.IsGenericMethod)
+            {
+                var genericArgs = methodInfo.GetGenericArguments();
+                nameBuilder.Append("_G_");
+                nameBuilder.Append(string.Join("_", genericArgs.Select(GetTypeAlias)));
+            }
+
+            return nameBuilder.ToString();
+        }
+
+        private string GetTypeAlias(Type type)
+        {
+            if (type == null) return "Null";
+            if (type.IsGenericParameter) return $"T{type.GenericParameterPosition}";
+            if (type.IsGenericType)
+            {
+                var genericTypeDef = type.GetGenericTypeDefinition();
+                var genericArgs = type.GetGenericArguments();
+                string baseTypeName = genericTypeDef.Name.Split('`')[0];
+                return $"{baseTypeName}Of{string.Join("And", genericArgs.Select(GetSimpleTypeName))}";
+            }
+            return GetSimpleTypeName(type);
+        }
+
+        private string GetSimpleTypeName(Type type)
+        {
+            if (type.IsEnum) return $"Enum{Enum.GetUnderlyingType(type).Name}";
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Boolean: return "Bool";
+                case TypeCode.Byte: return "Byte";
+                case TypeCode.Char: return "Char";
+                case TypeCode.Decimal: return "Decimal";
+                case TypeCode.Double: return "Double";
+                case TypeCode.Int16: return "Short";
+                case TypeCode.Int32: return "Int";
+                case TypeCode.Int64: return "Long";
+                case TypeCode.SByte: return "SByte";
+                case TypeCode.Single: return "Float";
+                case TypeCode.String: return "String";
+                case TypeCode.UInt16: return "UShort";
+                case TypeCode.UInt32: return "UInt";
+                case TypeCode.UInt64: return "ULong";
+                default: return type.Name;
+            }
+        }
+
+        private void BuildMethodBody(CodeMemberMethod codeMethod, MethodInfo methodInfo)
+        {
+            bool isStatic = methodInfo.IsStatic;
+            CodeExpression accessExpression = isStatic
+                ? new CodeTypeReferenceExpression(methodInfo.DeclaringType)
+                : BuildMethodArgument(methodInfo.DeclaringType, 0);
+
+            ParameterInfo[] parameters = methodInfo.GetParameters();
+            CodeExpression[] argExpressions = new CodeExpression[parameters.Length];
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                argExpressions[i] = BuildMethodArgument(parameters[i].ParameterType, i + (isStatic ? 0 : 1));
+            }
+
+            CodeMethodInvokeExpression invokeExpression;
+            if (methodInfo.IsGenericMethod)
+            {
+                var genericArgs = methodInfo.GetGenericArguments();
+                var genericArgReferences = genericArgs.Select(t => new CodeTypeReference(t)).ToArray();
+                var methodReference = new CodeMethodReferenceExpression(accessExpression, methodInfo.Name, genericArgReferences);
+                invokeExpression = new CodeMethodInvokeExpression(methodReference, argExpressions);
+            }
+            else
+            {
+                invokeExpression = new CodeMethodInvokeExpression(new CodeMethodReferenceExpression(accessExpression, methodInfo.Name), argExpressions);
+            }
+
+            if (methodInfo.ReturnType != typeof(void))
+            {
+                CodeMethodInvokeExpression allocExpression;
+                //CodeExpression typeofExpression = new CodeTypeOfExpression(methodInfo.ReturnType);
+
+                if (methodInfo.ReturnType is { IsValueType: true, IsPrimitive: false })
+                {
+                    // Use AllocRefBoxed for non-primitive value types
+                    allocExpression = new CodeMethodInvokeExpression(
+                        new CodeTypeReferenceExpression(typeof(StackData)),
+                        "AllocRefBoxed",
+                        new CodeArgumentReferenceExpression("ref stack[offset]"),
+                        invokeExpression
+                        );
+                }
+                else if (methodInfo.ReturnType.IsClass || methodInfo.ReturnType.IsInterface)
+                {
+                    // Use AllocRef for reference types
+                    allocExpression = new CodeMethodInvokeExpression(
+                        new CodeTypeReferenceExpression(typeof(StackData)),
+                        "AllocRef",
+                        new CodeArgumentReferenceExpression("ref stack[offset]"),
+                        invokeExpression
+                        );
+                }
+                else
+                {
+                    // Use specific Alloc methods for primitive types
+                    string allocMethodName = GetAllocMethodName(methodInfo.ReturnType);
+                    allocExpression = new CodeMethodInvokeExpression(
+                        new CodeTypeReferenceExpression(typeof(StackData)),
+                        allocMethodName,
+                        new CodeArgumentReferenceExpression("ref stack[offset]"),
+                        invokeExpression
+                        );
+                }
+
+                codeMethod.Statements.Add(allocExpression);
+            }
+            else
+            {
+                codeMethod.Statements.Add(invokeExpression);
+            }
+
+            // Handle ref and out parameters
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i].ParameterType.IsByRef)
+                {
+                    Type elementType = parameters[i].ParameterType.GetElementType();
+                    CodeMethodInvokeExpression allocExpression;
+
+                    if (elementType is { IsValueType: true, IsPrimitive: false })
+                    {
+                        allocExpression = new CodeMethodInvokeExpression(
+                            new CodeTypeReferenceExpression(typeof(StackData)),
+                            "AllocRefBoxed",
+                            new CodeArgumentReferenceExpression($"ref stack[offset + {i + (isStatic ? 0 : 1)}]"),
+                            argExpressions[i]
+                            );
+                    }
+                    else if (elementType != null && (elementType.IsClass || elementType.IsInterface))
+                    {
+                        allocExpression = new CodeMethodInvokeExpression(
+                            new CodeTypeReferenceExpression(typeof(StackData)),
+                            "AllocRef",
+                            new CodeArgumentReferenceExpression($"ref stack[offset + {i + (isStatic ? 0 : 1)}]"),
+                            argExpressions[i]
+                            );
+                    }
+                    else
+                    {
+                        string allocMethodName = GetAllocMethodName(elementType);
+                        allocExpression = new CodeMethodInvokeExpression(
+                            new CodeTypeReferenceExpression(typeof(StackData)),
+                            allocMethodName,
+                            new CodeArgumentReferenceExpression($"ref stack[offset + {i + (isStatic ? 0 : 1)}]"),
+                            argExpressions[i]
+                            );
+                    }
+
+                    codeMethod.Statements.Add(allocExpression);
+                }
+            }
+        }
+
+        private string GetAllocMethodName(Type type)
+        {
+            if (type == typeof(bool)) return "Alloc";
+            if (type == typeof(sbyte)) return "Alloc";
+            if (type == typeof(byte)) return "Alloc";
+            if (type == typeof(short)) return "Alloc";
+            if (type == typeof(ushort)) return "Alloc";
+            if (type == typeof(int)) return "Alloc";
+            if (type == typeof(uint)) return "Alloc";
+            if (type == typeof(long)) return "Alloc";
+            if (type == typeof(ulong)) return "Alloc";
+            if (type == typeof(float)) return "Alloc";
+            if (type == typeof(double)) return "Alloc";
+            if (type.IsEnum) return "Alloc";
+
+            // For any other type, use AllocTyped
+            return "AllocTyped";
         }
 
         private CodeExpression BuildMethodArgument(Type argType, int offset)
@@ -104,12 +313,12 @@ namespace dotnow.BindingGenerator.Emit
             TypeCode type = Type.GetTypeCode(argType);
 
             // Check type
-            if(type != TypeCode.Object && type != TypeCode.String)
+            if (type != TypeCode.Object && type != TypeCode.String && !argType.IsEnum)
             {
                 // Emit start of field access
                 CodeFieldReferenceExpression primitiveField = new CodeFieldReferenceExpression(indexExpression, nameof(StackData.value));
 
-                switch(type)
+                switch (type)
                 {
                     default:
                         {
@@ -125,7 +334,7 @@ namespace dotnow.BindingGenerator.Emit
                             // Insert cast conversion
                             if (type == TypeCode.Byte)
                                 finalExpression = new CodeCastExpression(new CodeTypeReference(typeof(byte)), finalExpression);
-                            
+
                             // Get expression
                             return finalExpression;
                         }
@@ -190,6 +399,39 @@ namespace dotnow.BindingGenerator.Emit
                 // Return ref value with cast
                 return new CodeCastExpression(new CodeTypeReference(argType),
                     new CodeFieldReferenceExpression(indexExpression, nameof(StackData.refValue)));
+            }
+        }
+
+        private string GetEnumUnderlyingTypeField(Type enumType)
+        {
+            Type underlyingType = Enum.GetUnderlyingType(enumType);
+            return GetPrimitiveFieldName(Type.GetTypeCode(underlyingType));
+        }
+
+        private string GetPrimitiveFieldName(TypeCode typeCode)
+        {
+            switch (typeCode)
+            {
+                case TypeCode.Boolean:
+                case TypeCode.Byte:
+                case TypeCode.SByte:
+                    return "Int8";
+                case TypeCode.Char:
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                    return "Int16";
+                case TypeCode.Int32:
+                case TypeCode.UInt32:
+                    return "Int32";
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                    return "Int64";
+                case TypeCode.Single:
+                    return "Single";
+                case TypeCode.Double:
+                    return "Double";
+                default:
+                    throw new ArgumentException($"Unsupported primitive type: {typeCode}");
             }
         }
     }

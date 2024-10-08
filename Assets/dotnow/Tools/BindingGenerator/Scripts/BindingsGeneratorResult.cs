@@ -1,5 +1,5 @@
 ﻿#if !UNITY_DISABLE
-#if UNITY_EDITOR && NET_4_6
+#if UNITY_EDITOR 
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;

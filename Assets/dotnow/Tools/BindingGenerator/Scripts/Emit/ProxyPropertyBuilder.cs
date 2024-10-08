@@ -1,5 +1,5 @@
 ﻿#if !UNITY_DISABLE
-#if UNITY_EDITOR && NET_4_6
+#if UNITY_EDITOR 
 using System.CodeDom;
 using System.Reflection;
 
@@ -38,7 +38,7 @@ namespace dotnow.BindingGenerator.Emit
                 MethodInfo method = property.GetGetMethod(true);
 
                 // Only interested in properties that can be overridden
-                return method != null && (method.IsVirtual == true || method.IsAbstract == true);
+                return method != null && (method.IsVirtual == true || method.IsAbstract == true );
             }
         }
 
@@ -69,29 +69,29 @@ namespace dotnow.BindingGenerator.Emit
         {
             CodeMemberProperty codeProperty = new CodeMemberProperty();
             codeProperty.Name = property.Name;
-
-            if(interfaceType == true)
-            {
-                codeProperty.Attributes = MemberAttributes.Public | MemberAttributes.Final;
-            }
-            else
-            {
-                MemberAttributes attributes = 0;
-
-                attributes |= MemberAttributes.Public;
-                attributes |= MemberAttributes.Final;
-
-                codeProperty.Attributes = attributes;
-            }
+            MethodInfo setter = property.SetMethod;
+            MethodInfo getter = property.GetMethod;
+            codeProperty.Attributes = 0;
 
             // Property type
             codeProperty.Type = new CodeTypeReference(property.PropertyType);
 
             // Emit getter
-            MethodInfo getter = property.GetMethod;
+           
 
             if(getter != null)
             {
+                if (!getter.IsVirtual&& !getter.IsAbstract)
+                {
+                    codeProperty.Attributes =  MemberAttributes.New;
+                }
+                else
+                {
+                    codeProperty.Attributes = MemberAttributes.Override;
+                }
+                
+                codeProperty.Attributes |= MemberAttributes.Public;
+                
                 // Create the method builder
                 ProxyMethodBuilder getterBuilder = new ProxyMethodBuilder(getter, interfaceType, memberIndex);
 
@@ -103,20 +103,29 @@ namespace dotnow.BindingGenerator.Emit
             }
 
             // Emit setter
-            MethodInfo setter = property.SetMethod;
+           
 
             if(setter != null)
             {
+                if (!setter.IsVirtual&& !setter.IsAbstract)
+                {
+                    codeProperty.Attributes =  MemberAttributes.New;
+                }
+                else
+                {
+                    codeProperty.Attributes = MemberAttributes.Override;
+                }
+            
                 // Create the method builder
                 ProxyMethodBuilder setterBuilder = new ProxyMethodBuilder(setter, interfaceType, memberIndex);
 
                 // Emit the method
                 CodeMemberMethod emitMethod = setterBuilder.BuildMethodProxy();
-
+                
                 // Add all statements
                 codeProperty.SetStatements.AddRange(emitMethod.Statements);
             }
-
+            codeProperty.Attributes |= MemberAttributes.Public;
             return codeProperty;
         }
     }

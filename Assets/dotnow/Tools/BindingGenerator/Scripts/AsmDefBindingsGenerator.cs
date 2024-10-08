@@ -1,9 +1,10 @@
 ﻿#if !UNITY_DISABLE
-#if UNITY_EDITOR && NET_4_6
+#if UNITY_EDITOR 
 using UnityEngine;
 using System.Linq;
 using System.IO;
 using System;
+using System.Collections.Generic;
 using Object = UnityEngine.Object;
 
 #if UNITY_EDITOR
@@ -28,8 +29,13 @@ namespace dotnow.BindingGenerator
         public bool autoGenerate = true;
         public long lastWriteTime = -1;
         public string outputPathRelative = "";
-
-
+        [ContextMenu("dotnow/Clean Bindings")]
+        public void CleanBindings()
+        {
+            lastWriteTime = -1;
+            List<string> deletedAssetPaths = new List<string>();
+            AssetDatabase.DeleteAssets(Directory.GetFiles(outputPathRelative, "*", SearchOption.AllDirectories), deletedAssetPaths);
+        }
         // Methods
         private void Reset()
         {
@@ -65,7 +71,7 @@ namespace dotnow.BindingGenerator
 
             // Try to find compilation
             Assembly asm = CompilationPipeline.GetAssemblies().FirstOrDefault(a => a.name == asmDefAsset.name);
-
+           
             // Check for found
             if(asm == null)
             {
@@ -82,23 +88,26 @@ namespace dotnow.BindingGenerator
                 return;
 
             // Get target folder
-            string assetPath = AssetDatabase.GetAssetPath(asmDefAsset);
+            //string assetPath = AssetDatabase.GetAssetPath(asmDefAsset);
 
-            string outputPath = FileUtil.GetProjectRelativePath(Directory.GetParent(assetPath).FullName.Replace('\\', '/'));// Path.ChangeExtension(assetPath, null);
+            var directoryInfo = new DirectoryInfo(Application.dataPath).Parent;
+            if (directoryInfo == null)
+                directoryInfo = new DirectoryInfo(Application.dataPath);
+            
+            var fullName = directoryInfo.FullName;
+            string outputPath = Path.Combine(fullName, outputPathRelative);// Path.ChangeExtension(assetPath, null);
 
-            // Make path relative to this asset
-            if(string.IsNullOrEmpty(outputPathRelative) == false)
-                outputPath = string.Concat(outputPath, "/", outputPathRelative);
-
+            
             // Create directory
             if(Directory.Exists(outputPath) == false)
                 Directory.CreateDirectory(outputPath);
 
             // Build assembly
             RebuildBindingsForAssembly(asm.outputPath, outputPath);
-
+                
             // Set last write time
             lastWriteTime = File.GetLastWriteTime(asm.outputPath).Ticks;
+            Debug.Log($"Rebuilt bindings for Assembly: {asmDefAsset.name} | Output Folder: {outputPath}");        
         }
 
         private void RebuildBindingsForAssembly(string assemblyPath, string outputFolder)
@@ -122,7 +131,7 @@ namespace dotnow.BindingGenerator
             if (string.IsNullOrEmpty(outputPathRelative) == true)
             {
                 if(asmDefAsset != null)
-                    outputPathRelative = asmDefAsset.name + "-Bindings";
+                    outputPathRelative = asmDefAsset.name + "-bindings";
 
 #if UNITY_EDITOR
                 EditorUtility.SetDirty(this);
