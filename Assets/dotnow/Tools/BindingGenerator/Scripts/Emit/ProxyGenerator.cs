@@ -1,5 +1,5 @@
 ﻿#if !UNITY_DISABLE
-#if UNITY_EDITOR && NET_4_6
+#if UNITY_EDITOR 
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -33,6 +33,10 @@ namespace dotnow.BindingGenerator.Emit
             // Get all types
             foreach (Type type in assembly.GetTypes())
             {
+                if (type.GetCustomAttributes(typeof(GenerateBindingsAttribute), false).Length == 0)
+                {
+                    continue;
+                }
                 if (CanGenerateProxyForType(type) == true)
                 {
                     // Generate the type declaration 
@@ -154,37 +158,34 @@ namespace dotnow.BindingGenerator.Emit
         private static bool CanGenerateProxyForType(Type type)
         {
             // Skip generated types
-            if (type.IsDefined(typeof(GeneratedAttribute)) == true)
+            if (type.IsDefined(typeof(GeneratedAttribute), false))
+                return false;
+            // Skip Unity-generated types
+            if (type.Name.StartsWith("UnitySourceGenerated"))
+                return false;
+            
+            // Handle inner classes
+            if (type.IsNested && !type.IsNestedPublic)
                 return false;
 
             // Check for interfaces
-            if (type.IsInterface == true)
+            if (type.IsInterface)
                 return true;
 
             // Check for sealed
-            if (type.IsSealed == true)
+            if (type.IsSealed)
                 return false;
 
             // Check for virtual or abstract methods
-            foreach (MethodInfo method in type.GetMethods())
-            {
-                if (method.IsVirtual == true || method.IsAbstract == true)
-                    return true;
-            }
+            if (type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Any(m => m.IsVirtual || m.IsAbstract))
+                return true;
 
             // Check for virtual or abstract properties
-            foreach (PropertyInfo property in type.GetProperties())
-            {
-                MethodInfo get = property.GetGetMethod();
-
-                if (get != null && (get.IsVirtual == true || get.IsAbstract == true))
-                    return true;
-
-                MethodInfo set = property.GetSetMethod();
-
-                if (set != null && (set.IsVirtual == true || set.IsAbstract == true))
-                    return true;
-            }
+            if (type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Any(p => (p.GetMethod != null && (p.GetMethod.IsVirtual || p.GetMethod.IsAbstract)) ||
+                          (p.SetMethod != null && (p.SetMethod.IsVirtual || p.SetMethod.IsAbstract))))
+                return true;
 
             return false;
         }

@@ -1,11 +1,12 @@
 ﻿#if !UNITY_DISABLE
-#if UNITY_EDITOR && NET_4_6
+#if UNITY_EDITOR 
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 
 namespace dotnow.BindingGenerator.Emit
 {
@@ -33,12 +34,21 @@ namespace dotnow.BindingGenerator.Emit
             // Get all types
             foreach(Type type in assembly.GetTypes())
             {
+                if (type.GetCustomAttributes(typeof(GenerateBindingsAttribute), false).Length == 0)
+                {
+                    continue;
+                }
                 // Check if we can generate for type
                 if (CanGenerateProxyForType(type) == true)
                 {
+                    Debug.Log(type.FullName);
+                    if (type.FullName.Contains('<'))
+                    {
+                        continue;
+                    }
                     // Generate the type declaration
                     string outputName = GenerateDirectCallBindingsForType(root, type, result);
-
+                    
                     if (isOutputFile == false)
                     {
                         // Get the target output path
