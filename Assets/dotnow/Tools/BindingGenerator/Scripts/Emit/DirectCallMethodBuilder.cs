@@ -202,7 +202,7 @@ namespace dotnow.BindingGenerator.Emit
                 CodeMethodInvokeExpression allocExpression;
                 //CodeExpression typeofExpression = new CodeTypeOfExpression(methodInfo.ReturnType);
 
-                if (methodInfo.ReturnType is { IsValueType: true, IsPrimitive: false })
+                if (methodInfo.ReturnType.IsValueType == true && methodInfo.ReturnType.IsPrimitive == false)
                 {
                     // Use AllocRefBoxed for non-primitive value types
                     allocExpression = new CodeMethodInvokeExpression(
@@ -249,7 +249,7 @@ namespace dotnow.BindingGenerator.Emit
                     Type elementType = parameters[i].ParameterType.GetElementType();
                     CodeMethodInvokeExpression allocExpression;
 
-                    if (elementType is { IsValueType: true, IsPrimitive: false })
+                    if (elementType.IsValueType == true && elementType.IsPrimitive == false)
                     {
                         allocExpression = new CodeMethodInvokeExpression(
                             new CodeTypeReferenceExpression(typeof(StackData)),

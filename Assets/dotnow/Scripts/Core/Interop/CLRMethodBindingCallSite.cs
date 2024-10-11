@@ -59,6 +59,11 @@ namespace dotnow.Interop
             get { throw new NotImplementedException(); }
         }
 
+        public AppDomain Domain
+        {
+            get { return domain; }
+        }
+
         public MethodBase OriginalMethod
         {
             get { return originalMethod; }

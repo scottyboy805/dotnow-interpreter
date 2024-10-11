@@ -8,6 +8,7 @@ namespace dotnow.Interop
     {
         // Protected
         protected Type[] genericArguments = null;
+        protected object[] args = null;
 
         // Constructor
         internal CLRGenericMethodBindingCallSite(AppDomain domain, MethodBase originalMethod, MethodBase target, Type[] genericArguments)
@@ -25,8 +26,8 @@ namespace dotnow.Interop
                 args = new object[5];
 
                 // Fill out persistent args
-                args[0] = domain;
-                args[1] = originalMethod;
+                args[0] = Domain;
+                args[1] = OriginalMethod;
             }
 
             // Fill out ordered parameters
@@ -35,7 +36,7 @@ namespace dotnow.Interop
             args[4] = genericArguments;
 
             // Invoke with mapped configuration
-            return target.Invoke(null, args);
+            return TargetMethod.Invoke(null, args);
         }
     }
 }
