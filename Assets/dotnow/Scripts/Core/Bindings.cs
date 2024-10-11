@@ -219,7 +219,7 @@ namespace dotnow
 							&& m.GetParameters().Select(p =>
 									p.ParameterType.IsByRef && p.ParameterType.GetElementType().IsGenericParameter ?
 									typeof(GenericType).MakeByRefType() :
-									p.ParameterType.IsGenericParameter ?
+									p.ParameterType.IsGenericParameter || p.ParameterType.ContainsGenericParameters ?
 										typeof(GenericType) :
 										p.ParameterType
 								).SequenceEqual(attribute.ParameterTypes
