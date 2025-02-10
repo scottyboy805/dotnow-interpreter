@@ -79,21 +79,17 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     stack[stackPtr - 2].value.Int32 = unchecked(left.value.Int32 + right.value.Int32);
                                     stack[stackPtr - 2].type = right.type;
                                     break;
 
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
                                 case StackData.ObjectType.UInt32:
                                     stack[stackPtr - 2].value.Int32 = (int)unchecked((uint)left.value.Int32 + (uint)right.value.Int32);
                                     break;
 
                                 case StackData.ObjectType.Int64:
-                                    stack[stackPtr - 2].value.Int64 = left.value.Int64 + right.value.Int64;// unchecked(left.value.Int64 + right.value.Int64);
+                                    stack[stackPtr - 2].value.Int64 = left.value.Int64 + right.value.Int64;
                                     break;
 
                                 case StackData.ObjectType.UInt64:
@@ -121,14 +117,10 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     stack[stackPtr - 2].value.Int32 = checked(left.value.Int32 + right.value.Int32);
                                     break;
 
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
                                 case StackData.ObjectType.UInt32:
                                     stack[stackPtr - 2].value.Int32 = (int)checked((uint)left.value.Int32 + (uint)right.value.Int32);
                                     break;
@@ -161,15 +153,11 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     stack[stackPtr - 2].value.Int32 = unchecked(left.value.Int32 - right.value.Int32);
                                     stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                     break;
 
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
                                 case StackData.ObjectType.UInt32:
                                     stack[stackPtr - 2].value.Int32 = (int)unchecked((uint)left.value.Int32 - (uint)right.value.Int32);
                                     stack[stackPtr - 2].type = StackData.ObjectType.Int32;
@@ -204,15 +192,11 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     stack[stackPtr - 2].value.Int32 = checked(left.value.Int32 - right.value.Int32);
                                     stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                     break;
 
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
                                 case StackData.ObjectType.UInt32:
                                     stack[stackPtr - 2].value.Int32 = (int)checked((uint)left.value.Int32 - (uint)right.value.Int32);
                                     stack[stackPtr - 2].type = StackData.ObjectType.Int32;
@@ -246,14 +230,10 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     stack[stackPtr - 2].value.Int32 = unchecked(left.value.Int32 * right.value.Int32);
                                     break;
 
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
                                 case StackData.ObjectType.UInt32:
                                     stack[stackPtr - 2].value.Int32 = (int)unchecked((uint)left.value.Int32 * (uint)right.value.Int32);
                                     break;
@@ -287,14 +267,10 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     stack[stackPtr - 2].value.Int32 = checked(left.value.Int32 * right.value.Int32);
                                     break;
 
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
                                 case StackData.ObjectType.UInt32:
                                     stack[stackPtr - 2].value.Int32 = (int)checked((uint)left.value.Int32 * (uint)right.value.Int32);
                                     break;
@@ -328,14 +304,10 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     stack[stackPtr - 2].value.Int32 = unchecked(left.value.Int32 / right.value.Int32);
                                     break;
 
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
                                 case StackData.ObjectType.UInt32:
                                     stack[stackPtr - 2].value.Int32 = (int)unchecked((uint)left.value.Int32 / (uint)right.value.Int32);
                                     break;
@@ -367,8 +339,6 @@ namespace dotnow.Runtime.CIL
 
                             switch (val.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     stack[stackPtr - 1].value.Int32 = -stack[stackPtr - 1].value.Int32;
                                     break;
@@ -395,14 +365,11 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     {
                                         stack[stackPtr++].value.Int32 = (left.value.Int32 % right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                     {
                                         stack[stackPtr++].value.Int64 = (left.value.Int64 % right.value.Int64);
@@ -418,7 +385,6 @@ namespace dotnow.Runtime.CIL
                                         stack[stackPtr++].value.Double = (left.value.Double % right.value.Double);
                                         break;
                                     }
-
                                 default:
                                     throw new NotSupportedException();
                             }
@@ -432,24 +398,18 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
                                 case StackData.ObjectType.UInt32:
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
                                     {
                                         stack[stackPtr++].value.Int32 = (int)((uint)left.value.Int32 % (uint)right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.UInt64:
                                 case StackData.ObjectType.Int64:
                                     {
                                         stack[stackPtr++].value.Int64 = (long)((ulong)left.value.Int64 % (ulong)right.value.Int64);
                                         break;
                                     }
-
                                 default:
                                     throw new NotSupportedException();
                             }
@@ -473,62 +433,30 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                    {
-                                        stack[stackPtr].value.Int32 = (left.value.Int8 << right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
-                                        break;
-                                    }
-
-                                case StackData.ObjectType.UInt8:
-                                    {
-                                        stack[stackPtr].value.Int32 = (left.value.Int8 << right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
-                                        break;
-                                    }
-
-                                case StackData.ObjectType.Int16:
-                                    {
-                                        stack[stackPtr].value.Int32 = (left.value.Int16 << right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
-                                        break;
-                                    }
-
-                                case StackData.ObjectType.UInt16:
-                                    {
-                                        stack[stackPtr].value.Int32 = (left.value.Int16 << right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
-                                        break;
-                                    }
-
                                 case StackData.ObjectType.Int32:
                                     {
                                         stack[stackPtr].value.Int32 = left.value.Int32 << right.value.Int32;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr].value.Int32 = (int)((uint)left.value.Int32 << right.value.Int32);
                                         stack[stackPtr++].type = StackData.ObjectType.UInt32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                     {
                                         stack[stackPtr].value.Int64 = left.value.Int64 << right.value.Int32;
                                         stack[stackPtr++].type = StackData.ObjectType.Int64;
                                         break;
                                     }
-
                                 case StackData.ObjectType.UInt64:
                                     {
                                         stack[stackPtr].value.Int64 = (long)((ulong)left.value.Int64 << right.value.Int32);
                                         stack[stackPtr++].type = StackData.ObjectType.UInt64;
                                         break;
                                     }
-
                                 default: throw new NotSupportedException();
                             }
                             break;
@@ -542,62 +470,30 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                    {
-                                        stack[stackPtr].value.Int32 = (left.value.Int8 >> right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
-                                        break;
-                                    }
-
-                                case StackData.ObjectType.UInt8:
-                                    {
-                                        stack[stackPtr].value.Int32 = (left.value.Int8 >> right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
-                                        break;
-                                    }
-
-                                case StackData.ObjectType.Int16:
-                                    {
-                                        stack[stackPtr].value.Int32 = (left.value.Int16 >> right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
-                                        break;
-                                    }
-
-                                case StackData.ObjectType.UInt16:
-                                    {
-                                        stack[stackPtr].value.Int32 = (left.value.Int16 >> right.value.Int32);
-                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
-                                        break;
-                                    }
-
                                 case StackData.ObjectType.Int32:
                                     {
                                         stack[stackPtr].value.Int32 = left.value.Int32 >> right.value.Int32;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr].value.Int32 = (int)((uint)left.value.Int32 >> right.value.Int32);
                                         stack[stackPtr++].type = StackData.ObjectType.UInt32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                     {
                                         stack[stackPtr].value.Int64 = left.value.Int64 >> right.value.Int32;
                                         stack[stackPtr++].type = StackData.ObjectType.Int64;
                                         break;
                                     }
-
                                 case StackData.ObjectType.UInt64:
                                     {
                                         stack[stackPtr].value.Int64 = (long)((ulong)left.value.Int64 >> right.value.Int32);
                                         stack[stackPtr++].type = StackData.ObjectType.UInt64;
                                         break;
                                     }
-
                                 default: throw new NotSupportedException();
                             }
                             break;
@@ -613,35 +509,41 @@ namespace dotnow.Runtime.CIL
                             switch (left.type)
                             {
                                 case StackData.ObjectType.Int32:
-                                case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Int32 == right.value.Int32) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        stack[stackPtr].value.Int32 = ((uint)left.value.Int32 == (uint)right.value.Int32) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
                                 case StackData.ObjectType.Int64:
-                                case StackData.ObjectType.UInt64:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Int64 == right.value.Int64) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        stack[stackPtr].value.Int32 = ((ulong)left.value.Int64 == (ulong)right.value.Int64) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
                                 case StackData.ObjectType.Single:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Single == right.value.Single) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Double:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Double == right.value.Double) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Null:
                                 case StackData.ObjectType.Ref:
                                 case StackData.ObjectType.RefBoxed:
@@ -673,7 +575,6 @@ namespace dotnow.Runtime.CIL
                         }
 
                     case Code.Clt:
-                    case Code.Clt_Un:
                         {
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
@@ -681,35 +582,29 @@ namespace dotnow.Runtime.CIL
                             switch (left.type)
                             {
                                 case StackData.ObjectType.Int32:
-                                case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Int32 < right.value.Int32) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
-                                case StackData.ObjectType.UInt64:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Int64 < right.value.Int64) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Single:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Single < right.value.Single) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Double:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Double < right.value.Double) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Ref:
                                     {
                                         stack[stackPtr].value.Int32 = (left.Address < right.Address) ? 1 : 0;
@@ -721,9 +616,38 @@ namespace dotnow.Runtime.CIL
                             }
                             break;
                         }
+                    case Code.Clt_Un:
+                        {
+                            right = stack[--stackPtr];
+                            left = stack[--stackPtr];
+
+                            switch (left.type)
+                            {
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        stack[stackPtr].value.Int32 = ((uint)left.value.Int32 < (uint)right.value.Int32) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        stack[stackPtr].value.Int32 = ((ulong)left.value.Int64 < (ulong)right.value.Int64) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
+                                case StackData.ObjectType.Ref:
+                                    {
+                                        stack[stackPtr].value.Int32 = ((uint)left.Address < (uint)right.Address) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
+
+                                default: throw new NotSupportedException();
+                            }
+                            break;
+                        }
 
                     case Code.Cgt:
-                    case Code.Cgt_Un:
                         {
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
@@ -731,35 +655,29 @@ namespace dotnow.Runtime.CIL
                             switch (left.type)
                             {
                                 case StackData.ObjectType.Int32:
-                                case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Int32 > right.value.Int32) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;    
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
-                                case StackData.ObjectType.UInt64:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Int64 > right.value.Int64) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Single:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Single > right.value.Single) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Double:
                                     {
                                         stack[stackPtr].value.Int32 = (left.value.Double > right.value.Double) ? 1 : 0;
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
                                 case StackData.ObjectType.Ref:
                                     {
                                         stack[stackPtr].value.Int32 = (left.Address > right.Address) ? 1 : 0;
@@ -772,11 +690,40 @@ namespace dotnow.Runtime.CIL
                             }
                             break;
                         }
+                    case Code.Cgt_Un:
+                        {
+                            right = stack[--stackPtr];
+                            left = stack[--stackPtr];
 
+                            switch (left.type)
+                            {
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        stack[stackPtr].value.Int32 = ((uint)left.value.Int32 > (uint)right.value.Int32) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        stack[stackPtr].value.Int32 = ((ulong)left.value.Int64 > (ulong)right.value.Int64) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
+                                case StackData.ObjectType.Ref:
+                                    {
+                                        stack[stackPtr].value.Int32 = ((uint)left.Address > (uint)right.Address) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
 
-#endregion
+                                default:
+                                    throw new NotSupportedException();
+                            }
+                            break;
+                        }
+                    #endregion
 
-#region Convert
+                    #region Convert
                     case Code.Box:
                         {
                             stack[stackPtr - 1].refValue = stack[stackPtr - 1].BoxAsType(instruction.typeOperand);
@@ -1849,15 +1796,15 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Ldind_I1:
                         {
-                            stack[stackPtr - 1].value.Int8 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI1();
-                            stack[stackPtr++].type = StackData.ObjectType.Int8;
+                            stack[stackPtr - 1].value.Int32 = (int)((IByRef)stack[--stackPtr].refValue).GetReferenceValueI1();
+                            stack[stackPtr++].type = StackData.ObjectType.Int32;
                             break;
                         }
 
                     case Code.Ldind_I2:
                         {
-                            stack[stackPtr - 1].value.Int16 = ((IByRef)stack[--stackPtr].refValue).GetReferenceValueI2();
-                            stack[stackPtr++].type = StackData.ObjectType.Int16;
+                            stack[stackPtr - 1].value.Int32 = (int)((IByRef)stack[--stackPtr].refValue).GetReferenceValueI2();
+                            stack[stackPtr++].type = StackData.ObjectType.Int32;
                             break;
                         }
 
@@ -1891,15 +1838,15 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Ldind_U1:
                         {
-                            stack[stackPtr - 1].value.Int8 = (sbyte)((IByRef)stack[--stackPtr].refValue).GetReferenceValueU1();
-                            stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                            stack[stackPtr - 1].value.Int32 = (int)(uint)(sbyte)((IByRef)stack[--stackPtr].refValue).GetReferenceValueU1();
+                            stack[stackPtr++].type = StackData.ObjectType.UInt32;
                             break;
                         }
 
                     case Code.Ldind_U2:
                         {
-                            stack[stackPtr - 1].value.Int16 = (short)((IByRef)stack[--stackPtr].refValue).GetReferenceValueU2();
-                            stack[stackPtr++].type = StackData.ObjectType.UInt16;
+                            stack[stackPtr - 1].value.Int32 = (int)(uint)(short)((IByRef)stack[--stackPtr].refValue).GetReferenceValueU2();
+                            stack[stackPtr++].type = StackData.ObjectType.UInt32;
                             break;
                         }
 
@@ -1931,7 +1878,7 @@ namespace dotnow.Runtime.CIL
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
 
-                            ((IByRef)left.refValue).SetReferenceValueI1(right.value.Int8);
+                            ((IByRef)left.refValue).SetReferenceValueI1((sbyte)right.value.Int32);
                             break;
                         }
 
@@ -1940,7 +1887,7 @@ namespace dotnow.Runtime.CIL
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
 
-                            ((IByRef)left.refValue).SetReferenceValueI2(right.value.Int16);
+                            ((IByRef)left.refValue).SetReferenceValueI2((short)right.value.Int32);
                             break;
                         }
 
@@ -2048,13 +1995,13 @@ namespace dotnow.Runtime.CIL
 
                             if ((int)temp.type <= 32)
                             {
-                                stack[stackPtr].value.Int8 = int8ArrImpl[temp.value.Int32];
-                                stack[stackPtr++].type = StackData.ObjectType.Int8;
+                                stack[stackPtr].value.Int32 = (int)int8ArrImpl[temp.value.Int32];
+                                stack[stackPtr++].type = StackData.ObjectType.Int32;
                             }
                             else if ((int)temp.type <= 64)
                             {
-                                stack[stackPtr].value.Int8 = int8ArrImpl[temp.value.Int64];
-                                stack[stackPtr++].type = StackData.ObjectType.Int8;
+                                stack[stackPtr].value.Int32 = (int)int8ArrImpl[temp.value.Int64];
+                                stack[stackPtr++].type = StackData.ObjectType.Int32;
                             }
                             else
                                 throw new NotSupportedException();
@@ -2076,13 +2023,13 @@ namespace dotnow.Runtime.CIL
 
                                 if ((int)temp.type <= 32)
                                 {
-                                    stack[stackPtr].value.Int16 = (short)charArrImpl[temp.value.Int32];
-                                    stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                    stack[stackPtr].value.Int32 = (int)(short)charArrImpl[temp.value.Int32];
+                                    stack[stackPtr++].type = StackData.ObjectType.Int32;
                                 }
                                 else if ((int)temp.type <= 64)
                                 {
-                                    stack[stackPtr].value.Int16 = (short)charArrImpl[temp.value.Int64];
-                                    stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                    stack[stackPtr].value.Int32 = (int)(short)charArrImpl[temp.value.Int64];
+                                    stack[stackPtr++].type = StackData.ObjectType.Int32;
                                 }
                                 else
                                     throw new NotSupportedException();
@@ -2094,13 +2041,13 @@ namespace dotnow.Runtime.CIL
 
                                 if ((int)temp.type <= 32)
                                 {
-                                    stack[stackPtr].value.Int16 = int16ArrImpl[temp.value.Int32];
-                                    stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                    stack[stackPtr].value.Int32 = (int)int16ArrImpl[temp.value.Int32];
+                                    stack[stackPtr++].type = StackData.ObjectType.Int32;
                                 }
                                 else if ((int)temp.type <= 64)
                                 {
-                                    stack[stackPtr].value.Int16 = int16ArrImpl[temp.value.Int64];
-                                    stack[stackPtr++].type = StackData.ObjectType.Int16;
+                                    stack[stackPtr].value.Int32 = (int)int16ArrImpl[temp.value.Int64];
+                                    stack[stackPtr++].type = StackData.ObjectType.Int32;
                                 }
                                 else
                                     throw new NotSupportedException();
@@ -2223,13 +2170,13 @@ namespace dotnow.Runtime.CIL
 
                                 if ((int)temp.type <= 32)
                                 {
-                                    stack[stackPtr].value.Int8 = (sbyte)(boolArrImpl[temp.value.Int32] == true ? 1 : 0);
-                                    stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                    stack[stackPtr].value.Int32 = (int)(uint)(sbyte)(boolArrImpl[temp.value.Int32] == true ? 1 : 0);
+                                    stack[stackPtr++].type = StackData.ObjectType.UInt32;
                                 }
                                 else if ((int)temp.type <= 64)
                                 {
-                                    stack[stackPtr].value.Int8 = (sbyte)(boolArrImpl[temp.value.Int64] == true ? 1 : 0);
-                                    stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                    stack[stackPtr].value.Int32 = (int)(uint)(sbyte)(boolArrImpl[temp.value.Int64] == true ? 1 : 0);
+                                    stack[stackPtr++].type = StackData.ObjectType.UInt32;
                                 }
                                 else
                                     throw new NotSupportedException();
@@ -2241,13 +2188,13 @@ namespace dotnow.Runtime.CIL
 
                                 if ((int)temp.type <= 32)
                                 {
-                                    stack[stackPtr].value.Int8 = (sbyte)uint8ArrImpl[temp.value.Int32];
-                                    stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                    stack[stackPtr].value.Int32 = (int)(uint)(sbyte)uint8ArrImpl[temp.value.Int32];
+                                    stack[stackPtr++].type = StackData.ObjectType.UInt32;
                                 }
                                 else if ((int)temp.type <= 64)
                                 {
-                                    stack[stackPtr].value.Int8 = (sbyte)uint8ArrImpl[temp.value.Int64];
-                                    stack[stackPtr++].type = StackData.ObjectType.UInt8;
+                                    stack[stackPtr].value.Int32 = (int)(uint)(sbyte)uint8ArrImpl[temp.value.Int64];
+                                    stack[stackPtr++].type = StackData.ObjectType.UInt32;
                                 }
                                 else
                                     throw new NotSupportedException();
@@ -2267,13 +2214,13 @@ namespace dotnow.Runtime.CIL
 
                             if ((int)temp.type <= 32)
                             {
-                                stack[stackPtr].value.Int16 = (short)uint16ArrImpl[temp.value.Int32];
-                                stack[stackPtr++].type = StackData.ObjectType.UInt16;
+                                stack[stackPtr].value.Int32 = (int)(uint)uint16ArrImpl[temp.value.Int32];
+                                stack[stackPtr++].type = StackData.ObjectType.UInt32;
                             }
                             else if ((int)temp.type <= 64)
                             {
-                                stack[stackPtr].value.Int16 = (short)uint16ArrImpl[temp.value.Int64];
-                                stack[stackPtr++].type = StackData.ObjectType.UInt16;
+                                stack[stackPtr].value.Int32 = (int)(uint)uint16ArrImpl[temp.value.Int64];
+                                stack[stackPtr++].type = StackData.ObjectType.UInt32;
                             }
                             else
                                 throw new NotSupportedException();
@@ -2425,11 +2372,11 @@ namespace dotnow.Runtime.CIL
 
                                 if ((int)temp.type <= 32)
                                 {
-                                    boolArrImpl[temp.value.Int32] = ((byte)right.value.Int8) == 1 ? true : false;
+                                    boolArrImpl[temp.value.Int32] = ((byte)right.value.Int32) == 1 ? true : false;
                                 }
                                 else if ((int)temp.type <= 64)
                                 {
-                                    boolArrImpl[temp.value.Int64] = ((byte)right.value.Int8) == 1 ? true : false;
+                                    boolArrImpl[temp.value.Int64] = ((byte)right.value.Int32) == 1 ? true : false;
                                 }
                                 else
                                     throw new NotSupportedException();
@@ -2441,11 +2388,11 @@ namespace dotnow.Runtime.CIL
 
                                 if ((int)temp.type <= 32)
                                 {
-                                    int8ArrImpl[temp.value.Int32] = right.value.Int8;
+                                    int8ArrImpl[temp.value.Int32] = (sbyte)right.value.Int32;
                                 }
                                 else if ((int)temp.type <= 64)
                                 {
-                                    int8ArrImpl[temp.value.Int64] = right.value.Int8;
+                                    int8ArrImpl[temp.value.Int64] = (sbyte)right.value.Int32;
                                 }
                                 else
                                     throw new NotSupportedException();
@@ -2469,11 +2416,11 @@ namespace dotnow.Runtime.CIL
 
                                 if ((int)temp.type <= 32)
                                 {
-                                    charArrImpl[temp.value.Int32] = (char)right.value.Int16;
+                                    charArrImpl[temp.value.Int32] = (char)right.value.Int32;
                                 }
                                 else if ((int)temp.type <= 64)
                                 {
-                                    charArrImpl[temp.value.Int64] = (char)right.value.Int16;
+                                    charArrImpl[temp.value.Int64] = (char)right.value.Int32;
                                 }
                                 else
                                     throw new NotSupportedException();
@@ -2485,11 +2432,11 @@ namespace dotnow.Runtime.CIL
 
                                 if ((int)temp.type <= 32)
                                 {
-                                    int16ArrImpl[temp.value.Int32] = right.value.Int16;
+                                    int16ArrImpl[temp.value.Int32] = (short)right.value.Int32;
                                 }
                                 else if ((int)temp.type <= 64)
                                 {
-                                    int16ArrImpl[temp.value.Int64] = right.value.Int16;
+                                    int16ArrImpl[temp.value.Int64] = (short)right.value.Int32;
                                 }
                                 else
                                     throw new NotSupportedException();
@@ -3277,18 +3224,30 @@ namespace dotnow.Runtime.CIL
                         {
                             switch(stack[stackPtr - 1].type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
-                                case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr - 1].value.Int32 = ~stack[stackPtr - 1].value.Int32;
                                         stack[stackPtr - 1].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        stack[stackPtr - 1].value.Int32 = (int)~(uint)stack[stackPtr - 1].value.Int32;
+                                        stack[stackPtr - 1].type = StackData.ObjectType.UInt32;
+                                        break;
+                                    }
+                                case StackData.ObjectType.Int64:
+                                    {
+                                        stack[stackPtr - 1].value.Int64 = ~stack[stackPtr - 1].value.Int64;
+                                        stack[stackPtr - 1].type = StackData.ObjectType.Int64;
+                                        break;
+                                    }
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        stack[stackPtr - 1].value.Int64 = (long)~(ulong)stack[stackPtr - 1].value.Int64;
+                                        stack[stackPtr - 1].type = StackData.ObjectType.UInt64;
+                                        break;
+                                    }
                                 default:
                                     throw new NotSupportedException();
                             }
@@ -3302,18 +3261,30 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
-                                case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr - 2].value.Int32 = left.value.Int32 & right.value.Int32;
                                         stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        stack[stackPtr - 2].value.Int32 = (int)((uint)left.value.Int32 & (uint)right.value.Int32);
+                                        stack[stackPtr - 2].type = StackData.ObjectType.UInt32;
+                                        break;
+                                    }
+                                case StackData.ObjectType.Int64:
+                                    {
+                                        stack[stackPtr - 2].value.Int64 = left.value.Int64 & right.value.Int64;
+                                        stack[stackPtr - 2].type = StackData.ObjectType.Int64;
+                                        break;
+                                    }
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        stack[stackPtr - 2].value.Int64 = (long)((ulong)left.value.Int64 & (ulong)right.value.Int64);
+                                        stack[stackPtr - 2].type = StackData.ObjectType.UInt64;
+                                        break;
+                                    }
                                 default:
                                     throw new NotSupportedException();
                             }
@@ -3328,18 +3299,30 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
-                                case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr - 2].value.Int32 = left.value.Int32 | right.value.Int32;
                                         stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        stack[stackPtr - 2].value.Int32 = (int)((uint)left.value.Int32 | (uint)right.value.Int32);
+                                        stack[stackPtr - 2].type = StackData.ObjectType.UInt32;
+                                        break;
+                                    }
+                                case StackData.ObjectType.Int64:
+                                    {
+                                        stack[stackPtr - 2].value.Int64 = left.value.Int64 | right.value.Int64;
+                                        stack[stackPtr - 2].type = StackData.ObjectType.Int64;
+                                        break;
+                                    }
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        stack[stackPtr - 2].value.Int64 = (long)((ulong)left.value.Int64 | (ulong)right.value.Int64);
+                                        stack[stackPtr - 2].type = StackData.ObjectType.UInt64;
+                                        break;
+                                    }
                                 default:
                                     throw new NotSupportedException();
                             }
@@ -3354,18 +3337,30 @@ namespace dotnow.Runtime.CIL
 
                             switch (left.type)
                             {
-                                case StackData.ObjectType.Int8:
-                                case StackData.ObjectType.Int16:
                                 case StackData.ObjectType.Int32:
-                                case StackData.ObjectType.UInt8:
-                                case StackData.ObjectType.UInt16:
-                                case StackData.ObjectType.UInt32:
                                     {
                                         stack[stackPtr - 2].value.Int32 = left.value.Int32 ^ right.value.Int32;
                                         stack[stackPtr - 2].type = StackData.ObjectType.Int32;
                                         break;
                                     }
-
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        stack[stackPtr - 2].value.Int32 = (int)((uint)left.value.Int32 ^ (uint)right.value.Int32);
+                                        stack[stackPtr - 2].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
+                                case StackData.ObjectType.Int64:
+                                    {
+                                        stack[stackPtr - 2].value.Int64 = left.value.Int64 ^ right.value.Int64;
+                                        stack[stackPtr - 2].type = StackData.ObjectType.Int64;
+                                        break;
+                                    }
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        stack[stackPtr - 2].value.Int64 = (long)((ulong)left.value.Int64 ^ (ulong)right.value.Int64);
+                                        stack[stackPtr - 2].type = StackData.ObjectType.Int64;
+                                        break;
+                                    }
                                 default:
                                     throw new NotSupportedException();
                             }
