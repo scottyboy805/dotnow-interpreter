@@ -10,8 +10,11 @@
 /[Ll]ogs/
 /[Mm]emoryCaptures/
 /Assets/Exclude/
-/Assets/JsonDotNet/
 /UnitTest/TrivialCLR.Tests/TestResults
+
+# Project settings
+/ProjectSettings/EditorBuildSettings.asset
+/ProjectSettings/ProjectSettings.asset
 
 #Progress tracking files
 Todo.txt
