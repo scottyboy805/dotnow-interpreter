@@ -779,7 +779,7 @@ namespace dotnow.Runtime.CIL
 #region Convert
                     case Code.Box:
                         {
-                            stack[stackPtr - 1].refValue = stack[stackPtr - 1].Box();
+                            stack[stackPtr - 1].refValue = stack[stackPtr - 1].BoxAsType(instruction.typeOperand);
                             stack[stackPtr - 1].type = StackData.ObjectType.RefBoxed;
                             break;
                         }

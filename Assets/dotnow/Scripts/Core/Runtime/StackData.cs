@@ -113,6 +113,40 @@ namespace dotnow.Runtime
             return refValue;
         }
 
+        public object BoxAsType(in CLRTypeInfo typeInfo)
+        {
+            // Check for enum type
+            if (typeInfo.typeCode == TypeCode.Object && typeInfo.isEnum == true && typeInfo.isArray == false)
+                return BoxAsTypeSlow(typeInfo.type.GetEnumUnderlyingType());
+
+            // Handle reference type
+            switch (type)
+            {
+                case ObjectType.Null:
+                case ObjectType.Ref:
+                case ObjectType.ByRef:
+                case ObjectType.RefBoxed:
+                    return Box();
+            }
+
+            // Box based on type code
+            switch(typeInfo.typeCode)
+            {
+                case TypeCode.SByte: return (sbyte)value.Int8;
+                case TypeCode.Int16: return (short)value.Int16;
+                case TypeCode.Int32: return (int)value.Int32;
+                case TypeCode.Int64: return (long)value.Int64;
+                case TypeCode.Byte: return (byte)value.Int8;
+                case TypeCode.UInt16: return (ushort)value.Int16;
+                case TypeCode.UInt32: return (uint)value.Int32;
+                case TypeCode.UInt64: return (ulong)value.Int64;
+                case TypeCode.Single: return (float)value.Single;
+                case TypeCode.Double: return (double)value.Double;
+            }
+            // Fallback to default beahviour
+            return Box();
+        }
+
         public object BoxAsTypeSlow(Type asType)
         {
             // Get type code
@@ -661,7 +695,7 @@ namespace dotnow.Runtime
                 case ObjectType.Int8:
                 case ObjectType.Int16:
                 case ObjectType.UInt8:
-                case ObjectType.UInt16:
+                case ObjectType.UInt16:                
                     return;
             }
 
