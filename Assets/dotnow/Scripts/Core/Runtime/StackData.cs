@@ -690,17 +690,21 @@ namespace dotnow.Runtime
             dest = src;
 
             // Check for primitive promoted types
-            switch(type)
+            switch (type)
             {
                 case ObjectType.Int8:
                 case ObjectType.Int16:
+                    dest.type = ObjectType.Int32;   // Promote to 32bit
+                    return;
+
                 case ObjectType.UInt8:
-                case ObjectType.UInt16:                
+                case ObjectType.UInt16:
+                    dest.type = ObjectType.UInt32;  // Promote to 32bit
                     return;
             }
 
-            // Overwrite type - except for boxed primitved
-            if(src.type != ObjectType.RefBoxed)
+            // Overwrite type - except for boxed primitve
+            if (src.type != ObjectType.RefBoxed)
                 dest.type = type;
         }
 
