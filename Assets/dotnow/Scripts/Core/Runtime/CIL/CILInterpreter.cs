@@ -635,6 +635,18 @@ namespace dotnow.Runtime.CIL
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
+                                case StackData.ObjectType.Single:
+                                    {
+                                        stack[stackPtr].value.Int32 = (left.value.Single < right.value.Single) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
+                                case StackData.ObjectType.Double:
+                                    {
+                                        stack[stackPtr].value.Int32 = (left.value.Double < right.value.Double) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
                                 case StackData.ObjectType.Ref:
                                     {
                                         stack[stackPtr].value.Int32 = ((uint)left.Address < (uint)right.Address) ? 1 : 0;
@@ -709,6 +721,18 @@ namespace dotnow.Runtime.CIL
                                         stack[stackPtr++].type = StackData.ObjectType.Int32;
                                         break;
                                     }
+                                case StackData.ObjectType.Single:
+                                    {
+                                        stack[stackPtr].value.Int32 = (left.value.Single > right.value.Single) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
+                                case StackData.ObjectType.Double:
+                                    {
+                                        stack[stackPtr].value.Int32 = (left.value.Double > right.value.Double) ? 1 : 0;
+                                        stack[stackPtr++].type = StackData.ObjectType.Int32;
+                                        break;
+                                    }
                                 case StackData.ObjectType.Ref:
                                     {
                                         stack[stackPtr].value.Int32 = ((uint)left.Address > (uint)right.Address) ? 1 : 0;
@@ -723,7 +747,7 @@ namespace dotnow.Runtime.CIL
                         }
                     #endregion
 
-                    #region Convert
+#region Convert
                     case Code.Box:
                         {
                             stack[stackPtr - 1].refValue = stack[stackPtr - 1].BoxAsType(instruction.typeOperand);
@@ -1062,26 +1086,22 @@ namespace dotnow.Runtime.CIL
                                         flag = ((uint)left.value.Int32 == (uint)right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                 case StackData.ObjectType.UInt64:
                                     {
                                         flag = (left.value.Int64 == right.value.Int64);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Single:
                                     {
                                         flag = (left.value.Single == right.value.Single);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Double:
                                     {
                                         flag = (left.value.Double == right.value.Double);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Null:
                                 case StackData.ObjectType.Ref:
                                 case StackData.ObjectType.RefBoxed:
@@ -1122,14 +1142,23 @@ namespace dotnow.Runtime.CIL
                                         flag = ((uint)left.value.Int32 != (uint)right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                 case StackData.ObjectType.UInt64:
                                     {
                                         flag = ((uint)left.value.Int64 != (uint)right.value.Int64);
                                         break;
                                     }
+                                case StackData.ObjectType.Single:
+                                    {
+                                        flag = (left.value.Single != right.value.Single);
+                                        break;
+                                    }
 
+                                case StackData.ObjectType.Double:
+                                    {
+                                        flag = (left.value.Double != right.value.Double);
+                                        break;
+                                    }
                                 case StackData.ObjectType.Null:
                                 case StackData.ObjectType.Ref:
                                 case StackData.ObjectType.RefBoxed:
@@ -1170,32 +1199,27 @@ namespace dotnow.Runtime.CIL
                                         flag = (left.value.Int32 < right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                 case StackData.ObjectType.UInt64:
                                     {
                                         flag = (left.value.Int64 < right.value.Int64);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Single:
                                     {
                                         flag = (left.value.Single < right.value.Single);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Double:
                                     {
                                         flag = (left.value.Double < right.value.Double);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Ref:
                                     {
                                         flag = (left.Address < right.value.Int32);
                                         break;
                                     }
-
                                 default: throw new NotSupportedException();
                             }
 
@@ -1220,20 +1244,27 @@ namespace dotnow.Runtime.CIL
                                         flag = ((uint)left.value.Int32 < (uint)right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                 case StackData.ObjectType.UInt64:
                                     {
                                         flag = ((uint)left.value.Int64 < (uint)right.value.Int64);
                                         break;
                                     }
-
+                                case StackData.ObjectType.Single:
+                                    {
+                                        flag = (left.value.Single < right.value.Single);
+                                        break;
+                                    }
+                                case StackData.ObjectType.Double:
+                                    {
+                                        flag = (left.value.Double < right.value.Double);
+                                        break;
+                                    }
                                 case StackData.ObjectType.Ref:
                                     {
                                         flag = ((uint)left.Address < (uint)right.value.Int32);
                                         break;
                                     }
-
                                 default: throw new NotSupportedException();
                             }
 
@@ -1259,32 +1290,27 @@ namespace dotnow.Runtime.CIL
                                         flag = (left.value.Int32 <= right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                 case StackData.ObjectType.UInt64:
                                     {
                                         flag = (left.value.Int64 <= right.value.Int64);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Single:
                                     {
                                         flag = (left.value.Single <= right.value.Single);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Double:
                                     {
                                         flag = (left.value.Double <= right.value.Double);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Ref:
                                     {
                                         flag = (left.Address <= right.value.Int32);
                                         break;
                                     }
-
                                 default: throw new NotSupportedException();
                             }
 
@@ -1316,13 +1342,21 @@ namespace dotnow.Runtime.CIL
                                         flag = ((uint)left.value.Int64 <= (uint)right.value.Int64);
                                         break;
                                     }
-
+                                case StackData.ObjectType.Single:
+                                    {
+                                        flag = (left.value.Single <= right.value.Single);
+                                        break;
+                                    }
+                                case StackData.ObjectType.Double:
+                                    {
+                                        flag = (left.value.Double <= right.value.Double);
+                                        break;
+                                    }
                                 case StackData.ObjectType.Ref:
                                     {
                                         flag = ((uint)left.Address <= (uint)right.value.Int32);
                                         break;
                                     }
-
                                 default: throw new NotSupportedException();
                             }
 
@@ -1348,32 +1382,27 @@ namespace dotnow.Runtime.CIL
                                         flag = (left.value.Int32 > right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                 case StackData.ObjectType.UInt64:
                                     {
                                         flag = (left.value.Int64 > right.value.Int64);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Single:
                                     {
                                         flag = (left.value.Single > right.value.Single);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Double:
                                     {
                                         flag = (left.value.Double > right.value.Double);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Ref:
                                     {
                                         flag = (left.Address > right.value.Int32);
                                         break;
                                     }
-
                                 default:
                                     throw new NotSupportedException();
                             }
@@ -1399,20 +1428,27 @@ namespace dotnow.Runtime.CIL
                                         flag = ((uint)left.value.Int32 > (uint)right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                 case StackData.ObjectType.UInt64:
                                     {
                                         flag = ((uint)left.value.Int64 > (uint)right.value.Int64);
                                         break;
                                     }
-
+                                case StackData.ObjectType.Single:
+                                    {
+                                        flag = (left.value.Single > right.value.Single);
+                                        break;
+                                    }
+                                case StackData.ObjectType.Double:
+                                    {
+                                        flag = (left.value.Double > right.value.Double);
+                                        break;
+                                    }
                                 case StackData.ObjectType.Ref:
                                     {
                                         flag = ((uint)left.Address > (uint)right.value.Int32);
                                         break;
                                     }
-
                                 default:
                                     throw new NotSupportedException();
                             }
@@ -1439,32 +1475,27 @@ namespace dotnow.Runtime.CIL
                                         flag = (left.value.Int32 >= right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                 case StackData.ObjectType.UInt64:
                                     {
                                         flag = (left.value.Int64 >= right.value.Int64);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Single:
                                     {
                                         flag = (left.value.Single >= right.value.Single);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Double:
                                     {
                                         flag = (left.value.Double >= right.value.Double);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Ref:
                                     {
                                         flag = (left.Address >= right.value.Int32);
                                         break;
                                     }
-
                                 default: throw new NotSupportedException();
                             }
 
@@ -1489,20 +1520,28 @@ namespace dotnow.Runtime.CIL
                                         flag = ((uint)left.value.Int32 >= (uint)right.value.Int32);
                                         break;
                                     }
-
                                 case StackData.ObjectType.Int64:
                                 case StackData.ObjectType.UInt64:
                                     {
                                         flag = ((uint)left.value.Int64 >= (uint)right.value.Int64);
                                         break;
                                     }
+                                case StackData.ObjectType.Single:
+                                    {
+                                        flag = (left.value.Single >= right.value.Single);
+                                        break;
+                                    }
 
+                                case StackData.ObjectType.Double:
+                                    {
+                                        flag = (left.value.Double >= right.value.Double);
+                                        break;
+                                    }
                                 case StackData.ObjectType.Ref:
                                     {
                                         flag = ((uint)left.Address >= (uint)right.value.Int32);
                                         break;
                                     }
-
                                 default: throw new NotSupportedException();
                             }
 
