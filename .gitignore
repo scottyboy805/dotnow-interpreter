@@ -10,6 +10,7 @@
 /[Ll]ogs/
 /[Mm]emoryCaptures/
 /Assets/Exclude/
+/Assets/JsonDotNet/
 /UnitTest/TrivialCLR.Tests/TestResults
 
 #Progress tracking files

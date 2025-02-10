@@ -1106,9 +1106,13 @@ namespace dotnow.Runtime.CIL
                             switch (left.type)
                             {
                                 case StackData.ObjectType.Int32:
-                                case StackData.ObjectType.UInt32:
                                     {
                                         flag = (left.value.Int32 == right.value.Int32);
+                                        break;
+                                    }
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        flag = ((uint)left.value.Int32 == (uint)right.value.Int32);
                                         break;
                                     }
 
@@ -1168,26 +1172,14 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.Int32:
                                 case StackData.ObjectType.UInt32:
                                     {
-                                        flag = (left.value.Int32 != right.value.Int32);
+                                        flag = ((uint)left.value.Int32 != (uint)right.value.Int32);
                                         break;
                                     }
 
                                 case StackData.ObjectType.Int64:
                                 case StackData.ObjectType.UInt64:
                                     {
-                                        flag = (left.value.Int64 != right.value.Int64);
-                                        break;
-                                    }
-
-                                case StackData.ObjectType.Single:
-                                    {
-                                        flag = (left.value.Single != right.value.Single);
-                                        break;
-                                    }
-
-                                case StackData.ObjectType.Double:
-                                    {
-                                        flag = (left.value.Double != right.value.Double);
+                                        flag = ((uint)left.value.Int64 != (uint)right.value.Int64);
                                         break;
                                     }
 
@@ -1219,8 +1211,6 @@ namespace dotnow.Runtime.CIL
 
                     case Code.Blt:
                     case Code.Blt_S:
-                    case Code.Blt_Un:
-                    case Code.Blt_Un_S:
                         {
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
@@ -1269,11 +1259,47 @@ namespace dotnow.Runtime.CIL
                             }
                             break;
                         }
+                    case Code.Blt_Un:
+                    case Code.Blt_Un_S:
+                        {
+                            right = stack[--stackPtr];
+                            left = stack[--stackPtr];
+
+                            switch (left.type)
+                            {
+                                case StackData.ObjectType.Int32:
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        flag = ((uint)left.value.Int32 < (uint)right.value.Int32);
+                                        break;
+                                    }
+
+                                case StackData.ObjectType.Int64:
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        flag = ((uint)left.value.Int64 < (uint)right.value.Int64);
+                                        break;
+                                    }
+
+                                case StackData.ObjectType.Ref:
+                                    {
+                                        flag = ((uint)left.Address < (uint)right.value.Int32);
+                                        break;
+                                    }
+
+                                default: throw new NotSupportedException();
+                            }
+
+                            if (flag == true)
+                            {
+                                instructionPtr += instruction.operand.Int32;
+                                continue;
+                            }
+                            break;
+                        }
 
                     case Code.Ble:
                     case Code.Ble_S:
-                    case Code.Ble_Un:
-                    case Code.Ble_Un_S:
                         {
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
@@ -1322,11 +1348,47 @@ namespace dotnow.Runtime.CIL
                             }
                             break;
                         }
+                    case Code.Ble_Un:
+                    case Code.Ble_Un_S:
+                        {
+                            right = stack[--stackPtr];
+                            left = stack[--stackPtr];
+
+                            switch (left.type)
+                            {
+                                case StackData.ObjectType.Int32:
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        flag = ((uint)left.value.Int32 <= (uint)right.value.Int32);
+                                        break;
+                                    }
+
+                                case StackData.ObjectType.Int64:
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        flag = ((uint)left.value.Int64 <= (uint)right.value.Int64);
+                                        break;
+                                    }
+
+                                case StackData.ObjectType.Ref:
+                                    {
+                                        flag = ((uint)left.Address <= (uint)right.value.Int32);
+                                        break;
+                                    }
+
+                                default: throw new NotSupportedException();
+                            }
+
+                            if (flag == true)
+                            {
+                                instructionPtr += instruction.operand.Int32;
+                                continue;
+                            }
+                            break;
+                        }
 
                     case Code.Bgt:
                     case Code.Bgt_S:
-                    case Code.Bgt_Un:
-                    case Code.Bgt_Un_S:
                         {
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
@@ -1376,11 +1438,48 @@ namespace dotnow.Runtime.CIL
                             }
                             break;
                         }
+                    case Code.Bgt_Un:
+                    case Code.Bgt_Un_S:
+                        {
+                            right = stack[--stackPtr];
+                            left = stack[--stackPtr];
+
+                            switch (left.type)
+                            {
+                                case StackData.ObjectType.Int32:
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        flag = ((uint)left.value.Int32 > (uint)right.value.Int32);
+                                        break;
+                                    }
+
+                                case StackData.ObjectType.Int64:
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        flag = ((uint)left.value.Int64 > (uint)right.value.Int64);
+                                        break;
+                                    }
+
+                                case StackData.ObjectType.Ref:
+                                    {
+                                        flag = ((uint)left.Address > (uint)right.value.Int32);
+                                        break;
+                                    }
+
+                                default:
+                                    throw new NotSupportedException();
+                            }
+
+                            if (flag == true)
+                            {
+                                instructionPtr += instruction.operand.Int32;
+                                continue;
+                            }
+                            break;
+                        }
 
                     case Code.Bge:
                     case Code.Bge_S:
-                    case Code.Bge_Un:
-                    case Code.Bge_Un_S:
                         {
                             right = stack[--stackPtr];
                             left = stack[--stackPtr];
@@ -1416,6 +1515,44 @@ namespace dotnow.Runtime.CIL
                                 case StackData.ObjectType.Ref:
                                     {
                                         flag = (left.Address >= right.value.Int32);
+                                        break;
+                                    }
+
+                                default: throw new NotSupportedException();
+                            }
+
+                            if (flag == true)
+                            {
+                                instructionPtr += instruction.operand.Int32;
+                                continue;
+                            }
+                            break;
+                        }
+                    case Code.Bge_Un:
+                    case Code.Bge_Un_S:
+                        {
+                            right = stack[--stackPtr];
+                            left = stack[--stackPtr];
+
+                            switch (left.type)
+                            {
+                                case StackData.ObjectType.Int32:
+                                case StackData.ObjectType.UInt32:
+                                    {
+                                        flag = ((uint)left.value.Int32 >= (uint)right.value.Int32);
+                                        break;
+                                    }
+
+                                case StackData.ObjectType.Int64:
+                                case StackData.ObjectType.UInt64:
+                                    {
+                                        flag = ((uint)left.value.Int64 >= (uint)right.value.Int64);
+                                        break;
+                                    }
+
+                                case StackData.ObjectType.Ref:
+                                    {
+                                        flag = ((uint)left.Address >= (uint)right.value.Int32);
                                         break;
                                     }
 
