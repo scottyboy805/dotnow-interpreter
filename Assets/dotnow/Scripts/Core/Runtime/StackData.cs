@@ -694,12 +694,8 @@ namespace dotnow.Runtime
             {
                 case ObjectType.Int8:
                 case ObjectType.Int16:
-                    dest.type = ObjectType.Int32;   // Promote to 32bit
-                    return;
-
                 case ObjectType.UInt8:
                 case ObjectType.UInt16:
-                    dest.type = ObjectType.UInt32;  // Promote to 32bit
                     return;
             }
 

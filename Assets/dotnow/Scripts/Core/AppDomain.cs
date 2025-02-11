@@ -16,6 +16,7 @@ using dotnow.Runtime.CIL;
 using dotnow.Runtime.JIT;
 
 [assembly: InternalsVisibleTo("dotnow.Integration")]
+[assembly: InternalsVisibleTo("dotnow.Tests")]
 
 namespace dotnow
 {
