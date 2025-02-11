@@ -190,15 +190,15 @@ namespace dotnow.Runtime
         public object UnboxAsType(CLRTypeInfo typeInfo)
 #else
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object UnboxAsType(in CLRTypeInfo typeInfo)
+        public object UnboxAsType(in CLRTypeInfo typeInfo, bool demotePromotedPrimitives = false)
 #endif
         {
             // Check for enum type
             if (typeInfo.typeCode == TypeCode.Object && typeInfo.isEnum == true && typeInfo.isArray == false)
-                return UnboxAsType(typeInfo.enumUnderlyingTypeCode);
+                return UnboxAsType(typeInfo.enumUnderlyingTypeCode, demotePromotedPrimitives);
 
             // Unbox by type code
-            return UnboxAsType(typeInfo.typeCode);
+            return UnboxAsType(typeInfo.typeCode, demotePromotedPrimitives);
         }
 
 #if !API_NET35
@@ -307,7 +307,7 @@ namespace dotnow.Runtime
                 throw new InvalidOperationException("Type must be RefBoxed in order to support unbox operation: " + type);
         }
 
-        public object UnboxAsType(TypeCode typeCode)
+        public object UnboxAsType(TypeCode typeCode, bool demotePromotedPrimitives = false)
         {
             // Cannot box nullable
             if (type == ObjectType.Null)
@@ -335,14 +335,14 @@ namespace dotnow.Runtime
             switch(typeCode)
             {
                 case TypeCode.Boolean: return value.Int32 == 0 ? false : true;
-                case TypeCode.SByte: return (sbyte)value.Int8;
-                case TypeCode.Byte: return (byte)value.Int8;
-                case TypeCode.Char: return (char)value.Int8;
-                case TypeCode.Int16: return (short)value.Int16;
+                case TypeCode.SByte: return demotePromotedPrimitives ? (sbyte)value.Int32 : (sbyte)value.Int8;
+                case TypeCode.Byte: return demotePromotedPrimitives ? (byte)value.Int32 : (byte)value.Int8;
+                case TypeCode.Char: return demotePromotedPrimitives ? (char)value.Int32 : (char)value.Int8;
+                case TypeCode.Int16: return demotePromotedPrimitives ? (short)value.Int32 : (short)value.Int16;
                 case TypeCode.Int32: return value.Int32;
                 case TypeCode.Int64: return value.Int64;
-                case TypeCode.UInt16: return (ushort)value.Int16;
-                case TypeCode.UInt32: return (uint)value.Int32;
+                case TypeCode.UInt16: return demotePromotedPrimitives ? (ushort)value.Int32 : (ushort)value.Int16;
+                case TypeCode.UInt32: return demotePromotedPrimitives ? (ushort)value.Int32 : (uint)value.Int32;
                 case TypeCode.UInt64: return (ulong)value.Int64;
                 case TypeCode.Single: return (float)value.Single;
                 case TypeCode.Double: return (double)value.Double;
@@ -435,8 +435,16 @@ namespace dotnow.Runtime
                     }
                 case TypeCode.Char:
                     {
-                        obj.type = ObjectType.UInt8;
-                        obj.value.Int8 = (sbyte)(char)value;
+                        if (promoteSmallPrimitives == true)
+                        {
+                            obj.type = ObjectType.Int32;
+                            obj.value.Int32 = (char)value;
+                        }
+                        else
+                        {
+                            obj.type = ObjectType.UInt8;
+                            obj.value.Int8 = (sbyte)(char)value;
+                        }
                         break;
                     }
                 case TypeCode.Int16: 

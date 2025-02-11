@@ -2656,7 +2656,7 @@ namespace dotnow.Runtime.CIL
                             }
                             else
                             {
-                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(null));
+                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(null), true);
                             }
                             break;
                         }
@@ -2706,7 +2706,7 @@ namespace dotnow.Runtime.CIL
                                     if (fieldAccess.isClrField == false)
                                         instByRef = instByRef.Unwrap();
 
-                                    StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(instByRef));
+                                    StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(instByRef), true);
                                     break;
                                 }
 
@@ -2715,7 +2715,7 @@ namespace dotnow.Runtime.CIL
                                 if (fieldAccess.isClrField == false)
                                     inst = inst.Unwrap();
 
-                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(inst));
+                                StackData.AllocTyped(ref stack[stackPtr++], fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(inst), true);
                             }
                             break;
                         }
@@ -2753,7 +2753,7 @@ namespace dotnow.Runtime.CIL
 
                             StackData.ValueTypeCopy(ref right);
 
-                            fieldAccess.targetField.SetValue(null, right.UnboxAsType(fieldAccess.fieldTypeInfo));
+                            fieldAccess.targetField.SetValue(null, right.UnboxAsType(fieldAccess.fieldTypeInfo, fieldAccess.isClrField == false));
                             break;
                         }
 
@@ -2785,7 +2785,7 @@ namespace dotnow.Runtime.CIL
                                 if (fieldAccess.isClrField == false)
                                     inst = inst.Unwrap();
 
-                                fieldAccess.targetField.SetValue(inst, right.UnboxAsType(fieldAccess.fieldTypeInfo));
+                                fieldAccess.targetField.SetValue(inst, right.UnboxAsType(fieldAccess.fieldTypeInfo, fieldAccess.isClrField == false));
                             }
                             else
                             {
@@ -2795,7 +2795,7 @@ namespace dotnow.Runtime.CIL
                                 if (fieldAccess.isClrField == false)
                                     inst = inst.Unwrap();
 
-                                fieldAccess.targetField.SetValue(inst, right.UnboxAsType(fieldAccess.fieldTypeInfo));
+                                fieldAccess.targetField.SetValue(inst, right.UnboxAsType(fieldAccess.fieldTypeInfo, fieldAccess.isClrField == false));
                             }
                             break;
                         }
