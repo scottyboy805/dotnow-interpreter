@@ -3168,7 +3168,7 @@ namespace dotnow.Runtime.CIL
                             // Load return value onto stack
                             if (signature.returnsValue == true)
                             {
-                                StackData.AllocTyped(ref stack[argOffset], signature.returnType, invocationResult);
+                                StackData.AllocTyped(ref stack[argOffset], signature.returnType, invocationResult, methodInvoke.isCLRMethod == false);
                                 stackPtr = argOffset + 1;
                             }
                             else
