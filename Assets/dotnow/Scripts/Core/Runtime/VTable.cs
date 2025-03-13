@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using dotnow.Runtime.CIL;
 
@@ -37,7 +38,38 @@ namespace dotnow.Runtime
             while (virtualCall == null && runtimeType != null)
             {
                 // Try to get method
-                MethodBase method = runtimeType.GetMethod(originalCall.Name, flags, null, signature.parameterTypes, null);
+                MethodBase method = null;
+                try
+                {
+                    method = runtimeType.GetMethod(originalCall.Name, flags, null, signature.parameterTypes, null);
+                }
+                catch (Exception e)
+                {
+                    // Get all potential methods
+                    MethodInfo[] methods = runtimeType.GetMethods(flags);
+
+                    // Find all closely matching methods
+                    IEnumerable<MethodInfo> potentialMethods = methods.Where(m =>
+                        m.Name == originalCall.Name && m.IsGenericMethod == originalCall.IsGenericMethod &&
+                        m.GetParameters().Length == originalCall.GetParameters().Length &&
+                        m.GetGenericArguments().Length == originalCall.GetGenericArguments().Length);
+
+                    try
+                    {
+                        // Try to get only match
+                        MethodInfo resolvedMethod = potentialMethods.SingleOrDefault();
+                        method = resolvedMethod;
+                        
+                        // Make method generic
+                        if (resolvedMethod != null && resolvedMethod.IsGenericMethod)
+                            method = resolvedMethod.MakeGenericMethod(originalCall.GetGenericArguments());
+                    }
+                    catch
+                    {
+                        // Throw first exception
+                        throw e;
+                    }
+                }
 
                 // Check for found method
                 if (method != null)

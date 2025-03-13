@@ -808,7 +808,7 @@ namespace dotnow
                     MethodInfo[] methods = resolvedDeclaringType.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
 
                     // Find all closely matching methods
-                    IEnumerable<MethodInfo> potentialMethods = methods.Where(m => m.Name == reference.Name && m.IsGenericMethod == true && m.GetParameters().Length == reference.Parameters.Count);
+                    IEnumerable<MethodInfo> potentialMethods = methods.Where(m => m.Name == reference.Name && m.IsGenericMethod == true && m.GetParameters().Length == reference.Parameters.Count && m.GetGenericArguments().Length == genericArguments.Length);
 
                     try
                     {
