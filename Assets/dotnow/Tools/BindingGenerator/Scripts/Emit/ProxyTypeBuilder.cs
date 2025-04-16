@@ -1,5 +1,5 @@
 ﻿#if !UNITY_DISABLE
-#if UNITY_EDITOR 
+#if UNITY_EDITOR && NET_4_6
 using dotnow.Interop;
 using System;
 using System.CodeDom;
