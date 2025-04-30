@@ -1,9 +1,11 @@
 {
     "name": "dotnow.Integration",
+    "rootNamespace": "",
     "references": [
         "GUID:f656afbb727c4e8418169dff952bc121",
         "GUID:82ccc7faf9a0ce8478430010c631dc89",
-        "GUID:842c85e8e7f0d24438e45dd7e05434da"
+        "GUID:842c85e8e7f0d24438e45dd7e05434da",
+        "GUID:742181db24a1e374db9561961d44638b"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
