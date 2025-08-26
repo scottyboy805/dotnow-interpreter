@@ -181,10 +181,10 @@ namespace UnityEngine
         // Methods
         public void InitializeProxy(AppDomain domain, CLRInstance instance)
         {
-            if(domainShared == null)
+            if (domainShared == null)
                 domainShared = domain;
 
-            this.domain = domain;            
+            this.domain = domain;
             this.instanceType = instance.Type;
             this.instance = instance;
 
@@ -200,7 +200,10 @@ namespace UnityEngine
 
             // Important - these serialized values must be set after Awake otherwise we have infinite instantiate loop
             this.assemblyInfo = instance.Type.Assembly.FullName;
-            this.typeInfo = instance.Type.Name;
+
+            // Set type info
+            if (gameObject.activeInHierarchy == true)
+                this.typeInfo = instance.Type.Name;
         }
 
         private void InstantiateProxy()
@@ -211,7 +214,7 @@ namespace UnityEngine
             CLRType type = domain.ResolveType(assemblyInfo, typeInfo) as CLRType;
 
             // Check for error
-            if(type == null)
+            if (type == null)
             {
                 Debug.LogError("Failed to resolve CLR type during instantiate! Script cannot run", this);
                 enabled = false;
@@ -253,6 +256,10 @@ namespace UnityEngine
             // When Unity calls this method, we have not yet had chance to 'InitializeProxy'. This method will be called manually when ready.
             if (domain == null)
                 return;
+
+            // Set type info on enable
+            if (gameObject.activeInHierarchy == true)
+                this.typeInfo = instance?.Type.Name;
 
             cache.InvokeProxyMethod(3, nameof(OnEnable));
         }

@@ -189,7 +189,7 @@ namespace dotnow
 						parameterTypes[4].ParameterType != typeof(Type[]))
 					{
 #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_WSA || UNITY_WEBGL || UNITY_SWITCH) && UNITY_DISABLE == false
-						UnityEngine.Debug.LogErrorFormat("Method binding {0} must have the following parameter signature ({1}, {2}, {3}, {4})", method,
+						UnityEngine.Debug.LogErrorFormat("Method binding {0} must have the following parameter signature ({1}, {2}, {3}, {4}, {5})", method,
 							typeof(AppDomain),
 							typeof(MethodInfo),
 							typeof(object),
