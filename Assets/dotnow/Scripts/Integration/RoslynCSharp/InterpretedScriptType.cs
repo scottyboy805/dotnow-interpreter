@@ -12,6 +12,8 @@ namespace RoslynCSharp
         // Private
         private static readonly MethodInfo addComponentMethod = typeof(GameObject)
             .GetMethod(nameof(GameObject.AddComponent), new Type[] { typeof(Type) });
+        private static readonly MethodInfo createInstanceMethod = typeof(ScriptableObject)
+            .GetMethod(nameof(ScriptableObject.CreateInstance), new Type[] { typeof(Type) });
 
         private ScriptAssembly assembly = null;
         private ScriptType parent = null;
@@ -149,7 +151,21 @@ namespace RoslynCSharp
 
         protected override ScriptProxy CreateScriptableObjectInstanceImpl()
         {
-            throw new NotSupportedException();
+            // Get the interpret domain
+            AppDomain appDomain = Assembly.Domain.GetAppDomain();
+
+            // Get the create instance method override
+            MethodBase createInstanceOverride = appDomain.GetOverrideMethodBinding(createInstanceMethod);
+
+            // Call create instance override
+            object instance = createInstanceOverride.Invoke(parent, new object[] { clrType });
+
+            // Create proxy
+            if (instance != null)
+                return ScriptProxy.CreateScriptProxy<InterpretedScriptProxy>(this, instance);
+
+            // Error creating instance
+            return null;
         }
 
         protected override ScriptProxy CreateInstanceImpl(object[] args)
