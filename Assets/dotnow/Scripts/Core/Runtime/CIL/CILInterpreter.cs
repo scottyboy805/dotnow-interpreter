@@ -1459,6 +1459,17 @@ namespace dotnow.Runtime.CIL
                                         flag = ((uint)left.value.Int64 > (uint)right.value.Int64);
                                         break;
                                     }
+                                case StackData.ObjectType.Single:
+                                    {
+                                        flag = (left.value.Single > right.value.Single);
+                                        break;
+                                    }
+
+                                case StackData.ObjectType.Double:
+                                    {
+                                        flag = (left.value.Double > right.value.Double);
+                                        break;
+                                    }
 
                                 case StackData.ObjectType.Ref:
                                     {
@@ -1549,6 +1560,16 @@ namespace dotnow.Runtime.CIL
                                         flag = ((uint)left.value.Int64 >= (uint)right.value.Int64);
                                         break;
                                     }
+                                case StackData.ObjectType.Single:
+                                    {
+                                        flag = ((float)left.value.Single >= (float)right.value.Single);
+                                        break;
+                                    }
+                                case StackData.ObjectType.Double:
+                                    {
+                                        flag = (((double)left.value.Double >= (double)right.value.Double));
+                                        break;
+                                    }
 
                                 case StackData.ObjectType.Ref:
                                     {
@@ -1556,7 +1577,7 @@ namespace dotnow.Runtime.CIL
                                         break;
                                     }
 
-                                default: throw new NotSupportedException();
+                                default: throw new NotSupportedException(left.type.ToString());
                             }
 
                             if (flag == true)
