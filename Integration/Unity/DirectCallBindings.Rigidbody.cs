@@ -11,7 +11,7 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(Rigidbody), "set_velocity", typeof(Vector3))]
         public static void UnityEngine_Rigidbody_SetVelocity(StackData[] stack, int offset)
         {
-            ((Rigidbody)stack[offset].Ref).velocity = (Vector3)stack[offset + 1].Ref;
+            ((Rigidbody)stack[offset].Ref).linearVelocity = (Vector3)stack[offset + 1].Ref;
         }
 
         [Preserve]
