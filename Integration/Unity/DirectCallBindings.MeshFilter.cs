@@ -11,8 +11,8 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(MeshFilter), "get_mesh")]
         public static void UnityEngine_MeshFilter_GetMesh(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((MeshFilter)stack[offset].refValue).mesh;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = ((MeshFilter)stack[offset].Ref).mesh;
+            stack[offset].Type = StackType.Ref;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(Vector2), "op_Subtraction", typeof(Vector2), typeof(Vector2))]
         public static void UnityEngine_Vector2_Subtraction(StackData[] stack, int offset)
         {
-            stack[offset].refValue = (Vector2)stack[offset].refValue - (Vector2)stack[offset + 1].refValue;
+            stack[offset].Ref = (Vector2)stack[offset].Ref - (Vector2)stack[offset + 1].Ref;
         }
 #endif
     }

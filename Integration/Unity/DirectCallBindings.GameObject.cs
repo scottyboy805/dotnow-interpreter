@@ -11,8 +11,8 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(GameObject), "get_transform")]
         public static void UnityEngine_GameObject_GetTransform(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((GameObject)stack[offset].refValue).transform;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = ((GameObject)stack[offset].Ref).transform;
+            stack[offset].Type = StackType.Ref;
         }
     }
 }

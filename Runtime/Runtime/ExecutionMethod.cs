@@ -46,8 +46,8 @@ namespace dotnow.Runtime
             // Push instance
             if(instanceCount > 0)
             {
-                frame.stack[frame.stackIndex].refValue = obj;
-                frame.stack[frame.stackIndex++].type = StackData.ObjectType.Ref;
+                frame.stack[frame.stackIndex].Ref = obj;
+                frame.stack[frame.stackIndex++].Type = StackType.Ref;
             }
 
             // ### More work required to copy value types
@@ -98,8 +98,8 @@ namespace dotnow.Runtime
             // Push instance
             if (instanceCount > 0)
             {
-                frame.stack[frame.stackIndex].refValue = obj;
-                frame.stack[frame.stackIndex++].type = StackData.ObjectType.Ref;
+                frame.stack[frame.stackIndex].Ref = obj;
+                frame.stack[frame.stackIndex++].Type = StackType.Ref;
             }
 
             // Execute method body

@@ -11,8 +11,8 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(Time), "get_time")]
         public static void UnityEngine_Time_GetTime(StackData[] stack, int offset)
         {
-            stack[offset].value.Single = Time.time;
-            stack[offset].type = StackData.ObjectType.Single;
+            stack[offset].Single = Time.time;
+            stack[offset].Type = StackType.Single;
         }
     }
 }

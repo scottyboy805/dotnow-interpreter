@@ -132,7 +132,7 @@ namespace dotnow.Reflection
                 IByRef byRef = obj as IByRef;
                 if (byRef != null)
                 {
-                    CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
+                    CLRInstance inst = byRef.GetReferenceValue().Ref as CLRInstance;
 
                     return inst.GetFieldValue(this);
                 }
@@ -158,20 +158,20 @@ namespace dotnow.Reflection
             if (isStatic == false)
             {
                 // Check for instance
-                if (obj.refValue.IsCLRInstanceOrByRefInstance() == false)
+                if (obj.Ref.IsCLRInstanceOrByRefInstance() == false)
                     throw new InvalidOperationException("Cannot access field value for non CLR instance");
 
-                IByRef byRef = obj.refValue as IByRef;
+                IByRef byRef = obj.Ref as IByRef;
                 if (byRef != null)
                 {
-                    CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
+                    CLRInstance inst = byRef.GetReferenceValue().Ref as CLRInstance;
 
                     inst.GetFieldValueStack(this, ref value);
                     return;
                 }
 
                 // Get value from the instance
-                (obj.refValue as CLRInstance).GetFieldValueStack(this, ref value);
+                (obj.Ref as CLRInstance).GetFieldValueStack(this, ref value);
                 return;
             }
 
@@ -194,7 +194,7 @@ namespace dotnow.Reflection
                 IByRef byRef = obj as IByRef;
                 if (byRef != null)
                 {
-                    CLRInstance inst = byRef.GetReferenceValue().refValue as CLRInstance;
+                    CLRInstance inst = byRef.GetReferenceValue().Ref as CLRInstance;
 
                     inst.SetFieldValue(this, value);
                 }

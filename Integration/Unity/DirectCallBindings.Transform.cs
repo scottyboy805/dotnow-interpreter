@@ -14,56 +14,56 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(Transform), "get_parent")]
         public static void UnityEngine_Transform_GetParent(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((Transform)stack[offset].refValue).parent;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = ((Transform)stack[offset].Ref).parent;
+            stack[offset].Type = StackType.Ref;
         }
 
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(Transform), "get_position")]
         public static void UnityEngine_Transform_GetPosition(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((Transform)stack[offset].refValue).position;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = ((Transform)stack[offset].Ref).position;
+            stack[offset].Type = StackType.Ref;
         }
 
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(Transform), "get_localPosition")]
         public static void UnityEngine_Transform_GetLocalPosition(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((Transform)stack[offset].refValue).localPosition;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = ((Transform)stack[offset].Ref).localPosition;
+            stack[offset].Type = StackType.Ref;
         }
 
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(Transform), "get_rotation")]
         public static void UnityEngine_Transform_GetRotation(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((Transform)stack[offset].refValue).rotation;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = ((Transform)stack[offset].Ref).rotation;
+            stack[offset].Type = StackType.Ref;
         }
 
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(Transform), "get_localRotation")]
         public static void GetLocalRotation(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((Transform)stack[offset].refValue).localRotation;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = ((Transform)stack[offset].Ref).localRotation;
+            stack[offset].Type = StackType.Ref;
         }
 
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(Transform), "Rotate", typeof(float), typeof(float), typeof(float))]
         public static void UnityEngine_Transform_Rotate_SingleSingleSingle(StackData[] stack, int offset)
         {
-            ((Transform)stack[offset].refValue).Rotate(stack[offset + 1].value.Single, 
-                stack[offset + 2].value.Single, 
-                stack[offset + 3].value.Single);
+            ((Transform)stack[offset].Ref).Rotate(stack[offset + 1].Single, 
+                stack[offset + 2].Single, 
+                stack[offset + 3].Single);
         }
 
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(List<Transform>.Enumerator), "MoveNext")]
         public static void IEnumerator_MoveNext(StackData[] stack, int offset)
         {
-            IEnumerator enumerator = (IEnumerator)((IByRef)stack[offset].refValue).GetReferenceValue().refValue;
+            IEnumerator enumerator = (IEnumerator)((IByRef)stack[offset].Ref).GetReferenceValue().Ref;
 
             StackData.AllocTyped(ref stack[offset], System.TypeCode.Boolean, enumerator.MoveNext());
         }
@@ -72,7 +72,7 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(List<Transform>.Enumerator), "get_Current")]
         public static void IEnumerator_getCurrent(StackData[] stack, int offset)
         {
-            IEnumerator enumerator = (IEnumerator)((IByRef)stack[offset].refValue).GetReferenceValue().refValue;
+            IEnumerator enumerator = (IEnumerator)((IByRef)stack[offset].Ref).GetReferenceValue().Ref;
 
             StackData.AllocTyped(ref stack[offset], System.TypeCode.Object, enumerator.Current);
         }

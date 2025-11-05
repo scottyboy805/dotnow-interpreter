@@ -14,7 +14,7 @@ namespace dotnow.Runtime
         // Properties
         public object Instance
         {
-            get { return instance.refValue; }
+            get { return instance.Ref; }
         }
 
         // Constructor
@@ -40,9 +40,9 @@ namespace dotnow.Runtime
             StackData value = new StackData();
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
+            if (instance.Type == StackType.ByRef)
             {
-                StackData.AllocTyped(ref value, fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box()));
+                StackData.AllocTyped(ref value, fieldAccess.fieldTypeInfo, fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box()));
                 return value;
             }
 
@@ -60,12 +60,12 @@ namespace dotnow.Runtime
                 directAccessStack[0] = instance;
 
                 fieldAccess.directReadAccessDelegate(directAccessStack, 0);
-                return (byte)directAccessStack[0].value.Int8;
+                return (byte)directAccessStack[0].Int32;
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
-                return (byte)fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box());
+            if (instance.Type == StackType.ByRef)
+                return (byte)fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box());
 
             return (byte)fieldAccess.targetField.GetValue(instance.Box());
         }
@@ -79,12 +79,12 @@ namespace dotnow.Runtime
                 directAccessStack[0] = instance;
 
                 fieldAccess.directReadAccessDelegate(directAccessStack, 0);
-                return (ushort)directAccessStack[0].value.Int16;
+                return (ushort)directAccessStack[0].Int32;
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
-                return (ushort)fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box());
+            if (instance.Type == StackType.ByRef)
+                return (ushort)fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box());
 
             return (ushort)fieldAccess.targetField.GetValue(instance.Box());
         }
@@ -98,12 +98,12 @@ namespace dotnow.Runtime
                 directAccessStack[0] = instance;
 
                 fieldAccess.directReadAccessDelegate(directAccessStack, 0);
-                return (uint)directAccessStack[0].value.Int32;
+                return (uint)directAccessStack[0].Int32;
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
-                return (uint)fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box());
+            if (instance.Type == StackType.ByRef)
+                return (uint)fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box());
 
             return (uint)fieldAccess.targetField.GetValue(instance.Box());
         }
@@ -117,12 +117,12 @@ namespace dotnow.Runtime
                 directAccessStack[0] = instance;
 
                 fieldAccess.directReadAccessDelegate(directAccessStack, 0);
-                return (ulong)directAccessStack[0].value.Int64;
+                return (ulong)directAccessStack[0].Int64;
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
-                return (ulong)fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box());
+            if (instance.Type == StackType.ByRef)
+                return (ulong)fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box());
 
             return (ulong)fieldAccess.targetField.GetValue(instance.Box());
         }
@@ -136,12 +136,12 @@ namespace dotnow.Runtime
                 directAccessStack[0] = instance;
 
                 fieldAccess.directReadAccessDelegate(directAccessStack, 0);
-                return directAccessStack[0].value.Int8;
+                return (sbyte)directAccessStack[0].Int32;
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
-                return (sbyte)fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box());
+            if (instance.Type == StackType.ByRef)
+                return (sbyte)fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box());
 
             return (sbyte)fieldAccess.targetField.GetValue(instance.Box());
         }
@@ -155,12 +155,12 @@ namespace dotnow.Runtime
                 directAccessStack[0] = instance;
 
                 fieldAccess.directReadAccessDelegate(directAccessStack, 0);
-                return directAccessStack[0].value.Int16;
+                return (short)directAccessStack[0].Int32;
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
-                return (short)fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box());
+            if (instance.Type == StackType.ByRef)
+                return (short)fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box());
 
             return (short)fieldAccess.targetField.GetValue(instance.Box());
         }
@@ -174,12 +174,12 @@ namespace dotnow.Runtime
                 directAccessStack[0] = instance;
 
                 fieldAccess.directReadAccessDelegate(directAccessStack, 0);
-                return directAccessStack[0].value.Int32;
+                return directAccessStack[0].Int32;
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
-                return (int)fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box());
+            if (instance.Type == StackType.ByRef)
+                return (int)fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box());
 
             return (int)fieldAccess.targetField.GetValue(instance.Box());
         }
@@ -193,12 +193,12 @@ namespace dotnow.Runtime
                 directAccessStack[0] = instance;
 
                 fieldAccess.directReadAccessDelegate(directAccessStack, 0);
-                return directAccessStack[0].value.Int64;
+                return directAccessStack[0].Int64;
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
-                return (long)fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box());
+            if (instance.Type == StackType.ByRef)
+                return (long)fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box());
 
             return (long)fieldAccess.targetField.GetValue(instance.Box());
         }
@@ -212,12 +212,12 @@ namespace dotnow.Runtime
                 directAccessStack[0] = instance;
 
                 fieldAccess.directReadAccessDelegate(directAccessStack, 0);
-                return directAccessStack[0].value.Single;
+                return directAccessStack[0].Single;
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
-                return (float)fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box());
+            if (instance.Type == StackType.ByRef)
+                return (float)fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box());
 
             return (float)fieldAccess.targetField.GetValue(instance.Box());
         }
@@ -231,12 +231,12 @@ namespace dotnow.Runtime
                 directAccessStack[0] = instance;
 
                 fieldAccess.directReadAccessDelegate(directAccessStack, 0);
-                return directAccessStack[0].value.Double;
+                return directAccessStack[0].Double;
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
-                return (double)fieldAccess.targetField.GetValue(((IByRef)instance.refValue).GetReferenceValue().Box());
+            if (instance.Type == StackType.ByRef)
+                return (double)fieldAccess.targetField.GetValue(((IByRef)instance.Ref).GetReferenceValue().Box());
 
             return (double)fieldAccess.targetField.GetValue(instance.Box());
         }
@@ -255,16 +255,16 @@ namespace dotnow.Runtime
             }
 
             // Check for by ref
-            if(instance.type == StackData.ObjectType.ByRef)
+            if(instance.Type == StackType.ByRef)
             {
                 // Fetch target object
-                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+                StackData val = ((IByRef)instance.Ref).GetReferenceValue();
 
                 // Assign field on object
                 fieldAccess.targetField.SetValue(val.Box(), value);
 
                 // Update reference chain
-                ((IByRef)instance.refValue).SetReferenceValue(val);
+                ((IByRef)instance.Ref).SetReferenceValue(val);
                 return;
             }
 
@@ -285,16 +285,16 @@ namespace dotnow.Runtime
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
+            if (instance.Type == StackType.ByRef)
             {
                 // Fetch target object
-                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+                StackData val = ((IByRef)instance.Ref).GetReferenceValue();
 
                 // Assign field on object
                 fieldAccess.targetField.SetValue(val.Box(), value);
 
                 // Update reference chain
-                ((IByRef)instance.refValue).SetReferenceValue(val);
+                ((IByRef)instance.Ref).SetReferenceValue(val);
                 return;
             }
 
@@ -315,16 +315,16 @@ namespace dotnow.Runtime
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
+            if (instance.Type == StackType.ByRef)
             {
                 // Fetch target object
-                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+                StackData val = ((IByRef)instance.Ref).GetReferenceValue();
 
                 // Assign field on object
                 fieldAccess.targetField.SetValue(val.Box(), value);
 
                 // Update reference chain
-                ((IByRef)instance.refValue).SetReferenceValue(val);
+                ((IByRef)instance.Ref).SetReferenceValue(val);
                 return;
             }
 
@@ -345,16 +345,16 @@ namespace dotnow.Runtime
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
+            if (instance.Type == StackType.ByRef)
             {
                 // Fetch target object
-                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+                StackData val = ((IByRef)instance.Ref).GetReferenceValue();
 
                 // Assign field on object
                 fieldAccess.targetField.SetValue(val.Box(), value);
 
                 // Update reference chain
-                ((IByRef)instance.refValue).SetReferenceValue(val);
+                ((IByRef)instance.Ref).SetReferenceValue(val);
                 return;
             }
 
@@ -375,16 +375,16 @@ namespace dotnow.Runtime
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
+            if (instance.Type == StackType.ByRef)
             {
                 // Fetch target object
-                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+                StackData val = ((IByRef)instance.Ref).GetReferenceValue();
 
                 // Assign field on object
                 fieldAccess.targetField.SetValue(val.Box(), value);
 
                 // Update reference chain
-                ((IByRef)instance.refValue).SetReferenceValue(val);
+                ((IByRef)instance.Ref).SetReferenceValue(val);
                 return;
             }
 
@@ -405,16 +405,16 @@ namespace dotnow.Runtime
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
+            if (instance.Type == StackType.ByRef)
             {
                 // Fetch target object
-                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+                StackData val = ((IByRef)instance.Ref).GetReferenceValue();
 
                 // Assign field on object
                 fieldAccess.targetField.SetValue(val.Box(), value);
 
                 // Update reference chain
-                ((IByRef)instance.refValue).SetReferenceValue(val);
+                ((IByRef)instance.Ref).SetReferenceValue(val);
                 return;
             }
 
@@ -435,16 +435,16 @@ namespace dotnow.Runtime
             }
 
             // Check for by ref
-            if (instance.type == StackData.ObjectType.ByRef)
+            if (instance.Type == StackType.ByRef)
             {
                 // Fetch target object
-                StackData val = ((IByRef)instance.refValue).GetReferenceValue();
+                StackData val = ((IByRef)instance.Ref).GetReferenceValue();
 
                 // Assign field on object
                 fieldAccess.targetField.SetValue(val.Box(), value);
 
                 // Update reference chain
-                ((IByRef)instance.refValue).SetReferenceValue(val);
+                ((IByRef)instance.Ref).SetReferenceValue(val);
                 return;
             }
 

@@ -57,42 +57,42 @@ namespace dotnow.Runtime.JIT
         #region Emit
         public void Emit(Code opCode)
         {
-            EmitOperation(new CILOperation(opCode, new StackData.Primitive { Int32 = 0 }, null));
+            EmitOperation(new CILOperation(opCode, new StackData { Int32 = 0 }, null));
         }
 
         public void Emit(Code opCode, int operand)
         {
-            EmitOperation(new CILOperation(opCode, new StackData.Primitive { Int32 = operand }, null));
+            EmitOperation(new CILOperation(opCode, new StackData { Int32 = operand }, null));
         }
 
         public void Emit(Code opCode, long operand)
         {
-            EmitOperation(new CILOperation(opCode, new StackData.Primitive { Int64 = operand }, null));
+            EmitOperation(new CILOperation(opCode, new StackData { Int64 = operand }, null));
         }
 
         public void Emit(Code opCode, float operand)
         {
-            EmitOperation(new CILOperation(opCode, new StackData.Primitive { Single = operand }, null));
+            EmitOperation(new CILOperation(opCode, new StackData { Single = operand }, null));
         }
 
         public void Emit(Code opCode, double operand)
         {
-            EmitOperation(new CILOperation(opCode, new StackData.Primitive { Double = operand }, null));
+            EmitOperation(new CILOperation(opCode, new StackData { Double = operand }, null));
         }
 
         public void Emit(Code opCode, string operand)
         {
-            EmitOperation(new CILOperation(opCode, default(StackData.Primitive), operand));
+            EmitOperation(new CILOperation(opCode, default(StackData), operand));
         }
 
         public void Emit(Code opCode, int[] operand)
         {
-            EmitOperation(new CILOperation(opCode, default(StackData.Primitive), operand));
+            EmitOperation(new CILOperation(opCode, default(StackData), operand));
         }
 
         public void Emit(Code opCode, Type type)
         {
-            CILOperation op = new CILOperation(opCode, default(StackData.Primitive), null);
+            CILOperation op = new CILOperation(opCode, default(StackData), null);
             op.typeOperand = CLRTypeInfo.GetTypeInfo(type);
 
             EmitOperation(op);
@@ -110,7 +110,7 @@ namespace dotnow.Runtime.JIT
 
         public void Emit(Code opCode, MemberInfo member, Type specialType = null)
         {
-            CILOperation op = new CILOperation(opCode, default(StackData.Primitive), member);
+            CILOperation op = new CILOperation(opCode, default(StackData), member);
 
             // Set type value
             if(specialType != null)

@@ -11,8 +11,8 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(Collision), "get_collider")]
         public static void UnityEngine_Collision_GetCollider(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((Collision)stack[offset].refValue).collider;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = ((Collision)stack[offset].Ref).collider;
+            stack[offset].Type = StackType.Ref;
         }
     }
 }

@@ -11,8 +11,8 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(ParticleSystem), "get_isPlaying")]
         public static void UnityEngine_ParticleSystem_IsPlaying(StackData[] stack, int offset)
         {
-            stack[offset].value.Int32 = ((ParticleSystem)stack[offset].refValue).isPlaying ? 1 : 0;
-            stack[offset].type = StackData.ObjectType.Int32;
+            stack[offset].Int32 = ((ParticleSystem)stack[offset].Ref).isPlaying ? 1 : 0;
+            stack[offset].Type = StackType.Int32;
         }
 
         [Preserve]
@@ -20,7 +20,7 @@ namespace UnityEngine
         public static void UnityEngine_ParticleSystem_SetEmissionRate(StackData[] stack, int offset)
         {
 #pragma warning disable CS0618
-            ((ParticleSystem)stack[offset].refValue).emissionRate = stack[offset + 1].value.Single;
+            ((ParticleSystem)stack[offset].Ref).emissionRate = stack[offset + 1].Single;
 #pragma warning restore CS0618
         }
 
@@ -29,7 +29,7 @@ namespace UnityEngine
         public static void UnityEngine_ParticleSystem_SetRateOverTime(StackData[] stack, int offset)
         {
             ParticleSystem.EmissionModule emission = stack[offset].GetRefValue<ParticleSystem.EmissionModule>();
-            emission.rateOverTimeMultiplier = stack[offset + 1].value.Single;
+            emission.rateOverTimeMultiplier = stack[offset + 1].Single;
         }
 
         [Preserve]
@@ -37,7 +37,7 @@ namespace UnityEngine
         public static void UnityEngine_ParticleSystem_SetRateOverDistanceMultiplier(StackData[] stack, int offset)
         {
             ParticleSystem.EmissionModule emission = stack[offset].GetRefValue<ParticleSystem.EmissionModule>();
-            emission.rateOverDistanceMultiplier = stack[offset + 1].value.Single;
+            emission.rateOverDistanceMultiplier = stack[offset + 1].Single;
         }
 
         [Preserve]
@@ -45,8 +45,8 @@ namespace UnityEngine
         public static void UnityEngine_ParticleSystem_GetEmissionRate(StackData[] stack, int offset)
         {
 #pragma warning disable CS0618
-            stack[offset].value.Single = ((ParticleSystem)stack[offset].refValue).emissionRate;
-            stack[offset].type = StackData.ObjectType.Single;
+            stack[offset].Single = ((ParticleSystem)stack[offset].Ref).emissionRate;
+            stack[offset].Type = StackType.Single;
 #pragma warning restore CS0618
         }
 
@@ -55,8 +55,8 @@ namespace UnityEngine
         public static void UnityEngine_ParticleSystem_GetRateOverTime(StackData[] stack, int offset)
         {
             ParticleSystem.EmissionModule emission = stack[offset].GetRefValue<ParticleSystem.EmissionModule>();
-            stack[offset].refValue = emission.rateOverTime;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = emission.rateOverTime;
+            stack[offset].Type = StackType.Ref;
         }
     }
 }

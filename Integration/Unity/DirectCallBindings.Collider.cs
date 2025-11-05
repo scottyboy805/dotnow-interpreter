@@ -11,8 +11,8 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(Collider), "get_gameObject")]
         public static void UnityEngine_Collider_GetGameObject(StackData[] stack, int offset)
         {
-            stack[offset].refValue = ((Collider)stack[offset].refValue).gameObject;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = ((Collider)stack[offset].Ref).gameObject;
+            stack[offset].Type = StackType.Ref;
         }
     }
 }

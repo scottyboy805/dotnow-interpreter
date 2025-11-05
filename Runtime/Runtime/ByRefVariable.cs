@@ -10,7 +10,7 @@ namespace dotnow.Runtime
         // Properties
         public object Instance
         {
-            get { return stack[varOffset].refValue; }
+            get { return stack[varOffset].Ref; }
         }
 
         // Constructor
@@ -28,52 +28,52 @@ namespace dotnow.Runtime
 
         public byte GetReferenceValueU1()
         {
-            return (byte)stack[varOffset].value.Int8;
+            return (byte)stack[varOffset].Int32;
         }
 
         public ushort GetReferenceValueU2()
         {
-            return (ushort)stack[varOffset].value.Int16;
+            return (ushort)stack[varOffset].Int32;
         }
 
         public uint GetReferenceValueU4()
         {
-            return (uint)stack[varOffset].value.Int32;
+            return (uint)stack[varOffset].Int32;
         }
 
         public ulong GetReferenceValueU8()
         {
-            return (ulong)stack[varOffset].value.Int64;
+            return (ulong)stack[varOffset].Int64;
         }
 
         public sbyte GetReferenceValueI1()
         {
-            return stack[varOffset].value.Int8;
+            return (sbyte)stack[varOffset].Int32;
         }
 
         public short GetReferenceValueI2()
         {
-            return stack[varOffset].value.Int16;
+            return (short)stack[varOffset].Int32;
         }
 
         public int GetReferenceValueI4()
         {
-            return stack[varOffset].value.Int32;
+            return stack[varOffset].Int32;
         }
 
         public long GetReferenceValueI8()
         {
-            return stack[varOffset].value.Int64;
+            return stack[varOffset].Int64;
         }
 
         public float GetReferenceValueR4()
         {
-            return stack[varOffset].value.Single;
+            return stack[varOffset].Single;
         }
 
         public double GetReferenceValueR8()
         {
-            return stack[varOffset].value.Double;
+            return stack[varOffset].Double;
         }
 
         public void SetReferenceValue(StackData value)
@@ -83,32 +83,32 @@ namespace dotnow.Runtime
 
         public void SetReferenceValueI1(sbyte value)
         {
-            stack[varOffset].value.Int8 = value;
+            stack[varOffset].Int32 = value;
         }
 
         public void SetReferenceValueI2(short value)
         {
-            stack[varOffset].value.Int16 = value;
+            stack[varOffset].Int32 = value;
         }
 
         public void SetReferenceValueI4(int value)
         {
-            stack[varOffset].value.Int32 = value;
+            stack[varOffset].Int32 = value;
         }
 
         public void SetReferenceValueI8(long value)
         {
-            stack[varOffset].value.Int64 = value;
+            stack[varOffset].Int64 = value;
         }
 
         public void SetReferenceValueR4(float value)
         {
-            stack[varOffset].value.Single = value;
+            stack[varOffset].Single = value;
         }
 
         public void SetReferenceValueR8(double value)
         {
-            stack[varOffset].value.Double = value;
+            stack[varOffset].Double = value;
         }
 
         public override string ToString()

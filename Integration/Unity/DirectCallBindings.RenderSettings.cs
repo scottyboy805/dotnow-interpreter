@@ -11,16 +11,16 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(RenderSettings), "get_fogColor")]
         public static void unityEngine_RenderSettings_GetFogColor(StackData[] stack, int offset)
         {
-            stack[offset].refValue = RenderSettings.fogColor;
-            stack[offset].type = StackData.ObjectType.Ref;
+            stack[offset].Ref = RenderSettings.fogColor;
+            stack[offset].Type = StackType.Ref;
         }
 
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(RenderSettings), "get_fogDensity")]
         public static void unityEngine_RenderSettings_GetFogDensity(StackData[] stack, int offset)
         {
-            stack[offset].value.Single = RenderSettings.fogDensity;
-            stack[offset].type = StackData.ObjectType.Single;
+            stack[offset].Single = RenderSettings.fogDensity;
+            stack[offset].Type = StackType.Single;
         }
     }
 }

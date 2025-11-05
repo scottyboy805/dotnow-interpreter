@@ -316,7 +316,7 @@ namespace dotnow.BindingGenerator.Emit
             if (type != TypeCode.Object && type != TypeCode.String && !argType.IsEnum)
             {
                 // Emit start of field access
-                CodeFieldReferenceExpression primitiveField = new CodeFieldReferenceExpression(indexExpression, nameof(StackData.value));
+                CodeFieldReferenceExpression primitiveField = new CodeFieldReferenceExpression(indexExpression, nameof(StackData));
 
                 switch (type)
                 {
@@ -329,7 +329,7 @@ namespace dotnow.BindingGenerator.Emit
                     case TypeCode.SByte:
                         {
                             // Check if case is needed
-                            CodeExpression finalExpression = new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Primitive.Int8));
+                            CodeExpression finalExpression = new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Int32));
 
                             // Insert cast conversion
                             if (type == TypeCode.Byte)
@@ -343,7 +343,7 @@ namespace dotnow.BindingGenerator.Emit
                     case TypeCode.UInt16:
                         {
                             // Check if case is needed
-                            CodeExpression finalExpression = new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Primitive.Int16));
+                            CodeExpression finalExpression = new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Int32));
 
                             // Insert cast conversion
                             if (type == TypeCode.UInt16)
@@ -357,7 +357,7 @@ namespace dotnow.BindingGenerator.Emit
                     case TypeCode.UInt32:
                         {
                             // Check if case is needed
-                            CodeExpression finalExpression = new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Primitive.Int32));
+                            CodeExpression finalExpression = new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Int32));
 
                             // Insert cast conversion
                             if (type == TypeCode.UInt32)
@@ -371,7 +371,7 @@ namespace dotnow.BindingGenerator.Emit
                     case TypeCode.UInt64:
                         {
                             // Check if case is needed
-                            CodeExpression finalExpression = new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Primitive.Int64));
+                            CodeExpression finalExpression = new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Int64));
 
                             // Insert cast conversion
                             if (type == TypeCode.UInt64)
@@ -384,13 +384,13 @@ namespace dotnow.BindingGenerator.Emit
                     case TypeCode.Single:
                         {
                             // Check if case is needed
-                            return new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Primitive.Single));
+                            return new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Single));
                         }
 
                     case TypeCode.Double:
                         {
                             // Check if case is needed
-                            return new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Primitive.Double));
+                            return new CodeFieldReferenceExpression(primitiveField, nameof(StackData.Double));
                         }
                 }
             }
@@ -398,7 +398,7 @@ namespace dotnow.BindingGenerator.Emit
             {
                 // Return ref value with cast
                 return new CodeCastExpression(new CodeTypeReference(argType),
-                    new CodeFieldReferenceExpression(indexExpression, nameof(StackData.refValue)));
+                    new CodeFieldReferenceExpression(indexExpression, nameof(StackData.Ref)));
             }
         }
 

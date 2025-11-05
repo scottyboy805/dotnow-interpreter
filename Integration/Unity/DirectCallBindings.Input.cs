@@ -11,24 +11,24 @@ namespace UnityEngine
         [CLRMethodDirectCallBinding(typeof(Input), "GetKey", typeof(KeyCode))]
         public static void UnityEngine_Input_GetKey(StackData[] stack, int offset)
         {
-            stack[offset].value.Int32 = Input.GetKey((KeyCode)stack[offset].value.Int32) ? 1 : 0;
-            stack[offset].type = StackData.ObjectType.Int32;
+            stack[offset].Int32 = Input.GetKey((KeyCode)stack[offset].Int32) ? 1 : 0;
+            stack[offset].Type = StackType.Int32;
         }
 
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(Input), "GetKeyDown", typeof(KeyCode))]
         public static void UnityEngine_Input_GetKeyDown(StackData[] stack, int offset)
         {
-            stack[offset].value.Int32 = Input.GetKeyDown((KeyCode)stack[offset].value.Int32) ? 1 : 0;
-            stack[offset].type = StackData.ObjectType.Int32;
+            stack[offset].Int32 = Input.GetKeyDown((KeyCode)stack[offset].Int32) ? 1 : 0;
+            stack[offset].Type = StackType.Int32;
         }
 
         [Preserve]
         [CLRMethodDirectCallBinding(typeof(Input), "GetKeyUp", typeof(KeyCode))]
         public static void UnityEngine_Input_GetKeyUp(StackData[] stack, int offset)
         {
-            stack[offset].value.Int32 = Input.GetKeyUp((KeyCode)stack[offset].value.Int32) ? 1 : 0;
-            stack[offset].type = StackData.ObjectType.Int32;
+            stack[offset].Int32 = Input.GetKeyUp((KeyCode)stack[offset].Int32) ? 1 : 0;
+            stack[offset].Type = StackType.Int32;
         }
     }
 }

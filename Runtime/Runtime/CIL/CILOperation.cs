@@ -9,12 +9,12 @@ namespace dotnow.Runtime.CIL
 
         // Public
         public Code opCode;
-        public StackData.Primitive operand;
+        public StackData operand;
         public object objectOperand;
         public CLRTypeInfo typeOperand;
 
         // Constructor
-        public CILOperation(Code opCode, StackData.Primitive operand, object objectOperand)
+        public CILOperation(Code opCode, StackData operand, object objectOperand)
         {
             this.monoInstruction = null;
             this.opCode = opCode;

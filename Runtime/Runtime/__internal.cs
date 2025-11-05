@@ -33,8 +33,8 @@ namespace dotnow.Runtime
             Array instance = Array.CreateInstance(arrType, length);
 
             // Push to stack
-            stack.refValue = instance;
-            stack.type = StackData.ObjectType.Ref;
+            stack.Ref = instance;
+            stack.Type = StackType.Ref;
         }
 
 #if !API_NET35
@@ -52,8 +52,8 @@ namespace dotnow.Runtime
             Array instance = Array.CreateInstance(arrType, length);
 
             // Push to stack
-            stack.refValue = instance;
-            stack.type = StackData.ObjectType.Ref;
+            stack.Ref = instance;
+            stack.Type = StackType.Ref;
         }
 
 #if !API_NET35
@@ -65,8 +65,8 @@ namespace dotnow.Runtime
             object instance = domain.CreateInstance(instType, ctor, args);
 
             // Push to stack
-            stack.refValue = instance;
-            stack.type = StackData.ObjectType.Ref;
+            stack.Ref = instance;
+            stack.Type = StackType.Ref;
         }
 
 #if !API_NET35
@@ -88,8 +88,8 @@ namespace dotnow.Runtime
             instance.fieldPtr = stackPtr;
 
             // Push to stack
-            stack.refValue = instance;
-            stack.type = StackData.ObjectType.Ref;
+            stack.Ref = instance;
+            stack.Type = StackType.Ref;
 
             // Increase stack ptr
             stackPtr += allocSize;
@@ -103,8 +103,8 @@ namespace dotnow.Runtime
 #endif
         {
             // Push to stack
-            stack.refValue = new ByRefField(field, inst);
-            stack.type = StackData.ObjectType.ByRef;
+            stack.Ref = new ByRefField(field, inst);
+     stack.Type = StackType.ByRef;
         }
 
 #if !API_NET35
@@ -113,8 +113,8 @@ namespace dotnow.Runtime
         internal static void __gc_alloc_addr_elem(ref StackData stack, Array arr, int index)
         {
             // Push to stack
-            stack.refValue = new ByRefElement(arr, index);
-            stack.type = StackData.ObjectType.ByRef;
+     stack.Ref = new ByRefElement(arr, index);
+      stack.Type = StackType.ByRef;
         }
 
 #if !API_NET35
@@ -123,8 +123,8 @@ namespace dotnow.Runtime
         internal static void __gc_alloc_addr_elem(ref StackData stack, Array arr, long index)
         {
             // Push to stack
-            stack.refValue = new ByRefElement(arr, index);
-            stack.type = StackData.ObjectType.ByRef;
+            stack.Ref = new ByRefElement(arr, index);
+            stack.Type = StackType.ByRef;
         }
 
 #if !API_NET35
@@ -133,8 +133,8 @@ namespace dotnow.Runtime
         internal static void __gc_alloc_addr_stack(ref StackData stack, StackData[] stackInst, int index)
         {
             // Push to stack
-            stack.refValue = new ByRefVariable(stackInst, index);
-            stack.type = StackData.ObjectType.ByRef;
+            stack.Ref = new ByRefVariable(stackInst, index);
+  stack.Type = StackType.ByRef;
         }
     }
 }
