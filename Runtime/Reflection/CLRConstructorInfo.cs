@@ -111,10 +111,10 @@ namespace dotnow.Reflection
             ThreadContext threadContext = metadataProvider.AppDomain.GetThreadContext();
 
             // Get method handle
-            CILMethodHandle methodHandle = this.GetHandle(metadataProvider.AppDomain);
+            CILMethodInfo methodInfo = this.GetMethodInfo(metadataProvider.AppDomain);
 
             // Create the runtime method
-            RuntimeMethod runtimeMethod = new RuntimeMethod(threadContext, AssemblyLoadContext, methodHandle);
+            RuntimeMethod runtimeMethod = new RuntimeMethod(threadContext, AssemblyLoadContext, methodInfo);
 
             // Perform reflection invoke
             return runtimeMethod.ReflectionInvoke(obj, parameters);

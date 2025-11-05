@@ -1,5 +1,4 @@
-﻿using dotnow.Reflection;
-using System;
+﻿using System;
 
 namespace dotnow.Interop
 {

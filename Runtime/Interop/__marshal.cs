@@ -4,67 +4,49 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Threading;
-using UnityEditor;
 
 namespace dotnow.Interop
 {   
     /// <summary>
     /// Handles cross domain operations from interpreted code to interop (host) code.
     /// </summary>
-    internal static unsafe class __marshal
+    internal static class __marshal
     {
         // Private
         // A lookup table for object array that can be reused for interop call args per thread
-        private static readonly ThreadLocal<Dictionary<int, Type[]>> parameterTypeListCache = new(
-            () => new Dictionary<int, Type[]>());
+        private static readonly ThreadLocal<Dictionary<int, Type[]>> parameterTypeListCache = new(() => new ());
         // A lookup table for object array that can be reused for interop call args per thread
-        private static readonly ThreadLocal<Dictionary<int, object[]>> parameterListCache = new (
-            () => new Dictionary<int, object[]>());
+        private static readonly ThreadLocal<Dictionary<int, object[]>> parameterListCache = new (() => new ());
 
         // Methods
-        public static StackData* GetFieldInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILFieldHandle field, StackData* instance)
+        public static void GetFieldInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILFieldInfo field, in StackData instance, ref StackData value)
         {
             throw new NotImplementedException();
         }
 
-        public static void SetFieldInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILFieldHandle field, StackData* instance, StackData* value)
+        public static void SetFieldInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILFieldInfo field, in StackData instance, ref StackData value)
         {
             throw new NotImplementedException();
         }
 
-        public static void SetArrayValueInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, ICLRArrayProxy arrayProxy, StackData* spArg)
-        {
-            // Create stack context
-            // 2 arguments = Index, value
-            StackContext context = new StackContext(threadContext, assemblyLoadContext, null, spArg, 2);
-
-            // Invoke the array proxy
-            arrayProxy.SetValueDirect(context);
-        }
-
-        public static void GetArrayValueInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, ICLRArrayProxy arrayProxy, StackData* spReturn, StackData* spArg)
-        {
-            // Create stack context
-            // 1 argument = Index
-            StackContext context = new StackContext(threadContext, assemblyLoadContext, spReturn, spArg, 1);
-
-            // Invoke the array proxy
-            arrayProxy.GetValueDirect(context);
-        }
-
-        public static void InvokeConstructorInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILTypeHandle type, in CILMethodHandle ctor, StackData* spReturn, StackData* spArg)
+        public static void InvokeConstructorInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILTypeInfo type, in CILMethodInfo ctor, int spReturn, int spArg)
         {
             // Check for delegate
             if((ctor.Flags & CILMethodFlags.DirectInstanceDelegate) != 0)
             {
                 // Get arg count
-                int argCount = ctor.Signature.ArgCount;
+                int argCount = ctor.ParameterTypes.Length;
+
+                // Create spans for view of stack argument and return slots
+                Span<StackData> stackArgs = new Span<StackData>(threadContext.stack, spArg, argCount);
+                Span<StackData> stackReturn = (ctor.Flags & CILMethodFlags.Return) != 0
+                    ? new Span<StackData>(threadContext.stack, spReturn, 1)
+                    : default;
 
                 // Create the stack context
-                StackContext directCallContext = new StackContext(threadContext, assemblyLoadContext, spReturn, spArg, argCount);
+                StackContext directCallContext = new StackContext(assemblyLoadContext, stackArgs, stackReturn);
 
                 // Check for debug
 #if DEBUG
@@ -72,57 +54,62 @@ namespace dotnow.Interop
 #endif
 
                 // Call the delegate
-                ((DirectInstance)ctor.InteropCall)(directCallContext, type.MetaType);
+                ((DirectInstance)ctor.InteropCall)(directCallContext, type.Type);
             }
             // Check for reflection call
             else
             {
 #if DEBUG
-                Debug.LineFormat("[Marshal: Reflection Call] Interop constructor: '{0}'", ctor.MetaMethod);
+                Debug.LineFormat("[Marshal: Reflection Call] Interop constructor: '{0}'", ctor.Method);
 #endif
 
                 // Get parameter list for reflection
-                object[] paramList = GetParameterList(ctor.Signature.ArgCount);
+                object[] paramList = GetParameterList(ctor.ParameterTypes.Length);
 
                 // Copy parameters
-                if ((ctor.Signature.Flags & CILMethodSignatureFlags.HasParameters) != 0)
+                if ((ctor.Flags & CILMethodFlags.Parameters) != 0)
                 {
                     for (int i = 0; i < paramList.Length; i++)
                     {
                         // Get parameter type
-                        CILTypeHandle parameterTypeHandle = ctor.Signature.Parameters[i].VariableTypeToken.GetTypeHandle(assemblyLoadContext.AppDomain);
+                        CILTypeInfo parameterTypeInfo = ctor.ParameterTypes[i];
 
                         // Load parameter
-                        StackData.Unwrap(threadContext, parameterTypeHandle, spArg + i, ref paramList[i]);
+                        StackData.Unwrap(parameterTypeInfo, ref threadContext.stack[spArg + i], ref paramList[i]);
                     }
                 }
 
                 // Reflection invoke - do not pass instance because it should be created as part of the call
-                object result = ((ConstructorInfo)ctor.MetaMethod).Invoke(paramList);
+                object result = ((ConstructorInfo)ctor.Method).Invoke(paramList);
 
                 // Load return instance
                 {
                     // Push return value to stack
-                    StackData.Wrap(threadContext, type, result, spReturn);
+                    StackData.Wrap(type, result, ref threadContext.stack[spReturn]);
                 }
             }
         }
 
-        public static void InvokeMethodInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILTypeHandle constrained, in CILMethodHandle method, StackData* spReturn, StackData* spArg)
+        public static void InvokeMethodInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILTypeInfo constrainedType, in CILMethodInfo method, int spReturn, int spArg)
         {
-            // Get return stack - Always 1 slot before the first arg if the method has a return value
-            StackData* spFirstArg = spArg;
+            int spFirstArg = spArg;
 
              // Check for direct call
             if ((method.Flags & CILMethodFlags.DirectCallDelegate) != 0)
             {
                 // Get arg count
                 int argCount = (method.Flags & CILMethodFlags.This) != 0
-                    ? method.Signature.ArgCount + 1
-                    : method.Signature.ArgCount;
+                    ? method.ParameterTypes.Length + 1
+                    : method.ParameterTypes.Length;
+
+                // Create spans for view of stack argument and return slots
+                Span<StackData> stackArgs = new Span<StackData>(threadContext.stack, spArg, argCount);
+                Span<StackData> stackReturn = (method.Flags & CILMethodFlags.Return) != 0
+                    ? new Span<StackData>(threadContext.stack, spReturn, 1)
+                    : default;
 
                 // Create the stack context
-                StackContext directCallContext = new StackContext(threadContext, assemblyLoadContext, spReturn, spArg, argCount);
+                StackContext directCallContext = new StackContext(assemblyLoadContext, stackArgs, stackReturn);
 
                 // Check for debug
 #if DEBUG
@@ -137,14 +124,20 @@ namespace dotnow.Interop
             {
                 // Get arg count
                 int argCount = (method.Flags & CILMethodFlags.This) != 0
-                    ? method.Signature.ArgCount + 1
-                    : method.Signature.ArgCount;
+                    ? method.ParameterTypes.Length + 1
+                    : method.ParameterTypes.Length;
+
+                // Create spans for view of stack argument and return slots
+                Span<StackData> stackArgs = new Span<StackData>(threadContext.stack, spArg, argCount);
+                Span<StackData> stackReturn = (method.Flags & CILMethodFlags.Return) != 0
+                    ? new Span<StackData>(threadContext.stack, spReturn, 1)
+                    : default;
 
                 // Get generic arguments
-                Type[] genericArguments = method.MetaMethod.GetGenericArguments();
+                Type[] genericArguments = method.Method.GetGenericArguments();
 
                 // Create the stack context
-                StackContext directCallGenericContext = new StackContext(threadContext, assemblyLoadContext, spReturn, spArg, argCount);
+                StackContext directCallGenericContext = new StackContext(assemblyLoadContext, stackArgs, stackReturn);
 
                 // Check for debug
 #if DEBUG
@@ -169,67 +162,67 @@ namespace dotnow.Interop
             else
             {
 #if DEBUG
-                Debug.LineFormat("[Marshal: Reflection Call] Interop method: '{0}'", method.MetaMethod);
+                Debug.LineFormat("[Marshal: Reflection Call] Interop method: '{0}'", method.Method);
 #endif
 
                 // Get parameter list for reflection
                 object instance = null;
-                object[] paramList = GetParameterList(method.Signature.ArgCount);
+                object[] paramList = GetParameterList(method.ParameterTypes.Length);
 
                 // Copy instance
                 if ((method.Flags & CILMethodFlags.This) != 0)
                 {
                     // Get instance type - check for optional constraint
-                    CILTypeHandle thisTypeHandle = constrained.MetaType == null
-                        ? method.This.VariableTypeToken.GetTypeHandle(assemblyLoadContext.AppDomain)
-                        : constrained;
+                    CILTypeInfo thisTypeInfo = constrainedType.Type == null
+                        ? method.DeclaringType
+                        : constrainedType;
 
                     // Load instance
-                    StackData.Unwrap(threadContext, thisTypeHandle, spArg, ref instance);
+                    StackData.Unwrap(thisTypeInfo, ref threadContext.stack[spArg], ref instance);
 
                     // Increment ptr to step over instance and start for args
                     spArg++;
                 }
 
                 // Copy parameters
-                if ((method.Signature.Flags & CILMethodSignatureFlags.HasParameters) != 0)
+                if ((method.Flags & CILMethodFlags.Parameters) != 0)
                 {
                     for (int i = 0; i < paramList.Length; i++)
                     {
                         // Get parameter type
-                        CILTypeHandle parameterTypeHandle = method.Signature.Parameters[i].VariableTypeToken.GetTypeHandle(assemblyLoadContext.AppDomain);
+                        CILTypeInfo parameterTypeInfo = method.ParameterTypes[i];
 
                         // Load parameter
-                        StackData.Unwrap(threadContext, parameterTypeHandle, spArg + i, ref paramList[i]);
+                        StackData.Unwrap(parameterTypeInfo, ref threadContext.stack[spArg + i], ref paramList[i]);
                     }
                 }
 
                 // Reflection invoke
-                object result = method.MetaMethod.Invoke(instance, paramList);
+                object result = method.Method.Invoke(instance, paramList);
 
                 // Marshal by ref instance
                 // Copy the modified by ref argument back to the associated stack slot
-                if ((method.Flags & CILMethodFlags.This) != 0 && (spFirstArg->IsAddress == true || spFirstArg->Type == StackTypeCode.UnmanagedValueType))
+                if ((method.Flags & CILMethodFlags.This) != 0 && threadContext.stack[spFirstArg].Ref is ValueType)
                 {
                     // Get instance type
-                    CILTypeHandle thisTypeHandle = constrained.MetaType == null
-                        ? method.This.VariableTypeToken.GetTypeHandle(assemblyLoadContext.AppDomain)
-                        : constrained; method.This.VariableTypeToken.GetTypeHandle(assemblyLoadContext.AppDomain);
+                    CILTypeInfo thisTypeInfo = constrainedType.Type == null
+                        ? method.DeclaringType
+                        : constrainedType;
 
                     // Wrap the instance
-                    StackData.Wrap(threadContext, thisTypeHandle, instance, spFirstArg);
+                    StackData.Wrap(thisTypeInfo, instance, ref threadContext.stack[spFirstArg]);
                 }
 
                 // TODO - marshal by ref arguments in a similar way
 
                 // Check for return
-                if ((method.Signature.Flags & CILMethodSignatureFlags.HasReturn) != 0)
+                if ((method.Flags & CILMethodFlags.Return) != 0)
                 {
                     // Get return type
-                    CILTypeHandle returnTypeHandle = method.Signature.Return.VariableTypeToken.GetTypeHandle(assemblyLoadContext.AppDomain);
+                    CILTypeInfo returnTypeInfo = method.ReturnType;
 
                     // Push return value to stack
-                    StackData.Wrap(threadContext, returnTypeHandle, result, spReturn);
+                    StackData.Wrap(returnTypeInfo, result, ref threadContext.stack[spReturn]);
                 }
             }
         }
@@ -274,40 +267,40 @@ namespace dotnow.Interop
             return paramList;
         }
 
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static void BoxUnmanagedInteropValueType(in CILTypeHandle typeHandle, void* src, out object boxedValueType)
+        //{
+        //    // Initialize new default instance
+        //    boxedValueType = FormatterServices.GetUninitializedObject(typeHandle.MetaType);
+
+        //    // Pin the boxed object
+        //    GCHandle handle = GCHandle.Alloc(boxedValueType, GCHandleType.Pinned);
+        //    try
+        //    {
+        //        // Get pointer to the pinned object's data
+        //        void* dst = (void*)handle.AddrOfPinnedObject();
+
+        //        // Get size of the struct
+        //        int size = Marshal.SizeOf(typeHandle.MetaType);
+
+        //        // Copy memory
+        //        Buffer.MemoryCopy(src, dst, size, size);
+        //    }
+        //    finally
+        //    {
+        //        handle.Free(); // Always free pinned handle
+        //    }
+        //}
+
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static void UnboxUnmanagedInteropValueType(object boxedValueType, void* dst)
+        //{
+        //    // Maybe this is the best way to achieve it??
+        //    Marshal.StructureToPtr(boxedValueType, (IntPtr)dst, false);
+        //}
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void BoxUnmanagedInteropValueType(in CILTypeHandle typeHandle, void* src, out object boxedValueType)
-        {
-            // Initialize new default instance
-            boxedValueType = FormatterServices.GetUninitializedObject(typeHandle.MetaType);
-
-            // Pin the boxed object
-            GCHandle handle = GCHandle.Alloc(boxedValueType, GCHandleType.Pinned);
-            try
-            {
-                // Get pointer to the pinned object's data
-                void* dst = (void*)handle.AddrOfPinnedObject();
-
-                // Get size of the struct
-                int size = Marshal.SizeOf(typeHandle.MetaType);
-
-                // Copy memory
-                Buffer.MemoryCopy(src, dst, size, size);
-            }
-            finally
-            {
-                handle.Free(); // Always free pinned handle
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UnboxUnmanagedInteropValueType(object boxedValueType, void* dst)
-        {
-            // Maybe this is the best way to achieve it??
-            Marshal.StructureToPtr(boxedValueType, (IntPtr)dst, false);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static unsafe object CopyInteropBoxedValueTypeSlow(object boxedValueType)
+        internal static object CopyInteropBoxedValueTypeSlow(object boxedValueType)
         {
             // Check for null - cannot copy null
             if (boxedValueType == null)

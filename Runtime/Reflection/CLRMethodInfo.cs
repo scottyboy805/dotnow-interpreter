@@ -122,65 +122,22 @@ namespace dotnow.Reflection
             ThreadContext threadContext = metadataProvider.AppDomain.GetThreadContext();
 
             // Get method handle that we can actually invoke
-            CILMethodHandle methodHandle = this.GetHandle(AssemblyLoadContext.AppDomain);
-
-            //int offset = 0;
-
-            //// Load instance onto stack
-            //if((methodHandle.Flags & CILMethodFlags.This) != 0)
-            //{
-            //    // Get instance type handle
-            //    CILTypeHandle thisTypeHandle = methodHandle.This.ParameterTypeToken.GetTypeHandle(AssemblyLoadContext);
-
-            //    // Load this
-            //    threadContext.LoadOntoStack(thisTypeHandle, 0, obj);
-            //    offset = 1;
-            //}
-
-            //// Load args onto stack
-            //for(int i = 0; i < methodHandle.Signature.ArgCount; i++)
-            //{
-            //    // Get parameter type handle
-            //    CILTypeHandle parameterTypeHandle = methodHandle.Signature.Parameters[i].ParameterTypeToken.GetTypeHandle(AssemblyLoadContext);
-
-            //    // Load arg
-            //    threadContext.LoadOntoStack(parameterTypeHandle, i + offset, parameters[i]);
-            //}
+            CILMethodInfo methodInfo = this.GetMethodInfo(AssemblyLoadContext.AppDomain);
 
             // Create the runtime method
-            RuntimeMethod runtimeMethod = new RuntimeMethod(threadContext, AssemblyLoadContext, methodHandle);
+            RuntimeMethod runtimeMethod = new RuntimeMethod(threadContext, AssemblyLoadContext, methodInfo);
 
             // Perform reflection invoke
             return runtimeMethod.ReflectionInvoke(obj, parameters);
-
-
-            //threadContext.PrepareReflectionMethodFrame(AssemblyLoadContext, methodHandle.Flags, methodHandle.Signature, methodHandle.Body, obj, parameters, out StackData* sp)
-
-            //// Call the method
-            //int stackReturnIndex = CILInterpreter.ExecuteMethodHandle(threadContext, AssemblyLoadContext, methodHandle);
-
-            //// Check for return value
-            //if((methodHandle.Signature.Flags & CILMethodSignatureFlags.HasReturn) != 0)
-            //{
-            //    // Get return type
-            //    CILTypeHandle returnTypeHandle = methodHandle.Signature.Return.ParameterTypeToken.GetTypeHandle(AssemblyLoadContext);
-
-            //    // Fetch return value
-            //    return threadContext.FetchFromStack(returnTypeHandle, stackReturnIndex);
-            //}
-
-            //return null;
         }
 
         public override Delegate CreateDelegate(Type delegateType)
         {
             return __delegate.CreateDelegate(delegateType, this);
-            //return Delegate.CreateDelegate(delegateType, this);
         }
 
         public override Delegate CreateDelegate(Type delegateType, object target)
         {
-            //return __delegate.CreateDelegate()
             return Delegate.CreateDelegate(delegateType, target, this);
         }
         #endregion

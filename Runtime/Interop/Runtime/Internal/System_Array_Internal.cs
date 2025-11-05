@@ -18,7 +18,7 @@ namespace dotnow.Interop.Runtime.Internal
             for(int i = 0; i < rank; i++)
             {
                 // Get the length as long or int
-                lengths[i] = context.ReadArgStackType(i) == StackTypeCode.I64
+                lengths[i] = context.ReadArgStackType(i) == StackType.I64
                     ? context.ReadArgValueType<long>(i)
                     : context.ReadArgValueType<int>(i);
             }

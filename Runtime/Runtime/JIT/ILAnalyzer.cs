@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 
 namespace dotnow.Runtime.JIT
@@ -11,7 +12,7 @@ namespace dotnow.Runtime.JIT
     internal static class ILAnalyzer
     {
         // Methods
-        public static unsafe void ResolveInteropMetadataTokens(AppDomain appDomain, MethodBase interopMethod)
+        public static void ResolveInteropMetadataTokens(AppDomain appDomain, MethodBase interopMethod)
         {
             // Check for interop
             if (interopMethod is CLRMethodInfo or CLRConstructorInfo)
@@ -22,38 +23,39 @@ namespace dotnow.Runtime.JIT
             {
                 // Resolve token
                 // Calling get handle on the meta type will force resolution if it was not already resolved
-                parameter.ParameterType.GetHandle(appDomain);
+                parameter.ParameterType.GetTypeInfo(appDomain);
             }
 
             // Get return value
             if(interopMethod is MethodInfo methodInfo)
-                methodInfo.ReturnType.GetHandle(appDomain);
+                methodInfo.ReturnType.GetTypeInfo(appDomain);
         }
 
-        public static unsafe void ResolveMetadataTokens(AssemblyLoadContext assemblyLoadContext, in CILMethodHandle methodHandle)
+        public static void ResolveMetadataTokens(AssemblyLoadContext assemblyLoadContext, in CILMethodInfo methodInfo)
         {
             // Check for body - cannot analyze a method with no body
-            if ((methodHandle.Flags & CILMethodFlags.Body) == 0)
+            if ((methodInfo.Flags & CILMethodFlags.Body) == 0)
                 return;
 
             // Report optimizing method
-            Debug.LineFormat("JIT analyze method: {0}", methodHandle.MetaMethod);
+            Debug.LineFormat("JIT analyze method: {0}", methodInfo.Method);
             Stopwatch timer = Stopwatch.StartNew();
 
 
-            // Resolve signature types
-            ResolveSignatureMetadataTokens(assemblyLoadContext, methodHandle.Signature);
+            //// Resolve signature types
+            //ResolveSignatureMetadataTokens(assemblyLoadContext, methodInfo.Signature);
 
-            // Resolve local types
-            if(methodHandle.Body.LocalCount > 0)
-                ResolveLocalMetadataTokens(assemblyLoadContext, methodHandle.Body.Locals);
+            //// Resolve local types
+            //if(methodInfo.Body.LocalCount > 0)
+            //    ResolveLocalMetadataTokens(assemblyLoadContext, methodInfo.Body.Locals);
+
+            byte[] instructions = methodInfo.Method.GetMethodBody().GetILAsByteArray();
 
             // Get instruction bounds
-            byte* pc = methodHandle.Body.Instructions.Ptr;
-            byte* pcMax = methodHandle.Body.Instructions.MaxPtr;
+            int pc = 0, pcMax = instructions.Length;
 
             // Find all instructions that use a metadata token
-            while(FetchNextMetadataTokenInstruction(ref pc, pcMax, out ILOpCode opCode, out ILOperandType operandType, out EntityHandle metadataToken) == true)
+            while(FetchNextMetadataTokenInstruction(instructions, ref pc, pcMax, out ILOpCode opCode, out ILOperandType operandType, out EntityHandle metadataToken) == true)
             {
                 // Select operand
                 switch(operandType)
@@ -109,48 +111,11 @@ namespace dotnow.Runtime.JIT
                 }
             }
 
-            Debug.LineFormat("Analyze IL: '{0}.{1} took: {2}ms", methodHandle.MetaMethod.DeclaringType.Name, methodHandle.MetaMethod.Name, timer.Elapsed.TotalMilliseconds);
-        }
-
-        public static void ResolveSignatureMetadataTokens(AssemblyLoadContext assemblyLoadContext, in CILMethodSignatureHandle signature)
-        {
-            // Check for any parameters
-            if ((signature.Flags & CILMethodSignatureFlags.HasParameters) != 0)
-            {
-                // Resolve parameter types
-                for (int i = 0; i < signature.Parameters.Length; i++)
-                {
-                    // Get the parameter
-                    CILMethodVariableHandle parameterHandle = signature.Parameters[i];
-
-                    // Resolve the parameter
-                    parameterHandle.VariableTypeToken.ResolveTypeHandle(assemblyLoadContext);
-                }
-            }
-
-            // Check for return
-            if ((signature.Flags & CILMethodSignatureFlags.HasReturn) != 0)
-            {
-                // Resolve return type
-                signature.Return.VariableTypeToken.ResolveTypeHandle(assemblyLoadContext);
-            }
-        }
-
-        public static void ResolveLocalMetadataTokens(AssemblyLoadContext assemblyLoadContext, CILMethodVariableHandle[] locals)
-        {
-            // Process all
-            for(int i = 0; i < locals.Length; i++)
-            {
-                // Get the local
-                CILMethodVariableHandle localHandle = locals[i];
-
-                // TResolve the local
-                localHandle.VariableTypeToken.ResolveTypeHandle(assemblyLoadContext);
-            }
+            Debug.LineFormat("Analyze IL: '{0}.{1} took: {2}ms", methodInfo.Method.DeclaringType.Name, methodInfo.Method.Name, timer.Elapsed.TotalMilliseconds);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe bool FetchNextMetadataTokenInstruction(ref byte* pc, byte* pcMax, out ILOpCode opCode, out ILOperandType operandType, out EntityHandle metadataToken)
+        private static bool FetchNextMetadataTokenInstruction(byte[] instructions, ref int pc, int pcMax, out ILOpCode opCode, out ILOperandType operandType, out EntityHandle metadataToken)
         {
             opCode = 0;
             operandType = 0;
@@ -160,11 +125,11 @@ namespace dotnow.Runtime.JIT
             while (pc < pcMax)
             {
                 // Fetch decode opcode
-                opCode = (ILOpCode)(*pc++);
+                opCode = CILInterpreter.FetchDecode<ILOpCode>(instructions, ref pc);
 
                 // Check for 2-byte encoded instructions
                 if ((byte)opCode == 0xFE)
-                    opCode = (ILOpCode)(((byte)opCode << 8) | *pc++);
+                    opCode = (ILOpCode)(((byte)opCode << 8) | CILInterpreter.FetchDecode<byte>(instructions, ref pc));
 
                 // Get operand type
                 operandType = opCode.GetOperandType();
@@ -188,10 +153,10 @@ namespace dotnow.Runtime.JIT
                     case ILOperandType.InlineMethod:
                     case ILOperandType.InlineString:
                         {
-                            int normalToken = *(int*)pc;
+                            int token = CILInterpreter.FetchDecode<int>(instructions, ref pc);
 
                             // Get the token
-                            metadataToken = *(EntityHandle*)pc;
+                            metadataToken = MetadataTokens.EntityHandle(token);
 
                             // Increment by operand size before returning
                             pc += opCode.GetOperandSize();

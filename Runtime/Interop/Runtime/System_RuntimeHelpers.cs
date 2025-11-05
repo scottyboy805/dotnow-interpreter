@@ -1,9 +1,7 @@
 ﻿using dotnow.Reflection;
-using dotnow.Runtime;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
 
 namespace dotnow.Interop.Runtime
 {
@@ -12,7 +10,7 @@ namespace dotnow.Interop.Runtime
         // Methods
         [Preserve]
         [CLRMethodBinding(typeof(RuntimeHelpers), nameof(RuntimeHelpers.InitializeArray), typeof(Array), typeof(RuntimeFieldHandle))]
-        public static unsafe void InitializeArray_Override(StackContext context)
+        public static void InitializeArray_Override(StackContext context)
         {
             // Read the array
             Array array = context.ReadArgObject<Array>(0);
@@ -24,24 +22,17 @@ namespace dotnow.Interop.Runtime
             Type elementType = array.GetType().GetElementType();
 
             // Get the initial data
-            UnmanagedMemory<byte> initData = field.GetFieldInitData();
-
-            // Get array length in bytes
-            uint arrayLength = (uint)Buffer.ByteLength(array);
-
-            // Check size
-            if ((uint)initData.Size != arrayLength)
-                throw new InvalidOperationException("Field init data is not of the expected size");
+            byte[] initData = field.GetFieldInitData();
 
             // Pin the array memory
             GCHandle handle = GCHandle.Alloc(array, GCHandleType.Pinned);
             try
             {
                 // Get array address
-                void* dst = (void*)handle.AddrOfPinnedObject();
+                IntPtr dst = handle.AddrOfPinnedObject();
 
-                // Copy from field init
-                __gc.CopyMemory(initData.Ptr, dst, arrayLength);
+                // Copy the memory
+                Marshal.Copy(initData, 0, dst, initData.Length);
             }
             finally
             {

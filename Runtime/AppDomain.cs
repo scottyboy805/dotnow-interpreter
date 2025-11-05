@@ -36,12 +36,9 @@ namespace dotnow
         /// Stores handles for interop members that are part of the calling app (For things like System.Int, System.String, etc.).
         /// The key is the hash of the system type.
         /// </summary>
-        internal readonly ConcurrentDictionary<int, CILTypeHandle> interopTypeHandles = new();
-        internal readonly ConcurrentDictionary<int, CILFieldHandle> interopFieldHandles = new();
-        internal readonly ConcurrentDictionary<int, CILMethodHandle> interopMethodHandles = new();
-
-        internal readonly ConcurrentDictionary<int, CILMethodSignatureHandle> signatureTable = new ();    
-        internal readonly ConcurrentDictionary<int, VTable> virtualTable = new();
+        internal readonly ConcurrentDictionary<int, CILTypeInfo> interopTypeHandles = new();
+        internal readonly ConcurrentDictionary<int, CILFieldInfo> interopFieldHandles = new();
+        internal readonly ConcurrentDictionary<int, CILMethodInfo> interopMethodHandles = new();
 
         // Public
 #if !UNITY_EDITOR && ENABLE_IL2CPP
@@ -115,7 +112,7 @@ namespace dotnow
             if(method.IsCLRMethod() == true)
             {
                 // Get the handle which will force JIT analyze
-                method.GetHandle(this);
+                method.GetMethodInfo(this);
             }
             else
             {
@@ -214,10 +211,10 @@ namespace dotnow
             else
             {
                 // Get type handle
-                CILTypeHandle typeHandle = clrType.GetHandle(this);
+                CILTypeInfo typeInfo = clrType.GetTypeInfo(this);
 
                 // Create type instance
-                CLRTypeInstance instance = CLRTypeInstance.CreateInstance(this, typeHandle);
+                CLRTypeInstance instance = CLRTypeInstance.CreateInstance(this, typeInfo);
 
                 // Check for constructor provided
                 if(ctor != null)
@@ -247,10 +244,10 @@ namespace dotnow
                 throw new ArgumentException("Type must be a CLR type");
 
             // Get the type handle
-            CILTypeHandle typeHandle = type.GetHandle(this);
+            CILTypeInfo typeInfo = type.GetTypeInfo(this);
 
             // Create instance
-            return CLRTypeInstance.CreateInstanceFromProxy(this, typeHandle, proxy);
+            return CLRTypeInstance.CreateInstanceFromProxy(this, typeInfo, proxy);
         }
         #endregion
 
@@ -333,18 +330,8 @@ namespace dotnow
             // Check for already added
             if (interopTypeHandles.ContainsKey(hash) == false)
             {
-                // Create vtable
-                VTable vTable = default;
-
-                // Check for virtual tyoe
-                if (type.IsSealed == false && type.IsValueType == false)
-                {
-                    // Need to get a vtable entry even if it will not contains any virtual members (Won't be initialized in that case)
-                    vTable = GetOrCreateVirtualTable(type);
-                }
-                
                 // Create handle
-                CILTypeHandle handle = CILTypeHandle.GetTypeHandle(this, null, type, vTable);
+                CILTypeInfo handle = new CILTypeInfo(type);
 
                 // Add to cache
                 interopTypeHandles[hash] = handle;
@@ -352,7 +339,7 @@ namespace dotnow
             return hash;
         }
 
-        internal int ResolveInteropFieldHandle(FieldInfo field, ushort objectOffset, ushort memoryOffset)
+        internal int ResolveInteropFieldHandle(FieldInfo field)
         {
             // Get hash code
             int hash = field.GetHashCode();
@@ -361,10 +348,10 @@ namespace dotnow
             if (interopFieldHandles.ContainsKey(hash) == false)
             {
                 // Ensure the field type is resolved
-                field.FieldType.GetHandle(this);
+                field.FieldType.GetTypeInfo(this);
 
                 // Create handle
-                CILFieldHandle handle = CILFieldHandle.GetFieldHandle(field, objectOffset, memoryOffset);
+                CILFieldInfo handle = new CILFieldInfo(this, field);
 
                 // Add to cache
                 interopFieldHandles[hash] = handle;
@@ -381,42 +368,12 @@ namespace dotnow
             if (interopMethodHandles.ContainsKey(hash) == false)
             {
                 // Create handle
-                CILMethodHandle handle = CILMethodHandle.GetMethodHandle(this, method);
+                CILMethodInfo handle = new CILMethodInfo(this, method);
 
                 // Add to cache
                 interopMethodHandles[hash] = handle;
             }
             return hash;
-        }
-
-        internal CILMethodSignatureHandle GetOrCreateMethodSignatureHandle(int signatureHash, ParameterInfo[] parameters, Type returnType)
-        {
-            // Try to get handle for hash
-            CILMethodSignatureHandle handle;
-            if (signatureTable.TryGetValue(signatureHash, out handle) == true)
-                return handle;
-
-            // Create handle
-            handle = CILMethodSignatureHandle.GetMethodSignatureHandle(this, parameters, returnType);
-
-            // Add handle
-            signatureTable[signatureHash] = handle;
-            return handle;
-        }
-
-        internal VTable GetOrCreateVirtualTable(Type virtualType)
-        {
-            // Try to get vtable
-            VTable vTable;
-            if (virtualTable.TryGetValue(virtualType.MetadataToken, out vTable) == true)
-                return vTable;
-
-            // Create vTable
-            vTable = new VTable(virtualType);
-
-            // Add vtable
-            virtualTable[virtualType.MetadataToken] = vTable;
-            return vTable;
         }
     }
 }

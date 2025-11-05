@@ -65,14 +65,14 @@ namespace dotnow.Reflection
             return toString.Value;
         }
 
-        internal unsafe UnmanagedMemory<byte> GetFieldInitData()
+        internal byte[] GetFieldInitData()
         {
             // Get the rva
             int rva = definition.GetRelativeVirtualAddress();
 
             // Check for none - the field does not have init data
-            if(rva == 0)
-                return UnmanagedMemory<byte>.Empty;
+            if (rva == 0)
+                return Array.Empty<byte>();
 
             // Get the field type - Safe to assume it is a CLR type when dealing with field initializers with a valid rva (compiler generated)
             CLRType fieldType = (CLRType)FieldType;
@@ -81,10 +81,10 @@ namespace dotnow.Reflection
             int layoutSize = fieldType.definition.GetLayout().Size;            
 
             // Read the data
-            PEMemoryBlock memoryBlock = metadataProvider.PEReader.GetSectionData(rva);            
+            PEMemoryBlock memoryBlock = metadataProvider.PEReader.GetSectionData(rva);
 
             // Create the unmanaged memory
-            return new UnmanagedMemory<byte>((IntPtr)memoryBlock.Pointer, layoutSize);
+            return memoryBlock.GetReader().ReadBytes(layoutSize);// new UnmanagedMemory<byte>((IntPtr)memoryBlock.Pointer, layoutSize);
         }
 
         #region MethodInfoMethods
@@ -109,12 +109,12 @@ namespace dotnow.Reflection
             ThreadContext threadContext = metadataProvider.AppDomain.GetThreadContext();
 
             // Get field handle and declaring type handles
-            CILFieldHandle fieldHandle = this.GetHandle(metadataProvider.AppDomain);
+            CILFieldInfo fieldInfo = this.GetFieldInfo(metadataProvider.AppDomain);
 
 
             {
                 // Create runtime field
-                RuntimeField runtimeField = new RuntimeField(threadContext, AssemblyLoadContext, fieldHandle);
+                RuntimeField runtimeField = new RuntimeField(threadContext, AssemblyLoadContext, fieldInfo);
 
                 // Get value
                 return runtimeField.ReflectionGetField(obj);
@@ -127,12 +127,12 @@ namespace dotnow.Reflection
             ThreadContext threadContext = metadataProvider.AppDomain.GetThreadContext();
 
             // Get field handle and declaring type handles
-            CILFieldHandle fieldHandle = this.GetHandle(metadataProvider.AppDomain);
+            CILFieldInfo fieldInfo = this.GetFieldInfo(metadataProvider.AppDomain);
 
 
             {
                 // Create runtime field
-                RuntimeField runtimeField = new RuntimeField(threadContext, AssemblyLoadContext, fieldHandle);
+                RuntimeField runtimeField = new RuntimeField(threadContext, AssemblyLoadContext, fieldInfo);
 
                 // Get value
                 runtimeField.ReflectionSetField(obj, value);

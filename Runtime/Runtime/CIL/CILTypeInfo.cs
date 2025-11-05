@@ -50,20 +50,20 @@ namespace dotnow.Runtime.CIL
         public readonly int StaticSize;
 
         // Constructor
-        internal CILTypeInfo(Type fromType)
+        internal CILTypeInfo(Type type)
         {
-            this.Type = fromType;
-            this.Flags = GetFlags(fromType);
-            this.TypeCode = Type.GetTypeCode(fromType);
+            this.Type = type;
+            this.Flags = GetFlags(type);
+            this.TypeCode = Type.GetTypeCode(type);
 
             // Check for CLR
             if((Flags & CILTypeFlags.Interpreted) != 0)
             {
                 // Get the interop types
-                this.InteropTypes = GetInteropTypes(fromType);
+                this.InteropTypes = GetInteropTypes(type);
 
                 // Get the type size
-                GetTypeSize(fromType, out this.InstanceSize, out this.StaticSize);
+                GetTypeSize(type, out this.InstanceSize, out this.StaticSize);
             }
         }
 

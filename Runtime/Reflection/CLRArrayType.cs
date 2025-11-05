@@ -1,7 +1,6 @@
 ﻿using dotnow.Interop.Runtime.Internal;
 using dotnow.Reflection.Internal;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;

@@ -1,5 +1,6 @@
 ﻿using dotnow.Interop;
 using dotnow.Reflection;
+using dotnow.Runtime.CIL;
 using System;
 
 namespace dotnow.Runtime
@@ -17,8 +18,29 @@ namespace dotnow.Runtime
             if ((typeInfo.Flags & CILTypeFlags.Interpreted) == 0)
                 throw new ArgumentException("Only supported for interpreted types");
 
-            this.Type = (CLRType)typeInfo.Meta;
+            this.Type = (CLRType)typeInfo.Type;
             this.Value = value;
+        }
+
+        public CLREnumInstance(CLRType metaType, object enumValue)
+        {
+            // Check for null
+            if (metaType == null)
+                throw new ArgumentNullException(nameof(metaType));
+
+            this.Type = metaType;
+
+            // Check type
+            Type enumType = metaType.GetEnumUnderlyingType();
+
+            // Get type handle
+            CILTypeInfo typeInfo = enumType.GetTypeInfo(metaType.AppDomain);
+
+            // Wrap the object
+            StackData wrapped = default;
+            StackData.Wrap(typeInfo, enumValue, ref wrapped);
+
+            this.Value = wrapped;
         }
 
         // Methods
@@ -55,14 +77,14 @@ namespace dotnow.Runtime
         public object Unwrap()
         {
             // Get the type handle
-            CILTypeHandle typeHandle = metaType.GetHandle(metaType.AppDomain);
+            CILTypeInfo typeInfo = Type.GetTypeInfo(Type.AppDomain);
 
             // Copy the value
-            StackData tempValue = enumValue;
+            StackData tempValue = Value;
 
             // Get the type - context is not needed here because the enum value should never be and object, but only a primitive integer type
             object unwrapped = null;
-            StackData.Unwrap(null, typeHandle, &tempValue, ref unwrapped);
+            StackData.Unwrap(typeInfo, ref tempValue, ref unwrapped);
 
             return unwrapped;
         }
@@ -78,7 +100,7 @@ namespace dotnow.Runtime
                 return ((ICLRInstance)this).Unwrap();
 
             // Get type code
-            TypeCode asTypeCode = Type.GetTypeCode(asType);
+            TypeCode asTypeCode = System.Type.GetTypeCode(asType);
 
             // Check for supported type
             switch (asTypeCode)
@@ -97,14 +119,14 @@ namespace dotnow.Runtime
             }
 
             // Copy the value
-            StackData tempValue = enumValue;
+            StackData tempValue = Value;
 
             // Get type handle
-            CILTypeHandle typeHandle = asType.GetHandle(metaType.AppDomain);
+            CILTypeInfo typeInfo = asType.GetTypeInfo(Type.AppDomain);
 
             // Get default unwrapped
             object unwrapped = default;
-            StackData.Unwrap(null, typeHandle, &tempValue, ref unwrapped);
+            StackData.Unwrap(typeInfo, ref tempValue, ref unwrapped);
 
             return unwrapped;
         }

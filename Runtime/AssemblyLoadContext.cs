@@ -1,5 +1,4 @@
 ﻿using dotnow.Reflection;
-using dotnow.Runtime;
 using dotnow.Runtime.CIL;
 using dotnow.Runtime.JIT;
 using System;
@@ -11,12 +10,10 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using UnityEditor.VersionControl;
 
 namespace dotnow
 {
-    public unsafe sealed class AssemblyLoadContext : IDisposable
+    public sealed class AssemblyLoadContext : IDisposable
     {
         // Type
         private readonly struct CILMetadataReference
@@ -68,17 +65,17 @@ namespace dotnow
         /// <summary>
         /// Fast access type definition table to access type handles defined within the loaded assembly by metadata token.
         /// </summary>
-        internal readonly CILTypeHandle[] typeDefinitions;
-        internal readonly CILTypeHandle[] typeSpecificationDefinitions;
+        internal readonly CILTypeInfo[] typeDefinitions;
+        internal readonly CILTypeInfo[] typeSpecificationDefinitions;
         /// <summary>
         /// Fast access field definition table to access field handles defined within the loaded assembly by metadata token.
         /// </summary>
-        internal readonly CILFieldHandle[] fieldDefinitions;
+        internal readonly CILFieldInfo[] fieldDefinitions;
         /// <summary>
         /// Fast access method definition table to access method handles defined within the loaded assembly by metadata token.
         /// </summary>
-        internal readonly CILMethodHandle[] methodDefinitions;
-        internal readonly CILMethodHandle[] methodSpecificationDefinitions;
+        internal readonly CILMethodInfo[] methodDefinitions;
+        internal readonly CILMethodInfo[] methodSpecificationDefinitions;
 
         /// <summary>
         /// Semi-fast access to type definitions defined in an external assembly or module.
@@ -116,9 +113,9 @@ namespace dotnow
 
             // Note that all tables are indexed at 1, so just add one to size and keep 0 element empty saves modifying offsets for every lookup
             // Initialize definition tables
-            this.typeDefinitions = new CILTypeHandle[metadataReferenceProvider.MetadataReader.TypeDefinitions.Count + 1];
-            this.fieldDefinitions = new CILFieldHandle[metadataReferenceProvider.MetadataReader.FieldDefinitions.Count + 1];
-            this.methodDefinitions = new CILMethodHandle[metadataReferenceProvider.MetadataReader.MethodDefinitions.Count + 1];
+            this.typeDefinitions = new CILTypeInfo[metadataReferenceProvider.MetadataReader.TypeDefinitions.Count + 1];
+            this.fieldDefinitions = new CILFieldInfo[metadataReferenceProvider.MetadataReader.FieldDefinitions.Count + 1];
+            this.methodDefinitions = new CILMethodInfo[metadataReferenceProvider.MetadataReader.MethodDefinitions.Count + 1];
 
             // Initialize reference tables
             this.typeReferences = new CILMetadataReference[metadataReferenceProvider.MetadataReader.TypeReferences.Count + 1];
@@ -127,10 +124,10 @@ namespace dotnow
             // Initialize specification tables
             GetSpecificationTableSizes(metadataReader, out int typeSpecSize, out int methodSpecSize);
 
-            this.typeSpecificationDefinitions = new CILTypeHandle[typeSpecSize + 1];
+            this.typeSpecificationDefinitions = new CILTypeInfo[typeSpecSize + 1];
             this.typeSpecificationReferences = new CILMetadataReference[typeSpecSize + 1];
 
-            this.methodSpecificationDefinitions = new CILMethodHandle[methodSpecSize + 1];
+            this.methodSpecificationDefinitions = new CILMethodInfo[methodSpecSize + 1];
             this.memberSpecificationReferences = new CILMetadataReference[methodSpecSize + 1];
             
             // Define all metadata members
@@ -175,10 +172,10 @@ namespace dotnow
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal CILTypeHandle GetTypeHandle(EntityHandle handle)
+        internal CILTypeInfo GetTypeHandle(EntityHandle handle)
         {
             // Get the row into the table
-            int row = *(int*)&handle & 0x00FFFFFF;
+            int row = MetadataTokens.GetRowNumber(handle);
 
             // Check kind
             switch (handle.Kind)
@@ -213,10 +210,10 @@ namespace dotnow
             }
         }
 
-        internal CILFieldHandle GetFieldHandle(EntityHandle handle)
+        internal CILFieldInfo GetFieldHandle(EntityHandle handle)
         {
             // Get the row into the table
-            int row = *(int*)&handle & 0x00FFFFFF;
+            int row = MetadataTokens.GetRowNumber(handle);
 
             // Check kind
             switch (handle.Kind)
@@ -242,10 +239,10 @@ namespace dotnow
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal CILMethodHandle GetMethodHandle(EntityHandle handle)
+        internal CILMethodInfo GetMethodHandle(EntityHandle handle)
         {
             // Get the row into the table
-            int row = *(int*)&handle & 0x00FFFFFF;
+            int row = MetadataTokens.GetRowNumber(handle);
 
             // Check kind
             switch (handle.Kind)
@@ -298,7 +295,7 @@ namespace dotnow
                         int row = MetadataTokens.GetRowNumber(handle);
 
                         // Check for already resolved
-                        if (typeDefinitions[row].MetaType != null)
+                        if (typeDefinitions[row].Type != null)
                             return;
 
                         // Resolve the definition
@@ -335,7 +332,7 @@ namespace dotnow
             }
         }
 
-        private void ResolveTypeDefinition(TypeDefinitionHandle typeDefinitionHandle, out CILTypeHandle @ref)
+        private void ResolveTypeDefinition(TypeDefinitionHandle typeDefinitionHandle, out CILTypeInfo @ref)
         {
             // Get metadata token
             int token = MetadataTokens.GetToken(typeDefinitionHandle);
@@ -343,18 +340,8 @@ namespace dotnow
             // Lookup the metadata member
             Type definedType = memberDefinitions[token] as Type;
 
-            // Create vtable
-            VTable vTable = default;
-
-            // Check for virtual tyoe
-            if (definedType.IsSealed == false && definedType.IsValueType == false)
-            {
-                // Need to get a vtable entry even if it will not contains any virtual members (Won't be initialized in that case)
-                vTable = appDomain.GetOrCreateVirtualTable(definedType);
-            }
-
             // Create the type handle
-            @ref = CILTypeHandle.GetTypeHandle(appDomain, this, definedType, vTable);
+            @ref = new CILTypeInfo(definedType);
         }
 
         private void ResolveTypeReference(TypeReferenceHandle typeReferenceHandle, out CILMetadataReference @ref)
@@ -404,20 +391,10 @@ namespace dotnow
                             int definitionRow = MetadataTokens.GetRowNumber(handle);
 
                             // Resolve type handle
-                            if (referenceContext.typeDefinitions[definitionRow].MetaType == null)
+                            if (referenceContext.typeDefinitions[definitionRow].Type == null)
                             {
-                                // Create vtable
-                                VTable vTable = default;
-
-                                // Check for virtual tyoe
-                                if (resolvedType.IsSealed == false && resolvedType.IsValueType == false)
-                                {
-                                    // Need to get a vtable entry even if it will not contains any virtual members (Won't be initialized in that case)
-                                    vTable = appDomain.GetOrCreateVirtualTable(resolvedType);
-                                }
-
                                 // Initialize the type handle
-                                referenceContext.typeDefinitions[definitionRow] = CILTypeHandle.GetTypeHandle(appDomain, this, resolvedType, vTable);
+                                referenceContext.typeDefinitions[definitionRow] = new CILTypeInfo(resolvedType);
                             }
 
                             // Resolve the type handle
@@ -471,20 +448,10 @@ namespace dotnow
                 int specificationRow = MetadataTokens.GetRowNumber(typeSpecificationHandle);
 
                 // Resolve type handle
-                if (referenceContext.typeSpecificationDefinitions[specificationRow].MetaType == null)
+                if (referenceContext.typeSpecificationDefinitions[specificationRow].Type == null)
                 {
-                    // Create vtable
-                    VTable vTable = default;
-
-                    // Check for virtual tyoe
-                    if (resolvedGenericType.IsSealed == false && resolvedGenericType.IsValueType == false)
-                    {
-                        // Need to get a vtable entry even if it will not contains any virtual members (Won't be initialized in that case)
-                        vTable = appDomain.GetOrCreateVirtualTable(resolvedGenericType);
-                    }
-
                     // Initialize the type handle
-                    referenceContext.typeSpecificationDefinitions[specificationRow] = CILTypeHandle.GetTypeHandle(appDomain, this, resolvedGenericType, vTable);
+                    referenceContext.typeSpecificationDefinitions[specificationRow] = new CILTypeInfo(resolvedGenericType);
                 }
 
                 // Resolve the type handle
@@ -515,7 +482,7 @@ namespace dotnow
                         int row = MetadataTokens.GetRowNumber(handle);
 
                         // Check for already resolved
-                        if (fieldDefinitions[row].MetaField != null)
+                        if (fieldDefinitions[row].Field != null)
                             return;
 
                         // Get the field definition
@@ -565,7 +532,7 @@ namespace dotnow
                         int row = MetadataTokens.GetRowNumber(handle);
 
                         // Check for already resolved
-                        if (methodDefinitions[row].MetaMethod != null)
+                        if (methodDefinitions[row].Method != null)
                             return;
 
                         // Resolve the definition
@@ -591,7 +558,7 @@ namespace dotnow
                         int row = MetadataTokens.GetRowNumber(handle);
 
                         // Check for already resolved
-                        if (methodSpecificationDefinitions[row].MetaMethod != null)
+                        if (methodSpecificationDefinitions[row].Method != null)
                             return;
 
                         // Resolve the generic definition
@@ -603,7 +570,7 @@ namespace dotnow
             }
         }
 
-        private void ResolveMethodDefinition(MethodDefinitionHandle methodDefinitionHandle, out CILMethodHandle @ref)
+        private void ResolveMethodDefinition(MethodDefinitionHandle methodDefinitionHandle, out CILMethodInfo @ref)
         {
             // Get metadata token
             int token = MetadataTokens.GetToken(methodDefinitionHandle);
@@ -615,7 +582,7 @@ namespace dotnow
             ResolveType(MetadataTokens.EntityHandle(definedMethod.DeclaringType.MetadataToken));
 
             // Create the type handle
-            @ref = CILMethodHandle.GetMethodHandle(appDomain, definedMethod);
+            @ref = new CILMethodInfo(appDomain, definedMethod);
 
             // Analyze and resolve members
             // Crucial step because this forces CIL handles to be loaded for referenced members.
@@ -635,7 +602,7 @@ namespace dotnow
             ResolveType(memberReference.Parent);
 
             // Get the declaring type handle
-            CILTypeHandle declaringTypeHandle = GetTypeHandle(memberReference.Parent);
+            CILTypeInfo declaringTypeInfo = GetTypeHandle(memberReference.Parent);
 
             // Get the method name
             string methodName = metadataReferenceProvider.MetadataReader.GetString(memberReference.Name);
@@ -643,7 +610,7 @@ namespace dotnow
 
             // Resolve signature
             MethodBase resolvedMethod = null;
-            MethodSignature<Type> signature = memberReference.DecodeMethodSignature(metadataReferenceProvider, declaringTypeHandle.MetaType);
+            MethodSignature<Type> signature = memberReference.DecodeMethodSignature(metadataReferenceProvider, declaringTypeInfo.Type);
 
             // Build params list
             Type[] parameters = Type.EmptyTypes;
@@ -671,7 +638,7 @@ namespace dotnow
             if (isCtor == true)
             {
                 // Try to resolve ctor
-                resolvedMethod = declaringTypeHandle.MetaType.GetConstructor(bindingFlags, Type.DefaultBinder, parameters, null);
+                resolvedMethod = declaringTypeInfo.Type.GetConstructor(bindingFlags, Type.DefaultBinder, parameters, null);
             }
             else
             {
@@ -679,12 +646,12 @@ namespace dotnow
                 try
                 {
                     // Try simple resolve
-                    resolvedMethod = declaringTypeHandle.MetaType.GetMethod(methodName, parameters);
+                    resolvedMethod = declaringTypeInfo.Type.GetMethod(methodName, parameters);
                 }
                 catch (AmbiguousMatchException)
                 {
                     // Try to resolve with extra args
-                    resolvedMethod = declaringTypeHandle.MetaType.GetMethod(methodName, signature.GenericParameterCount, bindingFlags, Type.DefaultBinder, parameters, null);
+                    resolvedMethod = declaringTypeInfo.Type.GetMethod(methodName, signature.GenericParameterCount, bindingFlags, Type.DefaultBinder, parameters, null);
                 }
             }
 
@@ -702,10 +669,10 @@ namespace dotnow
                 int definitionRow = MetadataTokens.GetRowNumber(handle);
 
                 // Create the method handle
-                if (referenceContext.methodDefinitions[definitionRow].MetaMethod == null)
+                if (referenceContext.methodDefinitions[definitionRow].Method == null)
                 {
                     // Get the method handle
-                    CILMethodHandle methodHandle = CILMethodHandle.GetMethodHandle(appDomain, resolvedMethod);
+                    CILMethodInfo methodHandle = new CILMethodInfo(appDomain, resolvedMethod);
 
                     // Initialize method handle
                     referenceContext.methodDefinitions[definitionRow] = methodHandle;
@@ -757,10 +724,10 @@ namespace dotnow
                 int specificationRow = MetadataTokens.GetRowNumber(methodSpecificationHandle);
 
                 // Resolve type handle
-                if (referenceContext.methodSpecificationDefinitions[specificationRow].MetaMethod == null)
+                if (referenceContext.methodSpecificationDefinitions[specificationRow].Method == null)
                 {
                     // Initialize the type handle
-                    referenceContext.methodSpecificationDefinitions[specificationRow] = CILMethodHandle.GetMethodHandle(appDomain, constructedMethodInstance);
+                    referenceContext.methodSpecificationDefinitions[specificationRow] = new CILMethodInfo(appDomain, constructedMethodInstance);
                 }
 
                 // Resolve the type handle

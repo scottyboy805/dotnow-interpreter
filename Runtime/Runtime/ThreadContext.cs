@@ -77,16 +77,16 @@ namespace dotnow.Runtime
         }
 
         // Methods
-        public unsafe void Throw<T>(byte* pc) where T : Exception, new()
+        public void Throw<T>() where T : Exception, new()
         {
             // Create the exception
             Exception e = new T();
 
             // Throw the exception on this thread
-            Throw(e, pc);
+            Throw(e);
         }
 
-        public unsafe void Throw(Exception e, byte* pc)
+        public void Throw(Exception e)
         {
             // Inject stack trace
             exceptionStackTraceField.SetValue(e, "Hello World");
@@ -169,70 +169,23 @@ namespace dotnow.Runtime
         //    managedStack.Add(null);
         //}
 
-        public unsafe void PrepareReflectionMethodFrame(AppDomain appDomain, in CILMethodHandle methodHandle, object instance, object[] args, out StackData* spArg, out StackData* sp)
+        public void PushReflectionMethodFrame(AppDomain appDomain, in CILMethodInfo methodHandle, object instance, object[] args, out int spArg)
         {
-            // Get stack base pointer
-            StackData* managedPtr = stack.Ptr;
-            byte* unmanagedPtr;
+            int sp = 0;
 
-            // Allocate the method handle
-            methodHandle.AllocateMethodStack(this, stack.Ptr, stack.MaxPtr, false, out _, out spArg, out sp, out unmanagedPtr);
+            // Copy instance to stack
+            if ((methodHandle.Flags & CILMethodFlags.This) != 0)
+                StackData.Wrap(methodHandle.DeclaringType, instance, ref stack[sp++]);
 
-            // Check for this
-            if((methodHandle.Flags & CILMethodFlags.This) != 0)
-            {
-                // Get initial address
-                StackData* thisPtr = managedPtr;
+            // Copy arguments to the stack
+            for(int i = 0; i < args.Length; i++)
+                StackData.Wrap(methodHandle.ParameterTypes[i], args[i], ref stack[sp++]);
 
-                // Initialize argument slot
-                PrepareMethodVariable(appDomain, methodHandle.This, ref managedPtr, ref unmanagedPtr);
+            // Get the sp arg
+            spArg = sp;
 
-                // Get the type handle because we need to update the managed offset
-                CILTypeHandle thisTypeHandle = methodHandle.This.VariableTypeToken.GetTypeHandle(appDomain);
-
-                // Load instance
-                StackData.Wrap(this, thisTypeHandle, instance, thisPtr);
-            }
-
-            // Check for arguments
-            if ((methodHandle.Signature.Flags & CILMethodSignatureFlags.HasParameters) != 0)
-            {
-                // Get the signature
-                CILMethodSignatureHandle methodSignature = methodHandle.Signature;
-
-                // Process all arguments
-                for (int i = 0; i < methodSignature.ArgCount; i++)
-                {
-                    // Get initial address
-                    StackData* argPtr = managedPtr;
-
-                    // Initialize argument slot
-                    PrepareMethodVariable(appDomain, methodSignature.Parameters[i], ref managedPtr, ref unmanagedPtr);
-
-                    // Get the type handle because we need to update the managed offset
-                    CILTypeHandle parameterTypeHandle = methodSignature.Parameters[i].VariableTypeToken.GetTypeHandle(appDomain);
-
-                    // Check for instance method
-                    bool hasThis = (methodHandle.Flags & CILMethodFlags.This) != 0;
-
-                    // Load the argument
-                    StackData.Wrap(this, parameterTypeHandle, args[i], argPtr);
-                }
-            }
-
-            // Check for locals
-            if (methodHandle.Body.LocalCount > 0)
-            {
-                // Get the body
-                CILMethodBodyHandle methodBody = methodHandle.Body;
-
-                // Process all locals
-                for (int i = 0; i < methodBody.LocalCount; i++)
-                {
-                    // Initialize local slot
-                    PrepareMethodVariable(appDomain, methodBody.Locals[i], ref managedPtr, ref unmanagedPtr);
-                }
-            }
+            // Push the frame
+            PushMethodFrame(appDomain, methodHandle, 0, sp);
         }
 
         /// <summary>
@@ -242,191 +195,98 @@ namespace dotnow.Runtime
         /// <param name="body"></param>
         /// <param name="spArg">The stack address where arguments passed into this method begin. Arguments will be copied from this location into the new method frame</param>
         /// <param name="sp">The stack pointer where the evaluation stack for the new frame begins</param>
-        public unsafe void PrepareMethodFrame(AppDomain appDomain, in CILMethodHandle methodHandle, StackData* spArgCaller, StackData* spCaller, out StackData* spReturn, out StackData* spArg, out StackData* sp)
+        public void PushMethodFrame(AppDomain appDomain, in CILMethodInfo methodInfo, int spArgCaller, int spCaller)
         {
-            // Get stack base pointer - Where this method frame will begin
-            StackData* managedPtr = spCaller;
-            byte* unmanagedPtr;
+            // Get instance and argument size
+            int requiredStackArgInst = methodInfo.ParameterTypes.Length;
 
-            // Check for return value
-            bool hasReturn = (methodHandle.Signature.Flags & CILMethodSignatureFlags.HasReturn) != 0;
+            // Take instance into account also
+            if ((methodInfo.Flags & CILMethodFlags.This) != 0)
+                requiredStackArgInst++;
 
-            // Allocate the method handle
-            // Make sure we allocate a slot (and unmanaged memory in the case of unmanaged value type) for the return value
-            methodHandle.AllocateMethodStack(this, managedPtr, stack.MaxPtr, hasReturn, out spReturn, out spArg, out sp, out unmanagedPtr);
+            // Calculate slots required
+            int requiredStack = requiredStackArgInst
+                + methodInfo.LocalCount
+                + methodInfo.MaxStack;
 
-            // Check for return
-            if(hasReturn == true)
+            
+
+            // Check for overflow
+            if (spArgCaller + requiredStack >= stack.Length)
+                throw new StackOverflowException();
+
+            // Start where the previous stack pointer is currently at
+            int spArg = spCaller + requiredStack;
+
+            // Copy all values to the new frame
+            for(int i = 0; i < requiredStackArgInst; i++)
             {
-                // Prepare method return slot
-                PrepareMethodVariable(appDomain, methodHandle.Signature.Return, ref managedPtr, ref unmanagedPtr);
-            }
-
-            // Check for this
-            if ((methodHandle.Flags & CILMethodFlags.This) != 0)
-            {
-                // Get initial address
-                StackData* thisPtr = managedPtr;
-
-                // Initialize argument slot
-                PrepareMethodVariable(appDomain, methodHandle.This, ref managedPtr, ref unmanagedPtr);
-
-                // Get the type handle because we need to update the managed offset
-                CILTypeHandle thisTypeHandle = methodHandle.This.VariableTypeToken.GetTypeHandle(appDomain);
-
-                // Perform stack copy
-                // This will copy the argument into the new frame, and will use correct copy semantics for value type vs reference type
-                //if((methodHandle.Flags & CILMethodFlags.Ctor) == 0)
-                if(spArgCaller->Type != 0)
-                    StackData.Copy(this, thisTypeHandle, spArgCaller, thisPtr);
-
-                // Increment the caller
-                spArgCaller++;
-            }
-
-            // Check for arguments
-            if ((methodHandle.Signature.Flags & CILMethodSignatureFlags.HasParameters) != 0)
-            {
-                // Get the signature
-                CILMethodSignatureHandle methodSignature = methodHandle.Signature;
-
-                // Process all arguments
-                for (int i = 0; i < methodSignature.ArgCount; i++)
+                // Check for value type but not a primitive
+                if ((methodInfo.ParameterTypes[i].Flags & CILTypeFlags.ValueType) != 0 && (methodInfo.ParameterTypes[i].Flags & CILTypeFlags.PrimitiveType) == 0)
                 {
-                    // Get initial address
-                    StackData* argPtr = managedPtr;
-
-                    // Initialize argument slot
-                    PrepareMethodVariable(appDomain, methodSignature.Parameters[i], ref managedPtr, ref unmanagedPtr);
-
-                    // Get the type handle for copy
-                    CILTypeHandle argTypeHandle = methodSignature.Parameters[i].VariableTypeToken.GetTypeHandle(appDomain);
-
-                    // Perform stack copy
-                    // This will copy the argument into the new frame, and will use correct copy semantics for value type vs reference type
-                    // The slot should be kept empty for out parameters specifically
-                    //if ((methodSignature.Parameters[i].Flags & CILMethodVariableFlags.Out) == 0)
-                        StackData.Copy(this, argTypeHandle, spArgCaller + i, argPtr);
-                }
-            }
-
-            // Check for locals
-            if(methodHandle.Body.LocalCount > 0)
-            {
-                // Get the method body
-                CILMethodBodyHandle methodBody = methodHandle.Body;
-
-                // Process all locals
-                for(int i = 0; i < methodBody.LocalCount; i++)
-                {
-                    // Initialize local slot
-                    PrepareMethodVariable(appDomain, methodBody.Locals[i], ref managedPtr, ref unmanagedPtr);
-                }
-            }
-        }
-
-        private unsafe void PrepareMethodVariable(AppDomain appDomain, in CILMethodVariableHandle variableHandle, ref StackData* managedPtr, ref byte* unmanagedPtr)
-        {
-            // Get the type handle because we need to update the managed offset
-            CILTypeHandle parameterTypeHandle = variableHandle.VariableTypeToken.GetTypeHandle(appDomain);
-
-            // Check for unmanaged user struct - primitives should not be handled here because they can be loaded on the stack natively
-            if ((variableHandle.Flags & CILMethodVariableFlags.UnmanagedValueType) != 0 && (variableHandle.Flags & CILMethodVariableFlags.PrimitiveType) == 0)
-            {
-                // Initialize with address
-                managedPtr->Ptr = (IntPtr)unmanagedPtr;
-                managedPtr->Type = StackTypeCode.UnmanagedValueType;
-                managedPtr->Register = parameterTypeHandle.InstanceSize;
-
-                // Increment the unmanaged ptr
-                unmanagedPtr += parameterTypeHandle.InstanceSize;
-            }
-            // Check for managed
-            else if ((variableHandle.Flags & CILMethodVariableFlags.ManagedValueType) != 0)
-            {
-                // Initialize with stack object address
-                managedPtr->Register = managedStack.Count;
-                managedPtr->Type = StackTypeCode.ManagedStackValueTypeReference;
-
-                // Create uninitialized instance
-                object defaultInstance = CLRTypeInstance.CreateInstance(appDomain, parameterTypeHandle);
-
-                // Add empty slot
-                managedStack.Add(defaultInstance);
-            }
-            // Check for reference type
-            else if ((variableHandle.Flags & CILMethodVariableFlags.ReferenceType) != 0)
-            {
-                // Initialize with stack object address
-                managedPtr->Register = managedStack.Count;
-                managedPtr->Type = StackTypeCode.ManagedStackClassReference;
-
-                // Add empty slot
-                managedStack.Add(null);
-            }
-            // Get default
-            else
-            {
-                // Initialize to default value
-                StackData.Default(this, parameterTypeHandle, managedPtr);
-            }
-
-            // Increment ptr
-            managedPtr++;
-        }
-
-        public string GetCallStack()
-        {
-            // Check for no call
-            if (callStack.Count == 0)
-                return "Null";
-
-            StringBuilder builder = new StringBuilder();
-
-            // Process all methods
-            foreach(CallContext call in callStack.Reverse())
-            {
-                // Get the method
-                CILMethodHandle methodHandle = call.Method;
-
-                // Check for interop
-                if((methodHandle.Flags & CILMethodFlags.Interop) != 0)
-                {
-                    // Append method
-                    builder.AppendLine(call.Method.MetaMethod.ToString());
+                    // Perform value type copy
+                    stack[spArg + i].Ref = __marshal.CopyInteropBoxedValueTypeSlow(stack[spArgCaller + i].Ref);
                 }
                 else
                 {
-                    // Append method name
-                    builder.Append(call.Method.MetaMethod.ToString());
-
-                    MetadataDebugInformation debugInfo = null;
-
-                    // Check for clr method
-                    if(call.Method.MetaMethod is CLRMethodInfo clrMethod)
-                    {
-                        // Get debug info
-                        debugInfo = clrMethod.DebugInformation;
-                    }
-                    // Check for clr constructor
-                    else if(call.Method.MetaMethod is CLRConstructorInfo clrConstructor)
-                    {
-                        // Get debug info
-                        debugInfo = clrConstructor.DebugInformation;
-                    }
-
-                    // Check for debug info available
-                    if(debugInfo != null)
-                    {
-
-                    }
-
-                    // Add line
-                    builder.AppendLine();
+                    // Simply copy is fine
+                    stack[spArg + i] = stack[spArgCaller + i];
                 }
             }
-
-            return builder.ToString();
         }
+
+        //public string GetCallStack()
+        //{
+        //    // Check for no call
+        //    if (callStack.Count == 0)
+        //        return "Null";
+
+        //    StringBuilder builder = new StringBuilder();
+
+        //    // Process all methods
+        //    foreach(CallContext call in callStack.Reverse())
+        //    {
+        //        // Get the method
+        //        CILMethodHandle methodHandle = call.Method;
+
+        //        // Check for interop
+        //        if((methodHandle.Flags & CILMethodFlags.Interop) != 0)
+        //        {
+        //            // Append method
+        //            builder.AppendLine(call.Method.MetaMethod.ToString());
+        //        }
+        //        else
+        //        {
+        //            // Append method name
+        //            builder.Append(call.Method.MetaMethod.ToString());
+
+        //            MetadataDebugInformation debugInfo = null;
+
+        //            // Check for clr method
+        //            if(call.Method.MetaMethod is CLRMethodInfo clrMethod)
+        //            {
+        //                // Get debug info
+        //                debugInfo = clrMethod.DebugInformation;
+        //            }
+        //            // Check for clr constructor
+        //            else if(call.Method.MetaMethod is CLRConstructorInfo clrConstructor)
+        //            {
+        //                // Get debug info
+        //                debugInfo = clrConstructor.DebugInformation;
+        //            }
+
+        //            // Check for debug info available
+        //            if(debugInfo != null)
+        //            {
+
+        //            }
+
+        //            // Add line
+        //            builder.AppendLine();
+        //        }
+        //    }
+
+        //    return builder.ToString();
+        //}
     }
 }

@@ -1,5 +1,6 @@
 ﻿using dotnow.Reflection;
 using dotnow.Runtime;
+using dotnow.Runtime.CIL;
 using System;
 using System.Linq;
 
@@ -20,7 +21,7 @@ namespace dotnow.Interop.Runtime
             string enumName = null;
 
             // Check for enum
-            if(enumValue is CLREnumTypeInstance clrEnum)
+            if(enumValue is CLREnumInstance clrEnum)
             {
                 // Use ToString which gives the correct name
                 enumName = enumValue.ToString();
@@ -77,7 +78,7 @@ namespace dotnow.Interop.Runtime
                     if(valueNamePair.Value == enumString)
                     {
                         // Create a boxed representation of the enum
-                        enumValue = new CLREnumTypeInstance(clrType, valueNamePair.Key);
+                        enumValue = new CLREnumInstance(clrType, valueNamePair.Key);
                         break;
                     }
                 }
@@ -111,7 +112,7 @@ namespace dotnow.Interop.Runtime
                     if (valueNamePair.Value == enumString)
                     {
                         // Create a boxed representation of the enum
-                        enumValue = new CLREnumTypeInstance(clrType, valueNamePair.Key);
+                        enumValue = new CLREnumInstance(clrType, valueNamePair.Key);
                         break;
                     }
                 }
@@ -143,7 +144,7 @@ namespace dotnow.Interop.Runtime
                     if (valueNamePair.Value == enumString)
                     {
                         // Write to out value
-                        context.WriteArgObject<object>(2, new CLREnumTypeInstance(clrType, valueNamePair.Key));
+                        context.WriteArgObject<object>(2, new CLREnumInstance(clrType, valueNamePair.Key));
 
                         // Write result
                         context.ReturnValueType(true);
@@ -186,7 +187,7 @@ namespace dotnow.Interop.Runtime
                     if (valueNamePair.Value == enumString)
                     {
                         // Write to out value
-                        context.WriteArgWrap(1, clrType, new CLREnumTypeInstance(clrType, valueNamePair.Key));
+                        context.WriteArgWrap(1, clrType, new CLREnumInstance(clrType, valueNamePair.Key));
 
                         // Write result
                         context.ReturnValueType(true);
@@ -254,7 +255,7 @@ namespace dotnow.Interop.Runtime
             {
                 // Create array
                 enumValues = clrType.CLREnumNames.Keys
-                    .Select(e => new CLREnumTypeInstance(clrType, e))
+                    .Select(e => new CLREnumInstance(clrType, e))
                     .ToArray();
             }
             // Must be interop

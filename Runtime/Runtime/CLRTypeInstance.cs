@@ -1,5 +1,6 @@
 ﻿using dotnow.Interop;
 using dotnow.Reflection;
+using dotnow.Runtime.CIL;
 using System;
 
 namespace dotnow.Runtime
@@ -18,7 +19,7 @@ namespace dotnow.Runtime
             if ((typeInfo.Flags & CILTypeFlags.Interpreted) == 0)
                 throw new ArgumentException("Only supported for interpreted types");
 
-            this.Type = (CLRType)typeInfo.Meta;
+            this.Type = (CLRType)typeInfo.Type;
             this.Interop = new object[typeInfo.InteropTypes.Length];
             this.Fields = new StackData[typeInfo.InstanceSize];
         }

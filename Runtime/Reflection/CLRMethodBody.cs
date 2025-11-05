@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Collections.Generic;
-using dotnow.Runtime;
 using System.Reflection.Metadata;
 using System.Collections.Immutable;
 
@@ -36,13 +35,9 @@ namespace dotnow.Reflection
         }
 
         // Methods
-        internal unsafe UnmanagedMemory<byte> GetInstructionSet()
+        public override byte[] GetILAsByteArray()
         {
-            // Get the memory reader
-            BlobReader reader = bodyBlock.GetILReader();
-
-            // Create unmanaged memory
-            return new UnmanagedMemory<byte>((IntPtr)reader.StartPointer, reader.Length);
+            return bodyBlock.GetILBytes();
         }
 
         private CLRVariableInfo[] InitLocalVariables()

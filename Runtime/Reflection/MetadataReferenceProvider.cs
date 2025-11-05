@@ -1,5 +1,4 @@
-﻿using dotnow.Runtime;
-using System;
+﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
@@ -66,7 +65,7 @@ namespace dotnow.Reflection
             assemblyLoadContext.ResolveType(handle);
 
             // Get the meta type
-            return assemblyLoadContext.GetTypeHandle(handle).MetaType;
+            return assemblyLoadContext.GetTypeHandle(handle).Type;
         }
 
         public FieldInfo ResolveMetadataField(in EntityHandle handle)
@@ -74,7 +73,7 @@ namespace dotnow.Reflection
             // First resolve the field - TODO
 
             // Get the meta field
-            return assemblyLoadContext.GetFieldHandle(handle).MetaField;
+            return assemblyLoadContext.GetFieldHandle(handle).Field;
         }
 
         public MethodBase ResolveMetadataMethod(in EntityHandle handle)
@@ -83,7 +82,7 @@ namespace dotnow.Reflection
             assemblyLoadContext.ResolveMethod(handle);
 
             // Get the meta method
-            return assemblyLoadContext.GetMethodHandle(handle).MetaMethod;
+            return assemblyLoadContext.GetMethodHandle(handle).Method;
         }
 
         Type IConstructedTypeProvider<Type>.GetArrayType(Type elementType, ArrayShape shape)

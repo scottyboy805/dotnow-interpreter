@@ -1,8 +1,6 @@
-﻿using dotnow.Runtime;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 
 namespace dotnow.Interop
 {
@@ -10,7 +8,6 @@ namespace dotnow.Interop
     {
         // Private
         private static readonly Dictionary<Type, Type> proxyBindings = new();
-        private static readonly Dictionary<(Type, int), Type> arrayProxyBindings = new();
         private static readonly Dictionary<MethodBase, DirectInstance> directInstanceBindings = new();
         private static readonly Dictionary<MethodBase, DirectCall> directCallBindings = new();
         private static readonly Dictionary<MethodBase, DirectCallGeneric> directCallGenericBindings = new();
@@ -26,11 +23,6 @@ namespace dotnow.Interop
         public static bool HasProxyBinding(Type forType)
         {
             return proxyBindings.ContainsKey(forType);
-        }
-
-        public static bool HasArrayProxyBinding(Type forArrayElementType, int arrayRank)
-        {
-            return arrayProxyBindings.ContainsKey((forArrayElementType, arrayRank));
         }
 
         public static bool HasDirectInstanceBinding(MethodBase method)
@@ -99,20 +91,6 @@ namespace dotnow.Interop
             return true;
         }
 
-        public static bool TryCreateArrayProxyBindingInstance(AppDomain appDomain, Type forArrayElementType, int arrayRank, out ICLRArrayProxy arrayProxy)
-        {
-            // Check for binding available
-            if(arrayProxyBindings.TryGetValue((forArrayElementType, arrayRank), out Type arrayProxyType) == false)
-            {
-                arrayProxy = null;
-                return false;
-            }
-
-            // Try create instance
-            arrayProxy = (ICLRArrayProxy)Activator.CreateInstance(arrayProxyType);
-            return true;
-        }
-
         public static bool TryGetDirectInstanceBinding(MethodBase method, out DirectInstance call)
         {
             return directInstanceBindings.TryGetValue(method, out call);
@@ -166,9 +144,6 @@ namespace dotnow.Interop
 
                 // Proxy
                 InitializeProxyBindings(types);
-
-                // Array proxy
-                InitializeArrayProxyBindings(types);
 
                 // Direct instance
                 InitializeDirectInstanceBindings(types);
@@ -246,59 +221,7 @@ namespace dotnow.Interop
                 proxyBindings.Add(attribute.ForType, type);
             }
         }
-
-        private static void InitializeArrayProxyBindings(IEnumerable<Type> types)
-        {
-            // Process all types
-            foreach (Type type in types)
-            {
-                // Check for attribute
-                if (type.IsDefined(typeof(CLRArrayProxyBindingAttribute), false) == false)
-                    continue;
-
-                // Get the attribute
-                CLRArrayProxyBindingAttribute attribute = type.GetCustomAttribute<CLRArrayProxyBindingAttribute>();
-
-                // Check abstract
-                if (type.IsAbstract == true)
-                {
-                    ReportBindingError("CLR array proxy binding '{0}' cannot be marked as abstract", type);
-                    continue;
-                }
-
-                // Check for ICLRProxy
-                if (typeof(ICLRArrayProxy).IsAssignableFrom(type) == false)
-                {
-                    ReportBindingError("CLR array proxy binding '{0}' must implement '{1}'", type, typeof(ICLRArrayProxy));
-                    continue;
-                }
-
-                // Check for array type
-                if (attribute.ForArrayType.IsArray == true)
-                {
-                    ReportBindingError("CLR array proxy binding '{0}' must specify an array element type, not an implicit array type '{1}'", type, attribute.ForArrayType);
-                    continue;
-                }
-
-                // Check for unmanaged element type
-                if (attribute.ForArrayType.IsPrimitive == true || RuntimeType.IsUnmanagedTypeSlow(attribute.ForArrayType) == false)
-                {
-                    ReportBindingError("CLR array proxy binding '{0}' must specify a non-primitive unmanaged/blittable array element type '{1}'", type, attribute.ForArrayType);
-                    continue;
-                }
-
-                // Check for proxy already defined
-                if (arrayProxyBindings.ContainsKey((attribute.ForArrayType, attribute.ArrayRank)) == true)
-                {
-                    ReportBindingError("Attempting to register multiple CLR array proxy bindings for type '{0}'", attribute.ForArrayType);
-                    continue;
-                }
-
-                // Add the type
-                arrayProxyBindings.Add((attribute.ForArrayType, attribute.ArrayRank), type);
-            }
-        }
-
+                
         private static void InitializeDirectInstanceBindings(IEnumerable<Type> types)
         {
             // Process all types
