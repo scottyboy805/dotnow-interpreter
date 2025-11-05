@@ -1,687 +1,341 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using dotnow.Interop;
+using dotnow.Reflection;
+using System;
 using System.Runtime.InteropServices;
 
 namespace dotnow.Runtime
 {
-    public enum StackType : uint
+    public enum StackTypeCode : uint
     {
-        Int32 = 31,
-        Int64 = 63,
-        UInt32 = 32,
-        UInt64 = 64,
-        Single,
-        Double,
-        Ref,            // Object
-        RefBoxed,       // Boxed primitive
-        ByRef           // By ref local, argument, element or field
+        /// <summary>
+        /// No valid data stored.
+        /// </summary>
+        Invalid = 0,
+
+        /// <summary>
+        /// Represents a signed 32-bit int stored on the stack (System.Int).
+        /// Note that any type smaller than 32-bits is always promoted to I32 when pushing onto the stack (Minimum storable type).
+        /// </summary>
+        I32,
+        /// <summary>
+        /// Represents an unsigned 32-bit int stored on the stack (System.Unit).
+        /// </summary>
+        U32,
+        /// <summary>
+        /// Represents a signed 64-bit int stored on the stack (System.Long).
+        /// </summary>
+        I64,
+        /// <summary>
+        /// Represent an unsigned 64-bit int stored on the stack (System.ULong).
+        /// </summary>
+        U64,
+        /// <summary>
+        /// Represents a single precision floating point value stored on the stack (System.Single).
+        /// </summary>
+        F32,
+        /// <summary>
+        /// Represents a double precision floating point value stored on the stack (System.Double).
+        /// </summary>
+        F64,
+        /// <summary>
+        /// Represents a signed pointer stored on the stack (System.IntPtr).
+        /// </summary>
+        IntPtr,
+        /// <summary>
+        /// Represents an unsigned pointer stored on the stack (System.UIntPtr).
+        /// </summary>
+        UIntPtr,
+
+        Ref,
+        ByRef,
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    public struct StackData
+    internal struct StackData
     {
         // Public
         [FieldOffset(0)]
-        public StackType Type;  // 4
+        public StackTypeCode Type;      // 8 bytes
 
-        [FieldOffset(4)]
-        private uint Padding;   // 4
-
+        // Access to primitive data for common operations
         [FieldOffset(8)]
-        public int Int32;
+        public int I32;
         [FieldOffset(8)]
-        public long Int64;
+        public long I64;
         [FieldOffset(8)]
-        public float Single;
+        public float F32;
         [FieldOffset(8)]
-        public double Double;
-
+        public double F64;
         [FieldOffset(8)]
-        public object Ref;     // 8 = 16
-
-        // Properties
-        public int Address
-        {
-            get { return Ref == null ? 0 : 1; }
-        }
+        public IntPtr Ptr;
+        [FieldOffset(8)]
+        public object Ref; // 16 bytes        
 
         // Methods
-        public T GetRefValue<T>()
+        public static void Wrap(CILTypeInfo typeInfo, object obj, ref StackData dst)
         {
-            switch (Type)
+            // ### Handle enum types
+            // Check for interpreted enum or as enum
+            if ((typeInfo.Flags & CILTypeFlags.Enum) != 0)
             {
-                case StackType.Ref:
-                case StackType.RefBoxed:
-                    {
-                        // Check for null
-                        if (Ref == null)
-                            throw new NullReferenceException();
-
-                        // Get reference value
-                        return (T)Ref;
-                    }
-                case StackType.ByRef:
-                    {
-                        // Get byref reference value
-                        return ((IByRef)Ref).GetReferenceValue().GetRefValue<T>();
-                    }
-            }
-            throw new NotSupportedException("Not a reference or boxed struct type");
-        }
-
-        public object Box()
-        {
-            switch(Type)
-            {
-                case StackType.Int32: return Int32;
-                case StackType.Int64: return Int64;
-                case StackType.UInt32: return (uint)Int32;
-                case StackType.UInt64: return (ulong)Int64;
-                case StackType.Single: return (float)Single;
-                case StackType.Double: return (double)Double;
-            }
-            return Ref;
-        }
-
-        public object BoxAsType(in CLRTypeInfo typeInfo)
-        {
-            // Check for enum type
-            if (typeInfo.typeCode == TypeCode.Object && typeInfo.isEnum == true && typeInfo.isArray == false)
-                return BoxAsTypeSlow(typeInfo.type.GetEnumUnderlyingType());
-
-            // Handle reference type
-            switch (Type)
-            {
-                case StackType.Ref:
-                case StackType.ByRef:
-                case StackType.RefBoxed:
-                    return Box();
-            }
-
-            // Box based on type code
-            switch(typeInfo.typeCode)
-            {
-                case TypeCode.Int32: return (int)Int32;
-                case TypeCode.Int64: return (long)Int64;
-                case TypeCode.UInt32: return (uint)Int32;
-                case TypeCode.UInt64: return (ulong)Int64;
-                case TypeCode.Single: return (float)Single;
-                case TypeCode.Double: return (double)Double;
-            }
-            // Fallback to default beahviour
-            return Box();
-        }
-
-        public object BoxAsTypeSlow(Type asType)
-        {
-            // Get type code
-            TypeCode code = System.Type.GetTypeCode(asType);
-
-            // Check for enum type
-            if (code == TypeCode.Object && asType.IsEnum == true && asType.IsArray == false)
-                return BoxAsTypeSlow(asType.GetEnumUnderlyingType());
-
-            switch(Type)
-            {
-                case StackType.Ref:
-                case StackType.ByRef:
-                case StackType.RefBoxed:
-                    return Box();
-            }
-
-            // Convert to type
-            if (asType.IsEnum == false)
-            {
-                return Convert.ChangeType(Box(), asType);
-            }
-            // If we somehow reached here with an enum type, use Enum.ToObject
-            return Enum.ToObject(asType, Box());
-        }
-
-        public object UnboxAsTypeSlow(Type asType)
-        {
-            // Get type code
-            TypeCode code = System.Type.GetTypeCode(asType);
-
-            // Check for enum type
-            if (code == TypeCode.Object && asType.IsEnum == true && asType.IsArray == false)
-                return UnboxAsTypeSlow(asType.GetEnumUnderlyingType());
-
-            return UnboxAsType(code);
-        }
-
-#if API_NET35
-        public object UnboxAsType(CLRTypeInfo typeInfo)
-#else
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object UnboxAsType(in CLRTypeInfo typeInfo)
-#endif
-        {
-            // Check for enum type
-            if (typeInfo.typeCode == TypeCode.Object && typeInfo.isEnum == true && typeInfo.isArray == false)
-                return UnboxAsType(typeInfo.enumUnderlyingTypeCode);
-
-            // Unbox by type code
-            return UnboxAsType(typeInfo.typeCode);
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public void UnboxAsType(ref StackData dest, in CLRTypeInfo typeInfo)
-        {
-            // Check for enum type
-            if (typeInfo.typeCode == TypeCode.Object && typeInfo.isEnum == true && typeInfo.isArray == false)
-            {
-                UnboxAsType(ref dest, typeInfo.enumUnderlyingTypeCode);
-            }
-            else
-            {
-                // Unbox by type code
-                UnboxAsType(ref dest, typeInfo.typeCode);
-            }
-        }
-
-        public void UnboxAsType(ref StackData dest, TypeCode typeCode)
-        {
-            // Check for boxed
-            if (Type == StackType.RefBoxed)
-            {
-                switch (typeCode)
+                // Check for interpreted
+                if ((typeInfo.Flags & CILTypeFlags.Interpreted) != 0)
                 {
-                    case TypeCode.Boolean:
-                        {
-                            dest.Int32 = (bool)Ref ? 1 : 0;
-                            dest.Type = StackType.Int32;
-                            break;
-                        }
-                    case TypeCode.SByte:
-                        {
-                            dest.Int32 = (sbyte)Ref; 
-                            dest.Type = StackType.Int32;
-                            break;
-                        }
-                    case TypeCode.Byte:
-                        {
-                            dest.Int32 = (sbyte)(byte)Ref;
-                            dest.Type = StackType.Int32;
-                            break;
-                        }
-                    case TypeCode.Int16:
-                        {
-                            dest.Int32 = (short)Ref;
-                            dest.Type = StackType.Int32;
-                            break;
-                        }
-                    case TypeCode.UInt16:
-                        {
-                            dest.Int32 = (short)(ushort)Ref;
-                            dest.Type = StackType.Int32;
-                            break;
-                        }
-                    case TypeCode.Int32:
-                        {
-                            dest.Int32 = (int)Ref;
-                            dest.Type = StackType.Int32;
-                            break;
-                        }
-                    case TypeCode.UInt32:
-                        {
-                            dest.Int32 = (int)(uint)Ref;
-                            dest.Type = StackType.UInt32;
-                            break;
-                        }
-                    case TypeCode.Int64:
-                        {
-                            dest.Int64 = (long)Ref;
-                            dest.Type = StackType.Int64;
-                            break;
-                        }
-                    case TypeCode.UInt64:
-                        {
-                            dest.Int64 = (long)(ulong)Ref;
-                            dest.Type = StackType.UInt64;
-                            break;
-                        }
-                    case TypeCode.Single:
-                        {
-                            dest.Single = (float)Ref;
-                            dest.Type = StackType.Single;
-                            break;
-                        }
-                    case TypeCode.Double:
-                        {
-                            dest.Double = (double)Ref;
-                            dest.Type = StackType.Double;
-                            break;
-                        }
+                    // Get object as enum
+                    CLREnumInstance enumInstance = (CLREnumInstance)obj;
 
-                    default:
-                        throw new NotSupportedException("Attempting to box unsupported type: " + typeCode);
+                    // Load into dst
+                    dst = enumInstance.Value;
+                    return;
                 }
-            }
-            else
-                throw new InvalidOperationException("Type must be RefBoxed in order to support unbox operation: " + Type);
-        }
-
-        public object UnboxAsType(TypeCode typeCode)
-        {
-            // Check for boxed type - need to unbox
-            if (Type == StackType.RefBoxed)
-            {
-                switch (typeCode)
+                // Must be interop
+                else
                 {
-                    case TypeCode.Boolean: return (bool)Ref;
-                    case TypeCode.SByte: return (sbyte)Ref;
-                    case TypeCode.Byte: return (byte)Ref;
-                    case TypeCode.Char: return (char)Ref;
-                    case TypeCode.Int16: return (short)Ref;
-                    case TypeCode.Int32: return (int)Ref;
-                    case TypeCode.Int64: return (long)Ref;
-                    case TypeCode.UInt16: return (ushort)Ref;
-                    case TypeCode.UInt32: return (uint)Ref;
-                    case TypeCode.UInt64: return (ulong)Ref;
-                    case TypeCode.Single: return (float)Ref;
-                    case TypeCode.Double: return (double)Ref;
+                    // Get the underlying type - bit slow but this is only when calling from reflection
+                    Type enumType = typeInfo.Meta.GetEnumUnderlyingType();
+
+                    // Convert to underlying type
+                    object underlyingValue = Convert.ChangeType(obj, enumType);
+
+                    // Get the type code
+                    TypeCode enumTypeCode = System.Type.GetTypeCode(enumType);
+
+                    // Select type code
+                    switch (enumTypeCode)
+                    {
+                        case TypeCode.SByte:
+                            {
+                                dst.I32 = (sbyte)underlyingValue;
+                                dst.Type = StackTypeCode.I32;
+                                break;
+                            }
+                        case TypeCode.Byte:
+                            {
+                                dst.I32 = (sbyte)underlyingValue;
+                                dst.Type = StackTypeCode.I32;
+                                break;
+                            }
+                        case TypeCode.Int16:
+                            {
+                                dst.I32 = (sbyte)underlyingValue;
+                                dst.Type = StackTypeCode.I32;
+                                break;
+                            }
+                        case TypeCode.UInt16:
+                            {
+                                dst.I32 = (sbyte)underlyingValue;
+                                dst.Type = StackTypeCode.I32;
+                                break;
+                            }
+                        case TypeCode.Int32:
+                            {
+                                dst.I32 = (sbyte)underlyingValue;
+                                dst.Type = StackTypeCode.I32;
+                                break;
+                            }
+                        case TypeCode.UInt32:
+                            {
+                                dst.I32 = (sbyte)underlyingValue;
+                                dst.Type = StackTypeCode.U32;
+                                break;
+                            }
+                        case TypeCode.Int64:
+                            {
+                                dst.I32 = (sbyte)underlyingValue;
+                                dst.Type = StackTypeCode.I64;
+                                break;
+                            }
+                        case TypeCode.UInt64:
+                            {
+                                dst.I32 = (sbyte)underlyingValue;
+                                dst.Type = StackTypeCode.U64;
+                                break;
+                            }
+                        default:
+                            throw new NotSupportedException(enumTypeCode.ToString());
+                    }
+                    return;
                 }
             }
 
-            switch(typeCode)
+
+            // ### Handle other type
+            switch (typeInfo.TypeCode)
             {
-                case TypeCode.Boolean: return Int32 == 0 ? false : true;
-                case TypeCode.SByte: return (sbyte)Int32;
-                case TypeCode.Byte: return (byte)Int32;
-                case TypeCode.Char: return (char)Int32;
-                case TypeCode.Int16: return (short)Int32;
-                case TypeCode.Int32: return Int32;
-                case TypeCode.Int64: return Int64;
-                case TypeCode.UInt16: return (ushort)Int32;
-                case TypeCode.UInt32: return (uint)Int32;
-                case TypeCode.UInt64: return (ulong)Int64;
-                case TypeCode.Single: return (float)Single;
-                case TypeCode.Double: return (double)Double;
-            }
-            return Ref;
-        }
+                default: throw new NotSupportedException();
 
-        public override string ToString()
-        {
-            switch(Type)
-            {
-                default:
-                case StackType.Int32: return Int32.ToString();
-                case StackType.Int64: return Int64.ToString();
-                case StackType.UInt32: return ((uint)Int32).ToString();
-                case StackType.UInt64: return ((ulong)Int64).ToString();
-                case StackType.Single: return Single.ToString();
-                case StackType.Double: return Double.ToString();
-                case StackType.Ref:
-                case StackType.RefBoxed:
-                    {
-                        if (Ref == null)
-                            return "nullptr";
-                        return Ref.ToString();
-                    }
-                case StackType.ByRef: return Ref.ToString();
-            }
-        }
-
-        public static void AllocTypedSlow(ref StackData obj, Type asType, object value, bool promoteSmallPrimitives = false)
-        {
-            // Get type code
-            TypeCode code = System.Type.GetTypeCode(asType);
-
-            // Check for enum
-            if (code == TypeCode.Object && asType.IsEnum == true && asType.IsArray == false)
-            {
-                AllocTypedSlow(ref obj, asType.GetEnumUnderlyingType(), value, promoteSmallPrimitives);
-                return;
-            }
-
-            AllocTyped(ref obj, code, value, promoteSmallPrimitives);
-        }
-
-#if API_NET35
-        public static void AllocTyped(ref StackData obj, CLRTypeInfo typeInfo, object value)
-#else
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AllocTyped(ref StackData obj, in CLRTypeInfo typeInfo, object value, bool promoteSmallPrimitives = false)
-#endif
-        {
-            // Check for enum
-            if(typeInfo.typeCode == TypeCode.Object && typeInfo.isEnum == true && typeInfo.isArray == false)
-            {
-                AllocTyped(ref obj, typeInfo.enumUnderlyingTypeCode, value);
-                return;
-            }
-
-            AllocTyped(ref obj, typeInfo.typeCode, value, promoteSmallPrimitives);
-        }
-
-        public static void AllocTyped(ref StackData obj, TypeCode typeCode, object value, bool promoteSmallPrimitives = false)
-        {
-            switch (typeCode)
-            {
                 case TypeCode.Boolean:
                     {
-                        obj.Type = StackType.Int32;
-                        obj.Int32 = ((bool)value) == true ? 1 : 0;
-                        break;
-                    }
-                case TypeCode.SByte:
-                    {
-                        if (promoteSmallPrimitives == true)
-                        {
-                            obj.Type = StackType.Int32;
-                            obj.Int32 = (sbyte)value;
-                        }
-                        else
-                        {
-                            obj.Type = StackType.Int32;
-                            obj.Int32 = (sbyte)value;
-                        }
+                        dst.Type = StackTypeCode.I32;
+                        dst.I32 = (bool)obj == true ? 1 : 0;
                         break;
                     }
                 case TypeCode.Char:
                     {
-                        obj.Type = StackType.Int32;
-                        obj.Int32 = (sbyte)(char)value;
+                        dst.Type = StackTypeCode.I32;
+                        dst.I32 = (char)obj;
                         break;
                     }
-                case TypeCode.Int16: 
+
+                case TypeCode.SByte:
                     {
-                        if (promoteSmallPrimitives == true)
-                        {
-                            obj.Type = StackType.Int32;
-                            obj.Int32 = (short)value;
-                        }
-                        else
-                        {
-                            obj.Type = StackType.Int32;
-                            obj.Int32 = (short)value;
-                        }
-                        break;
-                    }
-                case TypeCode.Int32:
-                    {
-                        obj.Type = StackType.Int32;
-                        obj.Int32 = (int)value;
-                        break;
-                    }
-                case TypeCode.Int64:
-                    {
-                        obj.Type = StackType.Int64;
-                        obj.Int64 = (long)value;
+                        dst.Type = StackTypeCode.I32;
+                        dst.I32 = (sbyte)obj;
                         break;
                     }
                 case TypeCode.Byte:
                     {
-                        if (promoteSmallPrimitives == true)
-                        {
-                            obj.Type = StackType.Int32;
-                            obj.Int32 = (byte)value;
-                        }
-                        else
-                        {
-                            obj.Type = StackType.Int32;
-                            obj.Int32 = (sbyte)(byte)value;
-                        }
+                        dst.Type = StackTypeCode.I32;
+                        dst.I32 = (byte)obj;
+                        break;
+                    }
+                case TypeCode.Int16:
+                    {
+                        dst.Type = StackTypeCode.I32;
+                        dst.I32 = (short)obj;
                         break;
                     }
                 case TypeCode.UInt16:
                     {
-                        if (promoteSmallPrimitives == true)
-                        {
-                            obj.Type = StackType.Int32;
-                            obj.Int32 = (ushort)value;
-                        }
-                        else
-                        {
-                            obj.Type = StackType.Int32;
-                            obj.Int32 = (short)(ushort)value;
-                        }
+                        dst.Type = StackTypeCode.I32;
+                        dst.I32 = (ushort)obj;
+                        break;
+                    }
+                case TypeCode.Int32:
+                    {
+                        dst.Type = StackTypeCode.I32;
+                        dst.I32 = (int)obj;
                         break;
                     }
                 case TypeCode.UInt32:
                     {
-                        obj.Type = StackType.UInt32;
-                        obj.Int32 = (int)(uint)value;
+                        dst.Type = StackTypeCode.U32;
+                        dst.I32 = (int)(uint)obj;
+                        break;
+                    }
+                case TypeCode.Int64:
+                    {
+                        dst.Type = StackTypeCode.I64;
+                        dst.I64 = (long)obj;
                         break;
                     }
                 case TypeCode.UInt64:
                     {
-                        obj.Type = StackType.UInt64;
-                        obj.Int64 = (long)(ulong)value;
+                        dst.Type = StackTypeCode.I64;
+                        dst.I64 = (long)(ulong)obj;
                         break;
                     }
-
                 case TypeCode.Single:
                     {
-                        obj.Type = StackType.Single;
-                        obj.Single = (float)value;
+                        dst.Type = StackTypeCode.F32;
+                        dst.F32 = (float)obj;
                         break;
                     }
                 case TypeCode.Double:
                     {
-                        obj.Type = StackType.Double;
-                        obj.Double = (double)value;
+                        dst.Type = StackTypeCode.F64;
+                        dst.F64 = (double)obj;
                         break;
                     }
 
-                default:
+                case TypeCode.Decimal:
                 case TypeCode.String:
                 case TypeCode.Object:
                     {
-                        // Check for null
-                        if(value == null)
-                        {
-                            obj.Ref = null;
-                            obj.Type = StackType.Ref;
-                            break;
-                        }
-
-                        // Check for value types - probably a little expensive??
-                        if (value is ValueType)
-                        {
-                            obj.Type = StackType.RefBoxed;
-                            obj.Ref = value;
-                            break;
-                        }
-
-                        obj.Type = StackType.Ref;
-                        obj.Ref = value;
+                        dst.Type = StackTypeCode.Ref;
+                        dst.Ref = obj;
                         break;
                     }
             }
         }
 
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, bool val)
+        public static void Unwrap(CILTypeInfo typeInfo, ref StackData src, ref object unwrapped)
         {
-            obj.Type = StackType.Int32;
-            obj.Int32 = (val == true) ? 1 : 0;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, sbyte val)
-        {
-            obj.Type = StackType.Int32;
-            obj.Int32 = val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, byte val)
-        {
-            obj.Type = StackType.Int32;
-            obj.Int32 = (sbyte)val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, short val)
-        {
-            obj.Type = StackType.Int32;
-            obj.Int32 = val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, ushort val)
-        {
-            obj.Type = StackType.Int32;
-            obj.Int32 = (short)val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, int val)
-        {
-            obj.Type = StackType.Int32;
-            obj.Int32 = val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, uint val)
-        {
-            obj.Type = StackType.UInt32;
-            obj.Int32 = (int)val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, long val)
-        {
-            obj.Type = StackType.Int64;
-            obj.Int64 = val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, ulong val)
-        {
-            obj.Type = StackType.UInt64;
-            obj.Int64 = (long)val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, float val)
-        {
-            obj.Type = StackType.Single;
-            obj.Single = val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void Alloc(ref StackData obj, double val)
-        {
-            obj.Type = StackType.Double;
-            obj.Double = val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void AllocRef(ref StackData obj, object val)
-        {
-            obj.Type = StackType.Ref;
-            obj.Ref = val;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void AllocRefBoxed(ref StackData obj, object valueType)
-        {
-            obj.Type = StackType.RefBoxed;
-            obj.Ref = valueType;
-        }
-
-#if !API_NET35
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public static void ValueTypeCopy(ref StackData obj)
-        {
-            // Check for boxed struct
-            if(obj.Type == StackType.RefBoxed && obj.Ref != null)
+            // ### Handle enums
+            // Check for interpreted enum or as enum
+            if ((typeInfo.Flags & CILTypeFlags.Enum) != 0)
             {
-                // This call will take the boxed value type stored in 'src' and perform a stuct copy (memberwise clone) returning a boxed reference to the new value type with same values
-                obj.Ref = System.Runtime.CompilerServices.RuntimeHelpers.GetObjectValue(obj.Ref);
+                // Check for interpreted
+                if ((typeInfo.Flags & CILTypeFlags.Interpreted) != 0)
+                {
+                    // Create the enum object
+                    unwrapped = new CLREnumInstance(typeInfo, src);
+                    return;
+                }
+                // Must be interop
+                else
+                {
+                    // Get the enum type code
+                    TypeCode enumTypeCode = System.Type.GetTypeCode(typeInfo.Meta.GetEnumUnderlyingType());
+
+                    // Select type code
+                    switch (enumTypeCode)
+                    {
+                        case TypeCode.SByte: unwrapped = Enum.ToObject(typeInfo.Meta, (sbyte)src.I32); break;
+                        case TypeCode.Byte: unwrapped = Enum.ToObject(typeInfo.Meta, (byte)src.I32); break;
+                        case TypeCode.Int16: unwrapped = Enum.ToObject(typeInfo.Meta, (short)src.I32); break;
+                        case TypeCode.UInt16: unwrapped = Enum.ToObject(typeInfo.Meta, (ushort)src.I32); break;
+                        case TypeCode.Int32: unwrapped = Enum.ToObject(typeInfo.Meta, (int)src.I32); break;
+                        case TypeCode.UInt32: unwrapped = Enum.ToObject(typeInfo.Meta, (uint)src.I32); break;
+                        case TypeCode.Int64: unwrapped = Enum.ToObject(typeInfo.Meta, (long)src.I32); break;
+                        case TypeCode.UInt64: unwrapped = Enum.ToObject(typeInfo.Meta, (ulong)src.I32); break;
+                        default:
+                            throw new NotSupportedException(enumTypeCode.ToString());
+                    }
+                    return;
+                }
             }
-        }
 
-#if API_NET35
-        public static void AssignKeepType(ref StackData dest, StackData src)
-#else
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssignKeepType(ref StackData dest, in StackData src)
-#endif
-        {
-            // Get existing type
-            StackType type = dest.Type;
 
-            // Copy value
-            dest = src;
-
-            // Overwrite type - except for boxed primitved
-            if(src.Type != StackType.RefBoxed)
-                dest.Type = type;
-        }
-
-#if API_NET35
-    public static bool NullCheck(StackData val)
-#else
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool NullCheck(in StackData val)
-#endif
-        {
-            switch (val.Type)
+            // ### Handle all other types
+            switch (typeInfo.TypeCode)
             {
-                default:
-                    throw new NotSupportedException("Null check operation is not supported on data type: " + val.Type);
+                default: throw new NotSupportedException();
 
-                // Check by ref
-                case StackType.ByRef:
-                    return ((IByRef)val.Ref).Instance == null;
+                case TypeCode.Boolean: unwrapped = src.I32 == 1 ? true : false; break;
+                case TypeCode.Char: unwrapped = (char)src.I32; break;
 
-                    // Check reference null
-                case StackType.Ref:
-                case StackType.RefBoxed:
-                    return val.Ref == null;
-            }
-        }
-
-        public static StackType StackTypeFromTypeCode(TypeCode code)
-        {
-            switch(code)
-            {
-                case TypeCode.Boolean: return StackType.Int32;
+                case TypeCode.SByte: unwrapped = (sbyte)src.I32; break;
+                case TypeCode.Byte: unwrapped = (byte)src.I32; break;
+                case TypeCode.Int16: unwrapped = (short)src.I32; break;
+                case TypeCode.UInt16: unwrapped = (ushort)src.I32; break;
+                case TypeCode.Int32: unwrapped = (int)src.I32; break;
+                case TypeCode.UInt32: unwrapped = (uint)src.I32; break;
+                case TypeCode.Int64: unwrapped = (long)src.I64; break;
+                case TypeCode.UInt64: unwrapped = (ulong)src.I64; break;
+                case TypeCode.Single: unwrapped = (float)src.F32; break;
+                case TypeCode.Double: unwrapped = (double)src.F64; break;
+                case TypeCode.Decimal:
+                case TypeCode.String:
                 case TypeCode.Object:
-                case TypeCode.String: return StackType.Ref;
-                case TypeCode.UInt32: return StackType.UInt32;
-                case TypeCode.Int32: return StackType.Int32;
-                case TypeCode.UInt64: return StackType.UInt64;
-                case TypeCode.Int64: return StackType.Int64;
-                case TypeCode.Single: return StackType.Single;
-                case TypeCode.Double: return StackType.Double;
+                    {
+                        unwrapped = src.Ref;
+                        break;
+                    }
             }
 
-            throw new NotSupportedException("Unsupported type: " + code.ToString());
+            // Check for ICLRInstance - should be passed as base type
+            if (unwrapped is ICLRInstance clrInstance)
+            {
+                // Try to unbox as best suited base interop type
+                unwrapped = clrInstance.UnwrapAsType(typeInfo.Meta);
+            }
+            // Check for CLR type - should be passed as base System.Type
+            else if (unwrapped is CLRType clrType)
+            {
+                // Select base type
+                Type current = clrType.BaseType;
+
+                // Keep descending until we reach an interop type
+                while (current.IsCLRType() == true)
+                    current = current.BaseType;
+
+                // Update unwrapped
+                unwrapped = current;
+
+                // Log implicit marshalling of type - it can cause strange behaviour if not expected, but can lead to a crash if no marshalling occurs
+                Debug.LineFormat("CLRType '{0}' was marshalled to interop base type '{1}'", clrType, current);
+            }
         }
     }
 }

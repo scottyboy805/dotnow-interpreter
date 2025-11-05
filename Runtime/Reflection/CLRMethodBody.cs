@@ -1,139 +1,72 @@
 ﻿using System;
 using System.Reflection;
-using Mono.Cecil;
+using System.Collections.Generic;
 using dotnow.Runtime;
-using dotnow.Runtime.CIL;
-using dotnow.Runtime.JIT;
-using MethodBody = Mono.Cecil.Cil.MethodBody;
+using System.Reflection.Metadata;
+using System.Collections.Immutable;
 
 namespace dotnow.Reflection
 {
-    public sealed class CLRMethodBody : CLRMethodBodyBase, IJITOptimizable
+    internal sealed class CLRMethodBody : MethodBody
     {
+        // Internal
+        internal readonly MetadataReferenceProvider metadataProvider = null;
+        internal readonly MethodBodyBlock bodyBlock = null;
+
         // Private
-        private MethodBody body = null;
-        private MethodBodyCompiler bodyCompiler = null;      
-        private CILOperation[] instructions = null;
-        private bool jitFailed = false;
+        private readonly MethodBase method = null;
+        private readonly Lazy<CLRVariableInfo[]> locals = null;
 
         // Properties
-        public override bool InitLocals
-        {
-            get { return body.InitLocals; }
-        }
-
-        public override int MaxStack
-        {
-            get { return body.MaxStackSize; }
-        }
+        #region MethodBodyProperties
+        public override IList<LocalVariableInfo> LocalVariables => locals.Value;
+        public override int MaxStackSize => bodyBlock.MaxStack;
+        public override bool InitLocals => bodyBlock.LocalVariablesInitialized;
+        #endregion
 
         // Constructor
-        internal CLRMethodBody(AppDomain domain, MethodBase method, MethodBody body)
-            : base(domain, method)
+        internal CLRMethodBody(MetadataReferenceProvider metadataProvider, MethodBase method, MethodBodyBlock bodyBlock)
         {
-            this.body = body;
-            this.bodyCompiler = new MethodBodyCompiler(body);
+            this.metadataProvider = metadataProvider;
+            this.method = method;
+            this.bodyBlock = bodyBlock;
 
-            // Lazy initialize
-            this.locals = new Lazy<StackLocal[]>(InitLocalDefaults);
-            
-            // Exception handlers
-            this.exceptionHandlers = new Lazy<CLRExceptionHandler[]>(InitExceptionHandlers);
+            // Initialize the locals
+            this.locals = new(InitLocalVariables);
         }
 
         // Methods
-        void IJITOptimizable.EnsureJITOptimized()
+        internal unsafe UnmanagedMemory<byte> GetInstructionSet()
         {
-            // Create instructions
-            if (instructions == null)
-            {
-                lock (bodyCompiler)
-                {
-                    // Check for jit failed
-                    if (jitFailed == true)
-                        throw new InvalidProgramException(string.Format("JIT compilation failed to run for the target method body: {0}. The method may use instructions or features that are not supported", method));
+            // Get the memory reader
+            BlobReader reader = bodyBlock.GetILReader();
 
-                    Type genericContext = null;
-
-                    // Check for generic type
-                    if (Method.DeclaringType.IsGenericType == true)
-                        genericContext = Method.DeclaringType;
-
-                    using (new GenericContext(genericContext))
-                    {
-                        try
-                        {
-                            // Get the compiled method body instruction pointer
-                            instructions = bodyCompiler.JITOptimizeInterpretedInstructionSet(domain);
-                        }
-                        catch
-                        {
-                            jitFailed = true;
-                            throw;
-                        }
-                    }
-                }
-            }
-
-            // Check for error
-            if (instructions == null)
-                throw new InvalidProgramException("Failed to JIT compile method body: " + method);
+            // Create unmanaged memory
+            return new UnmanagedMemory<byte>((IntPtr)reader.StartPointer, reader.Length);
         }
 
-        protected override CILOperation[] InitOperations()
+        private CLRVariableInfo[] InitLocalVariables()
         {
-            JITOptimize.EnsureJITOptimized(this);
-            return instructions;
-        }
+            // Check for no locals - locals are initialized fully by instructions - no need to do it here
+            if (bodyBlock.LocalSignature.IsNil == true)
+                return Array.Empty<CLRVariableInfo>();
 
-        protected override StackLocal[] InitLocalDefaults()
-        {
-            // Allocate locals
-            StackLocal[] locals = new StackLocal[body.Variables.Count];
+            // Resolve local signature
+            StandaloneSignature localSignature = metadataProvider.MetadataReader.GetStandaloneSignature(bodyBlock.LocalSignature);
 
-            // Initialize values
-            for(int i = 0; i < locals.Length; i++)
+            // Decode signature
+            ImmutableArray<Type> localTypes = localSignature.DecodeLocalSignature(metadataProvider, null);
+
+            // Init array
+            CLRVariableInfo[] locals = new CLRVariableInfo[localTypes.Length];
+
+            // Initialize all locals
+            for (int i = 0; i < locals.Length; i++)
             {
-                Type localType = null;
-
-                // Resolve generics
-                if(method.ContainsGenericParameters == true)
-                {
-                    GenericParameter parameter = body.Variables[i].VariableType as GenericParameter;
-
-                    if (parameter != null)
-                    {
-#if API_NET35
-                        localType = method.DeclaringType.GetGenericArguments()[parameter.Position];
-#else
-                        localType = method.DeclaringType.GenericTypeArguments[parameter.Position];
-#endif
-                    }
-                }
-
-                // Resolve the type
-                if (localType == null)
-                {
-                    localType = domain.ResolveType(body.Variables[i].VariableType);
-                }
-
                 // Create the local
-                locals[i] = new StackLocal(domain, localType);
+                locals[i] = new CLRVariableInfo(localTypes[i], i);
             }
-
             return locals;
-        }
-
-        protected override CLRExceptionHandler[] InitExceptionHandlers()
-        {
-            CLRExceptionHandler[] handlers = new CLRExceptionHandler[body.ExceptionHandlers.Count];
-
-            for(int i = 0; i < handlers.Length; i++)
-            {
-                handlers[i] = new CLRExceptionHandler(domain, this, body, body.ExceptionHandlers[i]);
-            }
-
-            return handlers;
         }
     }
 }

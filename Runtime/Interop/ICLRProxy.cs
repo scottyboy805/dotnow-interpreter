@@ -1,12 +1,14 @@
-﻿
+﻿using dotnow.Reflection;
+using System;
+
 namespace dotnow.Interop
 {
     public interface ICLRProxy
     {
         // Properties
-        CLRInstance Instance { get; } 
+        ICLRInstance Instance { get; }
 
         // Methods
-        void InitializeProxy(AppDomain domain, CLRInstance instance);
+        void Initialize(AppDomain appDomain, Type type, ICLRInstance instance);
     }
 }
