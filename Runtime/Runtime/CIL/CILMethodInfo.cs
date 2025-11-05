@@ -55,6 +55,8 @@ namespace dotnow.Runtime.CIL
         /// The CIL bytecode instructions for this method if it is a CLR method (interpreted).
         /// </summary>
         public readonly byte[] Instructions;
+        public readonly int LocalCount;
+        public readonly int MaxStack;
 
         // Constructor
         internal CILMethodInfo(AssemblyLoadContext loadContext, MethodBase fromMethod)
