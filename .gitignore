@@ -9,8 +9,7 @@
 /[Bb]uilds/
 /[Ll]ogs/
 /[Mm]emoryCaptures/
-/Assets/Exclude/
-/UnitTest/TrivialCLR.Tests/TestResults
+/Assets/_Exclude/
 
 # Project settings
 /ProjectSettings/EditorBuildSettings.asset
