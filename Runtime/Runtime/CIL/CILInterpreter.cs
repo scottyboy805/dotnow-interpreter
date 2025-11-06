@@ -5,8 +5,6 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using UnityEngine;
-using static UnityEngine.UI.Image;
 
 namespace dotnow.Runtime.CIL
 {
@@ -1622,7 +1620,7 @@ namespace dotnow.Runtime.CIL
                             // Pop address
                             StackData address = stack[sp - 1];
 
-                            // Read native int
+                            // Read sbyte
                             stack[sp - 1].I32 = ((IByRef)address.Ref).GetValueI1();
                             stack[sp - 1].Type = StackType.I32;
 
@@ -1635,7 +1633,7 @@ namespace dotnow.Runtime.CIL
                             // Pop address
                             StackData address = stack[sp - 1];
 
-                            // Read native int
+                            // Read short
                             stack[sp - 1].I32 = ((IByRef)address.Ref).GetValueI2();
                             stack[sp - 1].Type = StackType.I32;
 
@@ -1648,7 +1646,7 @@ namespace dotnow.Runtime.CIL
                             // Pop address
                             StackData address = stack[sp - 1];
 
-                            // Read native int
+                            // Read int
                             stack[sp - 1].I32 = ((IByRef)address.Ref).GetValueI4();
                             stack[sp - 1].Type = StackType.I32;
 
@@ -1661,7 +1659,7 @@ namespace dotnow.Runtime.CIL
                             // Pop address
                             StackData address = stack[sp - 1];
 
-                            // Read native int
+                            // Read long
                             stack[sp - 1].I64 = ((IByRef)address.Ref).GetValueI8();
                             stack[sp - 1].Type = StackType.I64;
 
@@ -1674,7 +1672,7 @@ namespace dotnow.Runtime.CIL
                             // Pop address
                             StackData address = stack[sp - 1];
 
-                            // Read native int
+                            // Read byte
                             stack[sp - 1].I32 = ((IByRef)address.Ref).GetValueU1();
                             stack[sp - 1].Type = StackType.I32;
 
@@ -1687,7 +1685,7 @@ namespace dotnow.Runtime.CIL
                             // Pop address
                             StackData address = stack[sp - 1];
 
-                            // Read native int
+                            // Read ushort
                             stack[sp - 1].I32 = ((IByRef)address.Ref).GetValueU2();
                             stack[sp - 1].Type = StackType.I32;
 
@@ -1700,7 +1698,7 @@ namespace dotnow.Runtime.CIL
                             // Pop address
                             StackData address = stack[sp - 1];
 
-                            // Read native int
+                            // Read uint
                             stack[sp - 1].I32 = (int)((IByRef)address.Ref).GetValueU4();
                             stack[sp - 1].Type = StackType.I32;
 
@@ -1713,7 +1711,7 @@ namespace dotnow.Runtime.CIL
                             // Pop address
                             StackData address = stack[sp - 1];
 
-                            // Read native int
+                            // Read float
                             stack[sp - 1].F32 = ((IByRef)address.Ref).GetValueR4();
                             stack[sp - 1].Type = StackType.F32;
 
@@ -1726,7 +1724,7 @@ namespace dotnow.Runtime.CIL
                             // Pop address
                             StackData address = stack[sp - 1];
 
-                            // Read native int
+                            // Read double
                             stack[sp - 1].F64 = ((IByRef)address.Ref).GetValueR8();
                             stack[sp - 1].Type = StackType.F64;
 
@@ -1739,7 +1737,7 @@ namespace dotnow.Runtime.CIL
                             // Pop address
                             StackData address = stack[sp - 1];
 
-                            // Read native int
+                            // Read ref
                             stack[sp - 1].Ref = ((IByRef)address.Ref).GetValueRef();
                             stack[sp - 1].Type = StackType.Ref;
 
@@ -1767,7 +1765,7 @@ namespace dotnow.Runtime.CIL
                             StackData value = stack[--sp];
                             StackData address = stack[--sp];
 
-                            // Write native int
+                            // Write sbyte
                             ((IByRef)address.Ref).SetValueI1((sbyte)value.I32);
 
                             // Debug execution
@@ -1780,7 +1778,7 @@ namespace dotnow.Runtime.CIL
                             StackData value = stack[--sp];
                             StackData address = stack[--sp];
 
-                            // Write native int
+                            // Write short
                             ((IByRef)address.Ref).SetValueI2((short)value.I32);
 
                             // Debug execution
@@ -1793,7 +1791,7 @@ namespace dotnow.Runtime.CIL
                             StackData value = stack[--sp];
                             StackData address = stack[--sp];
 
-                            // Write native int
+                            // Write int
                             ((IByRef)address.Ref).SetValueI4((int)value.I32);
 
                             // Debug execution
@@ -1806,7 +1804,7 @@ namespace dotnow.Runtime.CIL
                             StackData value = stack[--sp];
                             StackData address = stack[--sp];
 
-                            // Write native int
+                            // Write long
                             ((IByRef)address.Ref).SetValueI8((long)value.I32);
 
                             // Debug execution
@@ -1819,7 +1817,7 @@ namespace dotnow.Runtime.CIL
                             StackData value = stack[--sp];
                             StackData address = stack[--sp];
 
-                            // Write native int
+                            // Write float
                             ((IByRef)address.Ref).SetValueR4((float)value.F32);
 
                             // Debug execution
@@ -1832,7 +1830,7 @@ namespace dotnow.Runtime.CIL
                             StackData value = stack[--sp];
                             StackData address = stack[--sp];
 
-                            // Write native int
+                            // Write double
                             ((IByRef)address.Ref).SetValueR8((double)value.F64);
 
                             // Debug execution
@@ -1845,7 +1843,30 @@ namespace dotnow.Runtime.CIL
                             StackData value = stack[--sp];
                             StackData address = stack[--sp];
 
-                            // Write native int
+                            // Write reference
+                            ((IByRef)address.Ref).SetValueRef(value.Ref);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, value);
+                            break;
+                        }
+
+                    case ILOpCode.Stobj:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle typeHandle = MetadataTokens.EntityHandle(token);
+
+                            // Get the type info
+                            CILTypeInfo objType = loadContext.GetTypeHandle(typeHandle);
+
+                            // Pop value and address
+                            StackData value = stack[--sp];
+                            StackData address = stack[--sp];
+
+                            // Write reference
                             ((IByRef)address.Ref).SetValueRef(value.Ref);
 
                             // Debug execution

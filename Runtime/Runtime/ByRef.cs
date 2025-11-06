@@ -32,7 +32,6 @@ namespace dotnow.Runtime
             public long GetValueI8() => Stack[Index].I64;
             public float GetValueR4() => Stack[Index].F32;
             public double GetValueR8() => Stack[Index].F64;
-            public UIntPtr GetValueU() => (UIntPtr)(long)Stack[Index].Ptr;
             public byte GetValueU1() => (byte)Stack[Index].I32;
             public ushort GetValueU2() => (ushort)Stack[Index].I32;
             public uint GetValueU4() => (uint)Stack[Index].I32;
@@ -72,8 +71,7 @@ namespace dotnow.Runtime
             public sbyte GetValueI1() => ((sbyte[])Array)[Index];
             public short GetValueI2() => ((short[])Array)[Index];
             public int GetValueI4() => ((int[])Array)[Index];
-            public long GetValueI8() => ((long[])Array)[Index];        
-            public UIntPtr GetValueU() => ((UIntPtr[])Array)[Index];
+            public long GetValueI8() => ((long[])Array)[Index];       
             public byte GetValueU1() => ((byte[])Array)[Index];
             public ushort GetValueU2() => ((ushort[])Array)[Index];
             public uint GetValueU4() => ((uint[])Array)[Index];
@@ -101,7 +99,6 @@ namespace dotnow.Runtime
         ushort GetValueU2();
         uint GetValueU4();
         ulong GetValueU8();
-        UIntPtr GetValueU();
         long GetValueI8();
         float GetValueR4();
         double GetValueR8();

@@ -216,7 +216,7 @@ namespace dotnow.Runtime
                 throw new StackOverflowException();
 
             // Start where the previous stack pointer is currently at
-            spArg = spCaller + requiredStackArgInst;
+            spArg = spCaller;// + requiredStackArgInst;
 
             // Copy instance
             int srcOffset = 0;

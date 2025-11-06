@@ -63,5 +63,19 @@ namespace dotnow.Common
             // Check for equal elements
             CollectionAssert.AreEqual(expected, actual);
         }
+
+        [Test]
+        public void TestDecimal()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestArithmetic), nameof(TestArithmetic.TestDecimal));
+
+            // Call original
+            object expected = TestArithmetic.TestDecimal();
+            object actual = method.Invoke(null, null);
+
+            // Check for equal elements
+            Assert.AreEqual(expected, actual);
+        }
     }
 }

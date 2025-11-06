@@ -251,43 +251,43 @@ namespace dotnow.Runtime
                             }
                         case TypeCode.Byte:
                             {
-                                dst.I32 = (sbyte)underlyingValue;
+                                dst.I32 = (byte)underlyingValue;
                                 dst.Type = StackType.I32;
                                 break;
                             }
                         case TypeCode.Int16:
                             {
-                                dst.I32 = (sbyte)underlyingValue;
+                                dst.I32 = (short)underlyingValue;
                                 dst.Type = StackType.I32;
                                 break;
                             }
                         case TypeCode.UInt16:
                             {
-                                dst.I32 = (sbyte)underlyingValue;
+                                dst.I32 = (ushort)underlyingValue;
                                 dst.Type = StackType.I32;
                                 break;
                             }
                         case TypeCode.Int32:
                             {
-                                dst.I32 = (sbyte)underlyingValue;
+                                dst.I32 = (int)underlyingValue;
                                 dst.Type = StackType.I32;
                                 break;
                             }
                         case TypeCode.UInt32:
                             {
-                                dst.I32 = (sbyte)underlyingValue;
+                                dst.I32 = (int)(uint)underlyingValue;
                                 dst.Type = StackType.U32;
                                 break;
                             }
                         case TypeCode.Int64:
                             {
-                                dst.I32 = (sbyte)underlyingValue;
+                                dst.I64 = (long)underlyingValue;
                                 dst.Type = StackType.I64;
                                 break;
                             }
                         case TypeCode.UInt64:
                             {
-                                dst.I32 = (sbyte)underlyingValue;
+                                dst.I64 = (long)(ulong)underlyingValue;
                                 dst.Type = StackType.U64;
                                 break;
                             }
@@ -408,7 +408,7 @@ namespace dotnow.Runtime
                     case TypeCode.Byte: unwrapped = (byte)byRef.GetValueU1(); break;
                     case TypeCode.Int16: unwrapped = (short)byRef.GetValueI2(); break;
                     case TypeCode.UInt16: unwrapped = (ushort)byRef.GetValueU2(); break;
-                    case TypeCode.Int32: unwrapped = (int)byRef.GetValueU4(); break;
+                    case TypeCode.Int32: unwrapped = (int)byRef.GetValueI4(); break;
                     case TypeCode.UInt32: unwrapped = (uint)byRef.GetValueU4(); break;
                     case TypeCode.Int64: unwrapped = (long)byRef.GetValueI8(); break;
                     case TypeCode.UInt64: unwrapped = (ulong)byRef.GetValueU8(); break;
@@ -451,8 +451,8 @@ namespace dotnow.Runtime
                         case TypeCode.UInt16: unwrapped = Enum.ToObject(typeInfo.Type, (ushort)src.I32); break;
                         case TypeCode.Int32: unwrapped = Enum.ToObject(typeInfo.Type, (int)src.I32); break;
                         case TypeCode.UInt32: unwrapped = Enum.ToObject(typeInfo.Type, (uint)src.I32); break;
-                        case TypeCode.Int64: unwrapped = Enum.ToObject(typeInfo.Type, (long)src.I32); break;
-                        case TypeCode.UInt64: unwrapped = Enum.ToObject(typeInfo.Type, (ulong)src.I32); break;
+                        case TypeCode.Int64: unwrapped = Enum.ToObject(typeInfo.Type, (long)src.I64); break;
+                        case TypeCode.UInt64: unwrapped = Enum.ToObject(typeInfo.Type, (ulong)src.I64); break;
                         default:
                             throw new NotSupportedException(enumTypeCode.ToString());
                     }
@@ -528,8 +528,8 @@ namespace dotnow.Runtime
                 case TypeCode.UInt32: obj.Ref = (uint)obj.I32; break;
                 case TypeCode.Int64: obj.Ref = (long)obj.I64; break;
                 case TypeCode.UInt64: obj.Ref = (ulong)obj.I64; break;
-                case TypeCode.Single: obj.Ref = (float)obj.I64; break;
-                case TypeCode.Double: obj.Ref = (double)obj.I64; break;
+                case TypeCode.Single: obj.Ref = (float)obj.F32; break;
+                case TypeCode.Double: obj.Ref = (double)obj.F64; break;
                 case TypeCode.Decimal:
                 case TypeCode.Object:
                     {

@@ -62,7 +62,13 @@ namespace dotnow.Interop
 #endif
 
                 // Get parameter list for reflection
+                object instance = null;
                 object[] paramList = GetParameterList(ctor.ParameterTypes.Length);
+
+
+                // Load instance
+                StackData.Unwrap(type, ref threadContext.stack[spArg], ref instance);
+                spArg++;
 
                 // Copy parameters
                 if ((ctor.Flags & CILMethodFlags.Parameters) != 0)
@@ -78,7 +84,7 @@ namespace dotnow.Interop
                 }
 
                 // Reflection invoke - do not pass instance because it should be created as part of the call
-                ((ConstructorInfo)ctor.Method).Invoke(paramList);
+                ((ConstructorInfo)ctor.Method).Invoke(instance, paramList);
             }
         }
 

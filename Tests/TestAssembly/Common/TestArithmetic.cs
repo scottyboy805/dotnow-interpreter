@@ -171,5 +171,13 @@ namespace TestAssembly
 
             return results;
         }
+
+        public static object TestDecimal()
+        {
+            decimal a = 50.5m;
+            decimal b = 73.45m;
+
+            return a + b * 120 / 3;
+        }
     }
 }
