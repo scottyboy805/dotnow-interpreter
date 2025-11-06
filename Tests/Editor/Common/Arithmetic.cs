@@ -17,7 +17,7 @@ namespace dotnow.Common
             // Call original
             object[] expected = TestArithmetic.TestAddition();
             object[] actual = (object[])method.Invoke(null, null);
-            TestContext.WriteLine("Hello World");
+
             // Check for equal elements
             CollectionAssert.AreEqual(expected, actual);
         }

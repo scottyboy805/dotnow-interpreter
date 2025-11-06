@@ -21,7 +21,7 @@ namespace dotnow.Common
             object actual = method.Invoke(null, null);
 
             // Check for equal elements
-            CollectionAssert.AreEqual((decimal[])expected, (decimal[])actual.UnwrapAs<decimal[]>());
+            CollectionAssert.AreEqual((decimal[])expected, (decimal[])actual.UnwrapAsType<decimal[]>());
         }
 
         [Test]
@@ -35,7 +35,7 @@ namespace dotnow.Common
             object actual = method.Invoke(null, null);
 
             // Check for equal elements
-            CollectionAssert.AreEqual((int[])expected, actual.UnwrapAs<int[]>());
+            CollectionAssert.AreEqual((int[])expected, actual.UnwrapAsType<int[]>());
         }
 
         [Test]
@@ -49,7 +49,7 @@ namespace dotnow.Common
             object actual = method.Invoke(null, null);
 
             // Check for equal elements
-            CollectionAssert.AreEqual((int[,])expected, actual.UnwrapAs<int[,]>());
+            CollectionAssert.AreEqual((int[,])expected, actual.UnwrapAsType<int[,]>());
         }
     }
 }

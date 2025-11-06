@@ -1,5 +1,4 @@
-﻿using dotnow.Reflection;
-using System;
+﻿using System;
 using System.IO;
 using System.Reflection;
 
@@ -19,9 +18,12 @@ namespace dotnow
 
             // Get module
             string modulePath = TestAssembly.Location;
+            byte[] moduleBytes = File.ReadAllBytes(modulePath);
+            byte[] symbolsBytes = File.Exists(modulePath + ".pdb") == true ? File.ReadAllBytes(modulePath + ".pdb") : null;
 
             // Load module in domain
-            Assembly asm = domain.LoadModule(modulePath, false, false);
+            Assembly asm = domain.LoadAssemblyStream(new MemoryStream(moduleBytes),
+                symbolsBytes != null ? new MemoryStream(symbolsBytes) : null);
 
             return asm.GetType(typeName);
         }
@@ -34,9 +36,12 @@ namespace dotnow
 
             // Get module
             string modulePath = TestAssembly.Location;
+            byte[] moduleBytes = File.ReadAllBytes(modulePath);
+            byte[] symbolsBytes = File.Exists(modulePath + ".pdb") == true ? File.ReadAllBytes(modulePath + ".pdb") : null;
 
             // Load module in domain
-            Assembly asm = domain.LoadModule(modulePath, false, false);
+            Assembly asm = domain.LoadAssemblyStream(new MemoryStream(moduleBytes),
+                symbolsBytes != null ? new MemoryStream(symbolsBytes) : null);
 
             return asm.GetType(typeName).GetMethod(methodName);
         }

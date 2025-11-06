@@ -37,9 +37,13 @@ namespace dotnow.Runtime.CIL
         /// </summary>
         public readonly TypeCode TypeCode;
         /// <summary>
+        /// For CLR types it represents the first base type that is an interop type (not interpreted).
+        /// </summary>
+        public readonly Type InteropBaseType;
+        /// <summary>
         /// For CLR types it gets the interop base type and interface types that are implemented.
         /// </summary>
-        public readonly Type[] InteropTypes;
+        public readonly Type[] InteropImplementationTypes;
         /// <summary>
         /// For CLR instances it represents the number of instance fields.
         /// </summary>
@@ -59,8 +63,11 @@ namespace dotnow.Runtime.CIL
             // Check for CLR
             if((Flags & CILTypeFlags.Interpreted) != 0)
             {
-                // Get the interop types
-                this.InteropTypes = GetInteropTypes(type);
+                // Get the base type
+                this.InteropBaseType = GetInteropBaseType(type);
+
+                // Get the interop implementation types
+                this.InteropImplementationTypes = type.GetInterfaces();
 
                 // Get the type size
                 GetTypeSize(type, out this.InstanceSize, out this.StaticSize);
@@ -109,18 +116,19 @@ namespace dotnow.Runtime.CIL
             return flags;
         }
 
-        private static Type[] GetInteropTypes(Type fromType)
+        private static Type GetInteropBaseType(Type type)
         {
-            List<Type> implemented = new(4);
+            Type current = type.BaseType;
 
-            // Add immediate base
-            implemented.Add(fromType);
+            // Move down the hierarchy until we have a valid system base type
+            while (current.IsCLRType() == true)
+                current = current.BaseType;
 
-            // Add interfaces
-            implemented.AddRange(fromType.GetInterfaces());
+            // Check for none
+            if (current == null)
+                current = typeof(object);
 
-            // Get the array
-            return implemented.ToArray();
+            return current;
         }
 
         private static void GetTypeSize(Type fromType, out int instanceSize, out int staticSize)

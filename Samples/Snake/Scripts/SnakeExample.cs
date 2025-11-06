@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using dotnow.Reflection;
 using UnityEngine;
 
@@ -29,7 +30,7 @@ namespace dotnow.Examples
             AppDomain domain = new AppDomain();
 
             // Load the module
-            CLRModule module = domain.LoadModuleStream(new MemoryStream(assemblyModule.bytes), false);
+            Assembly module = domain.LoadAssemblyStream(new MemoryStream(assemblyModule.bytes), null, false);
 
             // Find the main type
             Type mainType = module.GetTypes()
@@ -45,7 +46,7 @@ namespace dotnow.Examples
             Debug.Log("Using main type: " + mainType);
 
             // Add component - cannot use 'gameObject.AddComponent' because it would crash the engine.
-            OverrideBindings.AddComponentOverride(domain, null, gameObject, new object[] { mainType });
+            //OverrideBindings.AddComponentOverride(domain, null, gameObject, new object[] { mainType });
 
             // IMPORTANT - This is required to keep the following Instatiate methods in the build, otherwise Unity will optimize them out and they will not generate AOT code.
             // This is the best workaround for the moment but is not ideal. Hopefully this can be replaced by direct call bindings at some point if bindings can support generic types.
