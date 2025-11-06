@@ -71,18 +71,24 @@ namespace dotnow.Runtime.JIT
                                     {
                                         // Ensure type handle is loaded
                                         assemblyLoadContext.ResolveType(metadataToken);
+
+                                        Debug.Line("Resolve type: " + assemblyLoadContext.GetTypeHandle(metadataToken));
                                         break;
                                     }
                                 case HandleKind.FieldDefinition:
                                     {
                                         // Ensure field handle is loaded
                                         assemblyLoadContext.ResolveField(metadataToken);
+
+                                        Debug.Line("Resolve field: " + assemblyLoadContext.GetFieldHandle(metadataToken));
                                         break;
                                     }
                                 case HandleKind.MethodDefinition:
                                     {
                                         // Ensure method handle is loaded
-                                        assemblyLoadContext.ResolveMethod(metadataToken); 
+                                        assemblyLoadContext.ResolveMethod(metadataToken);
+
+                                        Debug.Line("Resolve method: " + assemblyLoadContext.GetMethodHandle(metadataToken));
                                         break;
                                     }
                                 default:
@@ -94,18 +100,24 @@ namespace dotnow.Runtime.JIT
                         {
                             // Ensure type handle is loaded
                             assemblyLoadContext.ResolveType(metadataToken);
+
+                            Debug.Line("Resolve type: " + assemblyLoadContext.GetTypeHandle(metadataToken));
                             break;
                         }
                     case ILOperandType.InlineField:
                         {
                             // Ensure field handle is loaded
                             assemblyLoadContext.ResolveField(metadataToken);
+
+                            Debug.Line("Resolve field: " + assemblyLoadContext.GetFieldHandle(metadataToken));
                             break;
                         }
                     case ILOperandType.InlineMethod:
                         {
                             // Ensure method handle is loaded
                             assemblyLoadContext.ResolveMethod(metadataToken);
+
+                            Debug.Line("Resolve method: " + assemblyLoadContext.GetMethodHandle(metadataToken));
                             break;
                         }
                 }
@@ -151,15 +163,15 @@ namespace dotnow.Runtime.JIT
                     case ILOperandType.InlineType:
                     case ILOperandType.InlineField:
                     case ILOperandType.InlineMethod:
-                    case ILOperandType.InlineString:
+                    //case ILOperandType.InlineString:
                         {
+                            // Fetch the token and increment the pc by the size of the token
                             int token = CILInterpreter.FetchDecode<int>(instructions, ref pc);
 
                             // Get the token
                             metadataToken = MetadataTokens.EntityHandle(token);
-
-                            // Increment by operand size before returning
-                            pc += opCode.GetOperandSize();
+                            
+                            // Exit early now that we have found the next token
                             return true;
                         }
                 }

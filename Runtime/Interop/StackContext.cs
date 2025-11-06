@@ -3,8 +3,6 @@ using dotnow.Runtime.CIL;
 using System;
 using System.Diagnostics;
 using System.Reflection;
-using System.Reflection.Metadata;
-using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 
 namespace dotnow.Interop
@@ -16,20 +14,15 @@ namespace dotnow.Interop
     public readonly ref struct StackContext
     {
         // Internal
-        internal readonly AssemblyLoadContext assemblyLoadContext;
+        internal readonly AppDomain appDomain;
         internal readonly Span<StackData> stackArguments;
         internal readonly Span<StackData> stackReturn;
 
         // Properties
         /// <summary>
-        /// Get the <see cref="AppDomain"/> for the current method context.
+        /// Get the current app domain.
         /// </summary>
-        public AppDomain AppDomain => assemblyLoadContext.AppDomain;
-        /// <summary>
-        /// Get the <see cref="AssemblyLoadContext"/> for the current method context.
-        /// </summary>
-        public AssemblyLoadContext AssemblyLoadContext => assemblyLoadContext;
-
+        public AppDomain AppDomain => appDomain;
         /// <summary>
         /// Get the number of arguments for the current method context.
         /// Note that the instance is always passed as the first argument for non-static methods.
@@ -41,12 +34,9 @@ namespace dotnow.Interop
         public bool HasReturnValue => stackReturn.Length > 0;
 
         // Constructor
-        internal StackContext(AssemblyLoadContext assemblyLoadContext, Span<StackData> stackArguments, Span<StackData> stackReturn = default)
+        internal StackContext(AppDomain appDomain, Span<StackData> stackArguments, Span<StackData> stackReturn = default)
         {
-            if (assemblyLoadContext == null)
-                throw new ArgumentNullException(nameof(assemblyLoadContext));
-
-            this.assemblyLoadContext = assemblyLoadContext;
+            this.appDomain = appDomain;
             this.stackArguments = stackArguments;
             this.stackReturn = stackReturn;
         }
@@ -82,47 +72,17 @@ namespace dotnow.Interop
 
         public Type ReadArgTypeHandle(int offset)
         {
-            // Get token
-            int token = ReadArgValueType<int>(offset);
-
-            // Get handle
-            EntityHandle handle = MetadataTokens.EntityHandle(token);
-
-            // Get type handle
-            CILTypeInfo typeInfo = assemblyLoadContext.GetTypeHandle(handle);
-
-            // Get meta type
-            return typeInfo.Type;
+            return ReadArgObject<Type>(offset);
         }
 
         public FieldInfo ReadArgFieldHandle(int offset)
         {
-            // Get token 
-            int token = ReadArgValueType<int>(offset);
-
-            // Get handle
-            EntityHandle handle = MetadataTokens.EntityHandle(token);
-
-            // Get field handle
-            CILFieldInfo fieldInfo = assemblyLoadContext.GetFieldHandle(handle);
-
-            // Get meta field
-            return fieldInfo.Field;
+            return ReadArgObject<FieldInfo>(offset);
         }
 
         public MethodBase ReadArgMethodHandle(int offset)
         {
-            // Get token
-            int token = ReadArgValueType<int>(offset);
-
-            // Get handle
-            EntityHandle handle = MetadataTokens.EntityHandle(token);
-
-            // Get method handle
-            CILMethodInfo methodInfo = assemblyLoadContext.GetMethodHandle(handle);
-
-            // Get meta method
-            return methodInfo.Method;
+            return ReadArgObject<MethodBase>(offset);
         }
         #endregion
 
@@ -155,7 +115,7 @@ namespace dotnow.Interop
             CheckArgBounds(offset);
 
             // Get type handle
-            CILTypeInfo typeInfo = type.GetTypeInfo(AppDomain);
+            CILTypeInfo typeInfo = type.GetTypeInfo(appDomain);
 
             StackData val = default;
 
@@ -196,7 +156,7 @@ namespace dotnow.Interop
             CheckReturn();
 
             // Get type handle
-            CILTypeInfo typeInfo = type.GetTypeInfo(AppDomain);
+            CILTypeInfo typeInfo = type.GetTypeInfo(appDomain);
 
             StackData dst = default;
 

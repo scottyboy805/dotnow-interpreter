@@ -185,7 +185,7 @@ namespace dotnow.Runtime
             }
 
             // Push the frame
-            PushMethodFrame(appDomain, methodHandle, 0, 0, out spArg);
+            PushMethodFrame(appDomain, methodHandle, false, 0, 0, out spArg);
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace dotnow.Runtime
         /// <param name="body"></param>
         /// <param name="spArg">The stack address where arguments passed into this method begin. Arguments will be copied from this location into the new method frame</param>
         /// <param name="sp">The stack pointer where the evaluation stack for the new frame begins</param>
-        public void PushMethodFrame(AppDomain appDomain, in CILMethodInfo methodInfo, int spArgCaller, int spCaller, out int spArg)
+        public void PushMethodFrame(AppDomain appDomain, in CILMethodInfo methodInfo, bool isNewObj, int spArgCaller, int spCaller, out int spArg)
         {
             // Get instance and argument size
             int requiredStackArgInst = methodInfo.ParameterTypes.Length;
@@ -219,19 +219,25 @@ namespace dotnow.Runtime
             spArg = spCaller + requiredStackArgInst;
 
             // Copy instance
-            int offset = 0;
+            int srcOffset = 0;
+            int dstOffset = 0;
             if((methodInfo.Flags & CILMethodFlags.This) != 0)
             {
-                // Copy the instance
-                StackData.CopyFrame(methodInfo.DeclaringType, stack[spArgCaller], ref stack[spArg]);
-                offset++;
+                // No instance is provided for constructors
+                if (isNewObj == false)
+                {
+                    // Copy the instance
+                    StackData.CopyFrame(methodInfo.DeclaringType, stack[spArgCaller], ref stack[spArg]);
+                    srcOffset++;
+                }
+                dstOffset++;
             }
 
             // Copy all values to the new frame
             for(int i = 0; i < methodInfo.ParameterTypes.Length; i++)
             {
                 // Copy the value to the new frame
-                StackData.CopyFrame(methodInfo.ParameterTypes[i], stack[spArgCaller + i + offset], ref stack[spArg + i + offset]);
+                StackData.CopyFrame(methodInfo.ParameterTypes[i], stack[spArgCaller + i + srcOffset], ref stack[spArg + i + dstOffset]);
             }
         }
 

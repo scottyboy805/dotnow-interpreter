@@ -170,6 +170,43 @@ namespace dotnow
             }
             return value;
         }
+        internal MemberInfo GetMemberHandle(EntityHandle handle)
+        {
+            switch(handle.Kind)
+            {
+                // Check for type
+                case HandleKind.TypeDefinition:
+                case HandleKind.TypeReference:
+                case HandleKind.TypeSpecification:
+                    return GetTypeHandle(handle).Type;
+
+                // Check for field
+                case HandleKind.FieldDefinition:
+                    return GetFieldHandle(handle).Field;
+
+                // Check for method
+                case HandleKind.MethodDefinition:
+                case HandleKind.MethodSpecification:
+                    return GetMethodHandle(handle).Method;
+            }
+
+            // Could be a field or a method
+            CILMethodInfo method = GetMethodHandle(handle);
+
+            // Check for found
+            if (method != null)
+                return method.Method;
+
+            // Must be a field?
+            CILFieldInfo field = GetFieldHandle(handle);
+
+            // Check for found
+            if (field != null)
+                return field.Field;
+
+            throw new MissingMemberException("Could not resolve member handle");
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal CILTypeInfo GetTypeHandle(EntityHandle handle)
@@ -493,6 +530,12 @@ namespace dotnow
 
                         // Resolve the declaring type which will force all fields to be initialized
                         ResolveType(declaringTypeDefinitionHandle);
+
+                        // Lookup the metadata member
+                        FieldInfo definedField = memberDefinitions[MetadataTokens.GetToken(handle)] as FieldInfo;
+
+                        // Create the field handle
+                        fieldDefinitions[row] = new CILFieldInfo(appDomain, definedField);
                         break;
                     }
                 case HandleKind.MemberReference:
@@ -558,7 +601,7 @@ namespace dotnow
                         int row = MetadataTokens.GetRowNumber(handle);
 
                         // Check for already resolved
-                        if (methodSpecificationDefinitions[row].Method != null)
+                        if (methodSpecificationDefinitions[row] != null)
                             return;
 
                         // Resolve the generic definition

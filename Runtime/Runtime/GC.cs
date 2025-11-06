@@ -1,6 +1,7 @@
 ﻿using dotnow.Interop;
 using dotnow.Runtime.CIL;
 using System;
+using System.Runtime.Serialization;
 
 namespace dotnow.Runtime
 {
@@ -63,6 +64,37 @@ namespace dotnow.Runtime
             // Push to stack
             dst.Ref = array;
             dst.Type = StackType.Ref;
+        }
+
+        public static void AllocateObject(AppDomain domain, CILTypeInfo type, ref StackData dst)
+        {
+            // Check for interop
+            if((type.Flags & CILTypeFlags.Interop) != 0)
+            {
+                // Check for array
+                if((type.Flags & CILTypeFlags.Array) != 0)
+                    throw new NotSupportedException("Cannot get uninitialized array object");
+
+                // Create instance
+                dst.Ref = FormatterServices.GetUninitializedObject(type.Type);
+                dst.Type = StackType.Ref;
+            }
+            // Must be interpreted
+            else
+            {
+                // Check for enum
+                if ((type.Flags & CILTypeFlags.Enum) != 0)
+                {
+                    // Create underlying type
+                    throw new NotImplementedException();
+                }
+                else
+                {
+                    // Create the instance
+                    dst.Ref = CLRTypeInstance.CreateInstance(domain, type);
+                    dst.Type = StackType.Ref;
+                }
+            }
         }
     }
 }

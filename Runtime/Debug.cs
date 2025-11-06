@@ -105,7 +105,7 @@ namespace dotnow
         }
 
         [Conditional("DOTNOW_ENABLE_DEBUG_INSTRUCTIONS")]
-        internal static void Instruction(ILOpCode op, int pc, MethodBase method, in StackData spArg, int argCount)
+        internal static void Instruction(ILOpCode op, int pc, MethodBase method, int spArg, int argCount)
         {
             // Get offset address
             long offset = pc - instructionBasePtr;

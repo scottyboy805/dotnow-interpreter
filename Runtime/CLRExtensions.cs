@@ -57,6 +57,10 @@ namespace dotnow
             if (instance is ICLRInstance inst)
                 return inst.GetInterpretedType();
 
+            // Check for proxy
+            if (instance is ICLRProxy proxy)
+                return proxy.Instance.GetInterpretedType();
+
             // Use interop type
             return instance.GetType();
         }

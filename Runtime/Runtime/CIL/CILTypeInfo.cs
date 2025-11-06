@@ -1,6 +1,7 @@
 using dotnow.Reflection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace dotnow.Runtime.CIL
@@ -45,13 +46,13 @@ namespace dotnow.Runtime.CIL
         /// </summary>
         public readonly Type[] InteropImplementationTypes;
         /// <summary>
+        /// The memory where static field data is stored for this type.
+        /// </summary>
+        public readonly StackData[] StaticFields;
+        /// <summary>
         /// For CLR instances it represents the number of instance fields.
         /// </summary>
         public readonly int InstanceSize;
-        /// <summary>
-        /// For CLR types it represents the number of static fields.
-        /// </summary>
-        public readonly int StaticSize;
 
         // Constructor
         internal CILTypeInfo(Type type)
@@ -70,7 +71,7 @@ namespace dotnow.Runtime.CIL
                 this.InteropImplementationTypes = type.GetInterfaces();
 
                 // Get the type size
-                GetTypeSize(type, out this.InstanceSize, out this.StaticSize);
+                GetTypeSize((CLRType)type, out this.InstanceSize, out this.StaticFields);
             }
         }
 
@@ -131,36 +132,19 @@ namespace dotnow.Runtime.CIL
             return current;
         }
 
-        private static void GetTypeSize(Type fromType, out int instanceSize, out int staticSize)
+        private static void GetTypeSize(CLRType fromType, out int instanceSize, out StackData[] staticFields)
         {
-            int i = 0, s = 0;
+            // Get instance size
+            instanceSize = fromType.InstanceFields.Length;
 
-            Type current = fromType;
+            // Get static size
+            int staticSize = fromType.StaticFields.Length;
 
-            while(current != null && current is CLRType)
-            {
-                // Get fields
-                foreach(FieldInfo field in current.GetFields())
-                {
-                    // Check for instance
-                    if(field.IsStatic == false)
-                    {
-                        // Increase instance size
-                        i++;
-                    }
-                    else
-                    {
-                        // Increase static size
-                        s++;
-                    }
-                }
+            // Init fields
+            staticFields = new StackData[staticSize];
 
-                // Get base
-                current = current.BaseType;
-            }
-
-            instanceSize = i;
-            staticSize = s;
+            for (int i = 0; i < staticSize; i++)
+                staticFields[i] = default;
         }
     }
 }

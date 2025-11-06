@@ -1,4 +1,5 @@
 ﻿using dotnow.Interop;
+using dotnow.Reflection;
 using dotnow.Runtime.CIL;
 using System;
 
@@ -128,13 +129,18 @@ namespace dotnow.Runtime
             // Check for interpreted
             else if ((fieldInfo.Flags & CILFieldFlags.Interpreted) != 0)
             {
+                // Require CLR field
+                if (fieldInfo.Field is not CLRFieldInfo clrField)
+                    throw new FieldAccessException("Field must be a CLR field");
+
                 // Get the CLR instance
                 CLRTypeInstance clrInstance = (CLRTypeInstance)instance.Ref;
 
+                // Get the field offset
+                int offset = clrInstance.Type.GetInstanceFieldOffset(clrField);
 
-#warning fix this
-                // Set field value
-                //clrInstance.Fields[...] = value;
+                // Write the field
+                clrInstance.Fields[offset] = value;
             }
             else
                 throw new NotSupportedException(instance.Type.ToString());
@@ -158,35 +164,15 @@ namespace dotnow.Runtime
             // Check for interpreted
             else if ((fieldInfo.Flags & CILFieldFlags.Interpreted) != 0)
             {
-//                // Check for reference
-//                if ((fieldInfo.Flags & CILFieldFlags.ReferenceType) != 0 || (fieldInfo.Flags & CILFieldFlags.ManagedValueType) != 0)
-//                {
-//#if DEBUG
-//                    // Require reference address
-//                    if (value->Type != StackTypeCode.ManagedStackClassReference && value->Type != StackTypeCode.ManagedStackValueTypeReference)
-//                        throw new InvalidOperationException("Value must be a managed stack reference");
-//#endif
-//                    // Copy the reference
-//                    declaringTypeInfo.StaticInstance.staticObjects[fieldInfo.ObjectOffset] = threadContext.managedStack[value->Register];
-//                }
-//                // Check for primitive
-//                else if ((fieldInfo.Flags & CILFieldFlags.PrimitiveType) != 0)
-//                {
-//                    // Get pointer
-//                    byte* instanceFieldPtr = declaringTypeInfo.StaticInstance.staticMemory + fieldInfo.MemoryOffset;
+                // Require CLR field
+                if (fieldInfo.Field is not CLRFieldInfo clrField)
+                    throw new FieldAccessException("Field must be a CLR field");
 
-//                    // Copy primitive memory
-//                    StackData.CopyPrimitiveToMemory(value, instanceFieldPtr, fieldTypeInfo.TypeCode);
-//                }
-//                // Must be value type
-//                else
-//                {
-//                    // Get pointer
-//                    byte* instanceFieldPtr = declaringTypeInfo.StaticInstance.staticMemory + fieldInfo.MemoryOffset;
+                // Get the field offset
+                int fieldOffset = ((CLRType)declaringTypeInfo.Type).GetStaticFieldOffset(clrField);
 
-//                    // Copy value type memory
-//                    __gc.CopyMemory((byte*)value->Ptr, instanceFieldPtr, fieldTypeInfo.InstanceSize);
-//                }
+                // Write the field
+                declaringTypeInfo.StaticFields[fieldOffset] = value;
             }
             else
                 throw new NotSupportedException(fieldInfo.ToString());
@@ -206,10 +192,18 @@ namespace dotnow.Runtime
             // Check for interpreted
             else if ((fieldInfo.Flags & CILFieldFlags.Interpreted) != 0)
             {
+                // Require CLR field
+                if (fieldInfo.Field is not CLRFieldInfo clrField)
+                    throw new FieldAccessException("Field must be a CLR field");
+
                 // Get the CLR instance
                 CLRTypeInstance clrInstance = (CLRTypeInstance)instance.Ref;
 
-#warning TODO
+                // Get the field offset
+                int offset = clrInstance.Type.GetInstanceFieldOffset(clrField);
+
+                // Write the field
+                value =  clrInstance.Fields[offset];
             }
             else
                 throw new NotSupportedException(instance.Type.ToString());
@@ -233,35 +227,15 @@ namespace dotnow.Runtime
             // Check for interpreted
             else if ((fieldInfo.Flags & CILFieldFlags.Interpreted) != 0)
             {
-//                // Check for reference
-//                if ((fieldInfo.Flags & CILFieldFlags.ReferenceType) != 0 || (fieldInfo.Flags & CILFieldFlags.ManagedValueType) != 0)
-//                {
-//#if DEBUG
-//                    // Require reference address
-//                    if (value->Type != StackTypeCode.ManagedStackClassReference && value->Type != StackTypeCode.ManagedStackValueTypeReference)
-//                        throw new InvalidOperationException("Value must be a managed stack reference");
-//#endif
-//                    // Copy the reference
-//                    threadContext.managedStack[value->Register] = declaringTypeInfo.StaticInstance.staticObjects[fieldInfo.ObjectOffset];
-//                }
-//                // Check for primitive
-//                else if ((fieldInfo.Flags & CILFieldFlags.PrimitiveType) != 0)
-//                {
-//                    // Get pointer
-//                    byte* instanceFieldPtr = declaringTypeInfo.StaticInstance.staticMemory + fieldInfo.MemoryOffset;
+                // Require CLR field
+                if (fieldInfo.Field is not CLRFieldInfo clrField)
+                    throw new FieldAccessException("Field must be a CLR field");
 
-//                    // Copy primitive memory
-//                    StackData.CopyPrimitiveFromMemory(value, instanceFieldPtr, fieldTypeInfo.TypeCode);
-//                }
-//                // Must be value type
-//                else
-//                {
-//                    // Get pointer
-//                    byte* instanceFieldPtr = declaringTypeInfo.StaticInstance.staticMemory + fieldInfo.MemoryOffset;
+                // Get the field offset
+                int fieldOffset = ((CLRType)declaringTypeInfo.Type).GetStaticFieldOffset(clrField);
 
-//                    // Copy value type memory
-//                    __gc.CopyMemory(instanceFieldPtr, (byte*)value->Ptr, fieldTypeInfo.InstanceSize);
-//                }
+                // Read the field
+                value = declaringTypeInfo.StaticFields[fieldOffset];
             }
             else
                 throw new NotSupportedException(fieldInfo.ToString());

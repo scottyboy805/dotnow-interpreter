@@ -122,6 +122,14 @@ namespace dotnow.Runtime
 
         public static void Wrap(CILTypeInfo typeInfo, object obj, ref StackData dst)
         {
+            // Check for CLR proxy - should be passed as derived instance
+            if(obj is ICLRProxy proxy)
+            {
+                // Pass the actual instance for this case
+                Wrap(typeInfo, proxy.Instance, ref dst);
+                return;
+            }
+
             // ### Handle by ref
             if (dst.IsByRef == true)
             {
@@ -134,63 +142,63 @@ namespace dotnow.Runtime
 
                     case TypeCode.Boolean:
                         {
-                            byRef.SetReferenceValueI1(((bool)obj) == true ? (sbyte)1 : (sbyte)0);
+                            byRef.SetValueI1(((bool)obj) == true ? (sbyte)1 : (sbyte)0);
                             break;
                         }
                     case TypeCode.Char:
                         {
-                            byRef.SetReferenceValueI2((short)(char)obj);
+                            byRef.SetValueI2((short)(char)obj);
                             break;
                         }
 
                     case TypeCode.SByte:
                         {
-                            byRef.SetReferenceValueI1((sbyte)obj);
+                            byRef.SetValueI1((sbyte)obj);
                             break;
                         }
                     case TypeCode.Byte:
                         {
-                            byRef.SetReferenceValueI1((sbyte)(byte)obj);
+                            byRef.SetValueI1((sbyte)(byte)obj);
                             break;
                         }
                     case TypeCode.Int16:
                         {
-                            byRef.SetReferenceValueI2((short)obj);
+                            byRef.SetValueI2((short)obj);
                             break;
                         }
                     case TypeCode.UInt16:
                         {
-                            byRef.SetReferenceValueI2((short)(ushort)obj);
+                            byRef.SetValueI2((short)(ushort)obj);
                             break;
                         }
                     case TypeCode.Int32:
                         {
-                            byRef.SetReferenceValueI4((int)obj);
+                            byRef.SetValueI4((int)obj);
                             break;
                         }
                     case TypeCode.UInt32:
                         {
-                            byRef.SetReferenceValueI4((int)(uint)obj);
+                            byRef.SetValueI4((int)(uint)obj);
                             break;
                         }
                     case TypeCode.Int64:
                         {
-                            byRef.SetReferenceValueI8((long)obj);
+                            byRef.SetValueI8((long)obj);
                             break;
                         }
                     case TypeCode.UInt64:
                         {
-                            byRef.SetReferenceValueI8((long)(ulong)obj);
+                            byRef.SetValueI8((long)(ulong)obj);
                             break;
                         }
                     case TypeCode.Single:
                         {
-                            byRef.SetReferenceValueR4((float)obj);
+                            byRef.SetValueR4((float)obj);
                             break;
                         }
                     case TypeCode.Double:
                         {
-                            byRef.SetReferenceValueR8((double)obj);
+                            byRef.SetValueR8((double)obj);
                             break;
                         }
 
@@ -198,7 +206,7 @@ namespace dotnow.Runtime
                     case TypeCode.String:
                     case TypeCode.Object:
                         {
-                            byRef.SetReferenceValue(obj);
+                            byRef.SetValueRef(obj);
                             break;
                         }
                 }
@@ -391,26 +399,26 @@ namespace dotnow.Runtime
 
                 switch (typeInfo.TypeCode)
                 {
-                    default: throw new NotSupportedException();
+                    default: throw new NotSupportedException(typeInfo.ToString());
 
-                    case TypeCode.Boolean: unwrapped = byRef.GetReferenceValueI1() == 1 ? true : false; break;
-                    case TypeCode.Char: unwrapped = (char)byRef.GetReferenceValueI2(); break;
+                    case TypeCode.Boolean: unwrapped = byRef.GetValueI1() == 1 ? true : false; break;
+                    case TypeCode.Char: unwrapped = (char)byRef.GetValueI2(); break;
 
-                    case TypeCode.SByte: unwrapped = (sbyte)byRef.GetReferenceValueI1(); break;
-                    case TypeCode.Byte: unwrapped = (byte)byRef.GetReferenceValueU1(); break;
-                    case TypeCode.Int16: unwrapped = (short)byRef.GetReferenceValueI2(); break;
-                    case TypeCode.UInt16: unwrapped = (ushort)byRef.GetReferenceValueU2(); break;
-                    case TypeCode.Int32: unwrapped = (int)byRef.GetReferenceValueU4(); break;
-                    case TypeCode.UInt32: unwrapped = (uint)byRef.GetReferenceValueU4(); break;
-                    case TypeCode.Int64: unwrapped = (long)byRef.GetReferenceValueI8(); break;
-                    case TypeCode.UInt64: unwrapped = (ulong)byRef.GetReferenceValueU8(); break;
-                    case TypeCode.Single: unwrapped = (float)byRef.GetReferenceValueR4(); break;
-                    case TypeCode.Double: unwrapped = (double)byRef.GetReferenceValueR8(); break;
+                    case TypeCode.SByte: unwrapped = (sbyte)byRef.GetValueI1(); break;
+                    case TypeCode.Byte: unwrapped = (byte)byRef.GetValueU1(); break;
+                    case TypeCode.Int16: unwrapped = (short)byRef.GetValueI2(); break;
+                    case TypeCode.UInt16: unwrapped = (ushort)byRef.GetValueU2(); break;
+                    case TypeCode.Int32: unwrapped = (int)byRef.GetValueU4(); break;
+                    case TypeCode.UInt32: unwrapped = (uint)byRef.GetValueU4(); break;
+                    case TypeCode.Int64: unwrapped = (long)byRef.GetValueI8(); break;
+                    case TypeCode.UInt64: unwrapped = (ulong)byRef.GetValueU8(); break;
+                    case TypeCode.Single: unwrapped = (float)byRef.GetValueR4(); break;
+                    case TypeCode.Double: unwrapped = (double)byRef.GetValueR8(); break;
                     case TypeCode.Decimal:
                     case TypeCode.String:
                     case TypeCode.Object:
                         {
-                            unwrapped = byRef.GetReferenceValue();
+                            unwrapped = byRef.GetValueRef();
                             break;
                         }
                 }
@@ -456,7 +464,7 @@ namespace dotnow.Runtime
             // ### Handle all other types
             switch (typeInfo.TypeCode)
             {
-                default: throw new NotSupportedException();
+                default: throw new NotSupportedException(typeInfo.ToString());
 
                 case TypeCode.Boolean: unwrapped = src.I32 == 1 ? true : false; break;
                 case TypeCode.Char: unwrapped = (char)src.I32; break;
@@ -502,6 +510,36 @@ namespace dotnow.Runtime
                 // Log implicit marshalling of type - it can cause strange behaviour if not expected, but can lead to a crash if no marshalling occurs
                 Debug.LineFormat("CLRType '{0}' was marshalled to interop base type '{1}'", clrType, current);
             }
+        }
+
+        public static void Box(CILTypeInfo typeInfo, ref StackData obj)
+        {
+            switch(typeInfo.TypeCode)
+            {
+                default: throw new NotSupportedException(typeInfo.ToString());
+
+                case TypeCode.Boolean: obj.Ref = (bool)(obj.I32 == 1); break;
+                case TypeCode.Char: obj.Ref = (char)obj.I32; break;
+                case TypeCode.SByte: obj.Ref = (sbyte)obj.I32; break;
+                case TypeCode.Byte: obj.Ref = (byte)obj.I32; break;
+                case TypeCode.Int16: obj.Ref = (short)obj.I32; break;
+                case TypeCode.UInt16: obj.Ref = (ushort)obj.I32; break;
+                case TypeCode.Int32: obj.Ref = (int)obj.I32; break;
+                case TypeCode.UInt32: obj.Ref = (uint)obj.I32; break;
+                case TypeCode.Int64: obj.Ref = (long)obj.I64; break;
+                case TypeCode.UInt64: obj.Ref = (ulong)obj.I64; break;
+                case TypeCode.Single: obj.Ref = (float)obj.I64; break;
+                case TypeCode.Double: obj.Ref = (double)obj.I64; break;
+                case TypeCode.Decimal:
+                case TypeCode.Object:
+                    {
+                        // Do nothing for objects, even value types are already boxed
+                        break;
+                    }
+            }
+
+            // Check to reference now that it is boxed
+            obj.Type = StackType.Ref;
         }
 
         public static StackData Default(CILTypeInfo typeInfo)
@@ -617,7 +655,9 @@ namespace dotnow.Runtime
         internal static void CopyFrame(CILTypeInfo typeInfo, in StackData src, ref StackData dst)
         {
             // Check for value type but not a primitive
-            if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0 && (typeInfo.Flags & CILTypeFlags.PrimitiveType) == 0 && src.IsByRef == false)
+            if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0 
+                && (typeInfo.Flags & CILTypeFlags.PrimitiveType) == 0 
+                && src.Type == StackType.Ref)
             {
                 // Perform value type copy
                 dst.Ref = __marshal.CopyInteropBoxedValueTypeSlow(src.Ref);

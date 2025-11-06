@@ -33,6 +33,8 @@ namespace dotnow.Reflection
         private readonly Lazy<Type[]> genericTypes = null;
         private readonly Lazy<Dictionary<object, string>> enumNames = null;
 
+        private readonly Lazy<CLRFieldInfo[]> instanceFields = null;
+        private readonly Lazy<CLRFieldInfo[]> staticFields = null;
 
         private bool isEnum = false;
         private bool isByRef = false;
@@ -53,6 +55,9 @@ namespace dotnow.Reflection
         internal IReadOnlyList<CLRConstructorInfo> CLRConstructors => constructors;
         internal IReadOnlyList<CLRMethodInfo> CLRMethods => methods;
         internal IDictionary<object, string> CLREnumNames => enumNames.Value;
+
+        internal CLRFieldInfo[] InstanceFields => instanceFields.Value;
+        internal CLRFieldInfo[] StaticFields => staticFields.Value;
 
         #region TypeProperties
         public override Assembly Assembly => metadataProvider.AssemblyLoadContext.Assembly;
@@ -89,7 +94,10 @@ namespace dotnow.Reflection
             this.genericTypes = new(InitGenericTypes);
 
             //if(isEnum == true)
-                this.enumNames = new(InitEnumNames);
+            this.enumNames = new(InitEnumNames);
+
+            this.instanceFields = new(InitInstanceFields);
+            this.staticFields = new(InitStaticFields);
             
 
             // Nested type members
@@ -201,6 +209,16 @@ namespace dotnow.Reflection
         public override string ToString()
         {
             return toString.Value;
+        }
+
+        public int GetInstanceFieldOffset(CLRFieldInfo field)
+        {
+            return Array.IndexOf(InstanceFields, field);
+        }
+
+        public int GetStaticFieldOffset(CLRFieldInfo field)
+        {
+            return Array.IndexOf(StaticFields, field);
         }
 
         public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr)
@@ -725,6 +743,34 @@ namespace dotnow.Reflection
                 enumFields[value] = enumField.Name;
             }
             return enumFields;
+        }
+
+        private CLRFieldInfo[] InitInstanceFields()
+        {
+            return EnumerateFields(this)
+                .Where(f => f.IsStatic == false)
+                .ToArray();
+        }
+
+        private CLRFieldInfo[] InitStaticFields()
+        {
+            return EnumerateFields(this)
+                .Where(f => f.IsStatic == true)
+                .ToArray();
+        }
+
+        private IEnumerable<CLRFieldInfo> EnumerateFields(CLRType type)
+        {
+            if (type.BaseType is CLRType baseTypeCLR)
+            {
+                // Get base fields first
+                foreach (CLRFieldInfo baseField in EnumerateFields(baseTypeCLR))
+                    yield return baseField;
+            }
+
+            // Get this fields
+            foreach (CLRFieldInfo field in type.fields)
+                yield return field;
         }
         #endregion
     }

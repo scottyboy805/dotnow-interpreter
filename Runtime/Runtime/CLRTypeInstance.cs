@@ -146,7 +146,7 @@ namespace dotnow.Runtime
         internal static CLRTypeInstance CreateInstanceFromProxy(AppDomain domain, CILTypeInfo typeInfo, ICLRProxy proxy)
         {
             // Create the instance
-            CLRTypeInstance instance = new CLRTypeInstance(domain, typeInfo, null);
+            CLRTypeInstance instance = new CLRTypeInstance(domain, typeInfo, proxy);
 
             // Initialize proxy
             proxy.Initialize(domain, typeInfo.Type, instance);

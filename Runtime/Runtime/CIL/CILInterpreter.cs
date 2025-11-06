@@ -1,9 +1,12 @@
 ﻿using dotnow.Interop;
 using System;
+using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using UnityEngine;
+using static UnityEngine.UI.Image;
 
 namespace dotnow.Runtime.CIL
 {
@@ -63,6 +66,8 @@ namespace dotnow.Runtime.CIL
                             Debug.Instruction(op, pc - 1);
                             break;
                         }
+
+                    case ILOpCode.Volatile: continue;
 
                     #region Stack
                     case ILOpCode.Dup:
@@ -525,6 +530,101 @@ namespace dotnow.Runtime.CIL
                             stack[spLoc + offset] = stack[--sp];
 
                             Debug.Instruction(op, pc - 1, stack[spLoc]);
+                            break;
+                        }
+                    #endregion
+
+                    #region Field
+                    case ILOpCode.Ldfld:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle fieldHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
+
+                            // Pop the instance
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            if (instance.Ref == null)
+                                throw new NullReferenceException();
+
+                            // Load the field
+                            RuntimeField.GetInstanceFieldDirect(threadContext, loadContext, field, instance, ref stack[sp]);
+                            sp++;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldsfld:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle fieldHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
+
+                            // Load the field
+                            RuntimeField.GetStaticFieldDirect(threadContext, loadContext, field, ref stack[sp]);
+                            sp++;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Stfld:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle fieldHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
+
+                            // Pop value and instance
+                            StackData value = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            if (instance.Ref == null)
+                                throw new NullReferenceException();
+
+                            // Set the field
+                            RuntimeField.SetInstanceFieldDirect(threadContext, loadContext, field, instance, ref value);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, value);
+                            break;
+                        }
+                    case ILOpCode.Stsfld:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle fieldHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
+
+                            // Pop value
+                            StackData value = stack[--sp];
+
+                            // Load the field
+                            RuntimeField.SetStaticFieldDirect(threadContext, loadContext, field, ref value);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, value);
                             break;
                         }
                     #endregion
@@ -1503,6 +1603,256 @@ namespace dotnow.Runtime.CIL
                             break;
                         }
                     #endregion
+                    #region Indirect
+                    case ILOpCode.Ldind_i:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].Ptr = ((IByRef)address.Ref).GetValueI();
+                            stack[sp - 1].Type = StackType.Ptr;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldind_i1:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].I32 = ((IByRef)address.Ref).GetValueI1();
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldind_i2:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].I32 = ((IByRef)address.Ref).GetValueI2();
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldind_i4:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].I32 = ((IByRef)address.Ref).GetValueI4();
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldind_i8:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].I64 = ((IByRef)address.Ref).GetValueI8();
+                            stack[sp - 1].Type = StackType.I64;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldind_u1:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].I32 = ((IByRef)address.Ref).GetValueU1();
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldind_u2:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].I32 = ((IByRef)address.Ref).GetValueU2();
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldind_u4:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].I32 = (int)((IByRef)address.Ref).GetValueU4();
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldind_r4:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].F32 = ((IByRef)address.Ref).GetValueR4();
+                            stack[sp - 1].Type = StackType.F32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldind_r8:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].F64 = ((IByRef)address.Ref).GetValueR8();
+                            stack[sp - 1].Type = StackType.F64;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldind_ref:
+                        {
+                            // Pop address
+                            StackData address = stack[sp - 1];
+
+                            // Read native int
+                            stack[sp - 1].Ref = ((IByRef)address.Ref).GetValueRef();
+                            stack[sp - 1].Type = StackType.Ref;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Stind_i:
+                        {
+                            // Pop value and address
+                            StackData value = stack[--sp];
+                            StackData address = stack[--sp];
+
+                            // Write native int
+                            ((IByRef)address.Ref).SetValueI(value.Ptr);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, value);
+                            break;
+                        }
+                    case ILOpCode.Stind_i1:
+                        {
+                            // Pop value and address
+                            StackData value = stack[--sp];
+                            StackData address = stack[--sp];
+
+                            // Write native int
+                            ((IByRef)address.Ref).SetValueI1((sbyte)value.I32);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, value);
+                            break;
+                        }
+                    case ILOpCode.Stind_i2:
+                        {
+                            // Pop value and address
+                            StackData value = stack[--sp];
+                            StackData address = stack[--sp];
+
+                            // Write native int
+                            ((IByRef)address.Ref).SetValueI2((short)value.I32);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, value);
+                            break;
+                        }
+                    case ILOpCode.Stind_i4:
+                        {
+                            // Pop value and address
+                            StackData value = stack[--sp];
+                            StackData address = stack[--sp];
+
+                            // Write native int
+                            ((IByRef)address.Ref).SetValueI4((int)value.I32);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, value);
+                            break;
+                        }
+                    case ILOpCode.Stind_i8:
+                        {
+                            // Pop value and address
+                            StackData value = stack[--sp];
+                            StackData address = stack[--sp];
+
+                            // Write native int
+                            ((IByRef)address.Ref).SetValueI8((long)value.I32);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, value);
+                            break;
+                        }
+                    case ILOpCode.Stind_r4:
+                        {
+                            // Pop value and address
+                            StackData value = stack[--sp];
+                            StackData address = stack[--sp];
+
+                            // Write native int
+                            ((IByRef)address.Ref).SetValueR4((float)value.F32);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, value);
+                            break;
+                        }
+                    case ILOpCode.Stind_r8:
+                        {
+                            // Pop value and address
+                            StackData value = stack[--sp];
+                            StackData address = stack[--sp];
+
+                            // Write native int
+                            ((IByRef)address.Ref).SetValueR8((double)value.F64);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, value);
+                            break;
+                        }
+                    case ILOpCode.Stind_ref:
+                        {
+                            // Pop value and address
+                            StackData value = stack[--sp];
+                            StackData address = stack[--sp];
+
+                            // Write native int
+                            ((IByRef)address.Ref).SetValueRef(value.Ref);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, value);
+                            break;
+                        }
+                    #endregion
 
                     #region Array
                     case ILOpCode.Newarr:
@@ -2201,6 +2551,59 @@ namespace dotnow.Runtime.CIL
                     #endregion
 
                     #region Object
+                    case ILOpCode.Newobj:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle ctorHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            CILMethodInfo ctorMethod = loadContext.GetMethodHandle(ctorHandle);
+
+                            // Get load context
+                            AssemblyLoadContext ctorLoadContext = ctorMethod.Method.GetLoadContext();
+
+                            // Get the stack index where the method arguments were loaded
+                            int spArgCaller = sp - ctorMethod.ParameterTypes.Length;
+
+                            // Prepare the call
+                            threadContext.PushMethodFrame(loadContext.AppDomain, ctorMethod, true, spArgCaller, sp, out int spCall);
+
+                            // Create instance at slot
+                            GC.AllocateObject(loadContext.AppDomain, ctorMethod.DeclaringType, ref stack[spCall]);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, ctorMethod.Method, spCall, ctorMethod.ParameterTypes.Length + 1);
+
+                            // Execute the method
+                            if ((ctorMethod.Flags & CILMethodFlags.Interpreted) != 0)
+                            {
+                                // Execute the method
+                                ExecuteMethod(threadContext, ctorLoadContext, ctorMethod, spCall);
+                            }
+                            // Check for interop
+                            else if((ctorMethod.Flags & CILMethodFlags.Interop) != 0)
+                            {
+                                // Invoke with marshal
+                                __marshal.InvokeConstructorInterop(threadContext, loadContext.AppDomain, ctorMethod.DeclaringType, ctorMethod, spCall);
+                            }
+                            else
+                                throw new NotSupportedException("Constructor cannot be executed: " + ctorMethod);
+
+                            // Decrement stack pointer
+                            sp -= ctorMethod.ParameterTypes.Length;
+
+                            // Note we do not do a frame copy here - just a simple copy
+                            stack[sp] = stack[spCall];
+                            sp++;
+
+                            // Pop the frame
+                            threadContext.PopMethodFrame();
+                            break;
+                        }
+
                     case ILOpCode.Call:
                     case ILOpCode.Callvirt:
                         {
@@ -2214,10 +2617,7 @@ namespace dotnow.Runtime.CIL
                             CILMethodInfo callMethod = loadContext.GetMethodHandle(callHandle);
 
                             // Get load context
-                            AssemblyLoadContext callLoadContext = callMethod.Method.GetLoadContext();
-
-                            // Debug execution
-                            //Debug.Instruction(threadContext, op, pc - 5, methodInfo.Method, sp - methodInfo.ParameterTypes.Length, callHandle.Signature.ArgCount);
+                            AssemblyLoadContext callLoadContext = callMethod.Method.GetLoadContext();                            
 
                             // Get argument count including instance
                             int argCount = (callMethod.Flags & CILMethodFlags.This) != 0
@@ -2228,8 +2628,11 @@ namespace dotnow.Runtime.CIL
                             int spArgCaller = sp - argCount;
 
                             // Push the frame
-                            threadContext.PushMethodFrame(loadContext.AppDomain, callMethod, spArgCaller, sp, out int spCall);
+                            threadContext.PushMethodFrame(loadContext.AppDomain, callMethod, false, spArgCaller, sp, out int spCall);
                             int spReturn = sp;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, callMethod.Method, spCall, argCount);
 
                             // Check for interpreted
                             if ((callMethod.Flags & CILMethodFlags.Interpreted) != 0)
@@ -2243,10 +2646,13 @@ namespace dotnow.Runtime.CIL
                             else if ((callMethod.Flags & CILMethodFlags.Interop) != 0)
                             {
                                 // Call interop method
-                                __marshal.InvokeMethodInterop(threadContext, callLoadContext, null, callMethod, spReturn, spCall);
+                                __marshal.InvokeMethodInterop(threadContext, loadContext.AppDomain, null, callMethod, spReturn, spCall);
                             }
                             else
                                 throw new NotSupportedException("Method cannot be executed: " + callMethod);
+
+                            // Decrement stack pointer
+                            sp -= argCount;
 
                             // Copy return value
                             if ((callMethod.Flags & CILMethodFlags.Return) != 0)
@@ -2264,10 +2670,47 @@ namespace dotnow.Runtime.CIL
                     case ILOpCode.Ret:
                         {
                             // Debug execution
-                            Debug.Instruction(op, pc - 1, sp - 1);
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
 
                             // Abort execution - set pc to max value and execution will finish naturally
                             pc = pcMax;
+                            break;
+                        }
+                    case ILOpCode.Box:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle boxHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            CILTypeInfo boxType = loadContext.GetTypeHandle(boxHandle);
+
+                            // Perform the box operation
+                            StackData.Box(boxType, ref stack[sp - 1]);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldtoken:
+                        {
+                            // Get token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle handle = MetadataTokens.EntityHandle(token);
+
+                            // Resolve the member
+                            MemberInfo member = loadContext.GetMemberHandle(handle);
+
+                            // Push member reference
+                            stack[sp].Ref = member;
+                            stack[sp++].Type = StackType.Ref;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
                             break;
                         }
                         #endregion
@@ -2275,7 +2718,7 @@ namespace dotnow.Runtime.CIL
                 } // End switch
             } // End loop
 
-            return sp; // Return the final stack pointer
+            return sp - 1; // Return the final stack pointer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

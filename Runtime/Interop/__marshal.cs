@@ -31,7 +31,7 @@ namespace dotnow.Interop
             throw new NotImplementedException();
         }
 
-        public static void InvokeConstructorInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILTypeInfo type, in CILMethodInfo ctor, int spReturn, int spArg)
+        public static void InvokeConstructorInterop(ThreadContext threadContext, AppDomain appDomain, in CILTypeInfo type, in CILMethodInfo ctor, int spArg)
         {
             // Check for delegate
             if((ctor.Flags & CILMethodFlags.DirectInstanceDelegate) != 0)
@@ -41,12 +41,10 @@ namespace dotnow.Interop
 
                 // Create spans for view of stack argument and return slots
                 Span<StackData> stackArgs = new Span<StackData>(threadContext.stack, spArg, argCount);
-                Span<StackData> stackReturn = (ctor.Flags & CILMethodFlags.Return) != 0
-                    ? new Span<StackData>(threadContext.stack, spReturn, 1)
-                    : default;
+                Span<StackData> stackReturn = default;
 
                 // Create the stack context
-                StackContext directCallContext = new StackContext(assemblyLoadContext, stackArgs, stackReturn);
+                StackContext directCallContext = new StackContext(appDomain, stackArgs, stackReturn);
 
                 // Check for debug
 #if DEBUG
@@ -80,17 +78,11 @@ namespace dotnow.Interop
                 }
 
                 // Reflection invoke - do not pass instance because it should be created as part of the call
-                object result = ((ConstructorInfo)ctor.Method).Invoke(paramList);
-
-                // Load return instance
-                {
-                    // Push return value to stack
-                    StackData.Wrap(type, result, ref threadContext.stack[spReturn]);
-                }
+                ((ConstructorInfo)ctor.Method).Invoke(paramList);
             }
         }
 
-        public static void InvokeMethodInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILTypeInfo constrainedType, in CILMethodInfo method, int spReturn, int spArg)
+        public static void InvokeMethodInterop(ThreadContext threadContext, AppDomain appDomain, in CILTypeInfo constrainedType, in CILMethodInfo method, int spReturn, int spArg)
         {
             int spFirstArg = spArg;
 
@@ -109,7 +101,7 @@ namespace dotnow.Interop
                     : default;
 
                 // Create the stack context
-                StackContext directCallContext = new StackContext(assemblyLoadContext, stackArgs, stackReturn);
+                StackContext directCallContext = new StackContext(appDomain, stackArgs, stackReturn);
 
                 // Check for debug
 #if DEBUG
@@ -137,7 +129,7 @@ namespace dotnow.Interop
                 Type[] genericArguments = method.Method.GetGenericArguments();
 
                 // Create the stack context
-                StackContext directCallGenericContext = new StackContext(assemblyLoadContext, stackArgs, stackReturn);
+                StackContext directCallGenericContext = new StackContext(appDomain, stackArgs, stackReturn);
 
                 // Check for debug
 #if DEBUG
