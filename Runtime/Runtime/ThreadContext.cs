@@ -178,14 +178,14 @@ namespace dotnow.Runtime
                 StackData.Wrap(methodHandle.DeclaringType, instance, ref stack[sp++]);
 
             // Copy arguments to the stack
-            for(int i = 0; i < args.Length; i++)
-                StackData.Wrap(methodHandle.ParameterTypes[i], args[i], ref stack[sp++]);
-
-            // Get the sp arg
-            spArg = sp;
+            if (args != null)
+            {
+                for (int i = 0; i < args.Length; i++)
+                    StackData.Wrap(methodHandle.ParameterTypes[i], args[i], ref stack[sp++]);
+            }
 
             // Push the frame
-            PushMethodFrame(appDomain, methodHandle, 0, sp);
+            PushMethodFrame(appDomain, methodHandle, 0, 0, out spArg);
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace dotnow.Runtime
         /// <param name="body"></param>
         /// <param name="spArg">The stack address where arguments passed into this method begin. Arguments will be copied from this location into the new method frame</param>
         /// <param name="sp">The stack pointer where the evaluation stack for the new frame begins</param>
-        public void PushMethodFrame(AppDomain appDomain, in CILMethodInfo methodInfo, int spArgCaller, int spCaller)
+        public void PushMethodFrame(AppDomain appDomain, in CILMethodInfo methodInfo, int spArgCaller, int spCaller, out int spArg)
         {
             // Get instance and argument size
             int requiredStackArgInst = methodInfo.ParameterTypes.Length;
@@ -216,23 +216,28 @@ namespace dotnow.Runtime
                 throw new StackOverflowException();
 
             // Start where the previous stack pointer is currently at
-            int spArg = spCaller + requiredStack;
+            spArg = spCaller + requiredStackArgInst;
+
+            // Copy instance
+            int offset = 0;
+            if((methodInfo.Flags & CILMethodFlags.This) != 0)
+            {
+                // Copy the instance
+                StackData.CopyFrame(methodInfo.DeclaringType, stack[spArgCaller], ref stack[spArg]);
+                offset++;
+            }
 
             // Copy all values to the new frame
-            for(int i = 0; i < requiredStackArgInst; i++)
+            for(int i = 0; i < methodInfo.ParameterTypes.Length; i++)
             {
-                // Check for value type but not a primitive
-                if ((methodInfo.ParameterTypes[i].Flags & CILTypeFlags.ValueType) != 0 && (methodInfo.ParameterTypes[i].Flags & CILTypeFlags.PrimitiveType) == 0)
-                {
-                    // Perform value type copy
-                    stack[spArg + i].Ref = __marshal.CopyInteropBoxedValueTypeSlow(stack[spArgCaller + i].Ref);
-                }
-                else
-                {
-                    // Simply copy is fine
-                    stack[spArg + i] = stack[spArgCaller + i];
-                }
+                // Copy the value to the new frame
+                StackData.CopyFrame(methodInfo.ParameterTypes[i], stack[spArgCaller + i + offset], ref stack[spArg + i + offset]);
             }
+        }
+
+        public void PopMethodFrame()
+        {
+
         }
 
         //public string GetCallStack()

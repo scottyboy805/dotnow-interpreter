@@ -52,7 +52,11 @@ namespace dotnow.Runtime.CIL
         /// <summary>
         /// The type information for the parameter types.
         /// </summary>
-        public readonly CILTypeInfo[] ParameterTypes;        
+        public readonly CILTypeInfo[] ParameterTypes;
+        /// <summary>
+        /// Contains the default local values for this method.
+        /// </summary>
+        public readonly StackData[] Locals;
         /// <summary>
         /// The optional delegate if an interop binding is associated with this method.
         /// </summary>
@@ -85,6 +89,7 @@ namespace dotnow.Runtime.CIL
                 // Get the body
                 MethodBody body = method.GetMethodBody();
 
+                this.Locals = body.LocalVariables.Select(l => StackData.Default(l.LocalType.GetTypeInfo(domain))).ToArray();
                 this.Instructions = body.GetILAsByteArray();
                 this.LocalCount = body.LocalVariables.Count;
                 this.MaxStack = body.MaxStackSize;
@@ -154,7 +159,7 @@ namespace dotnow.Runtime.CIL
                 }
 
                 // Get binding method
-                MethodBase bindingMethod = method.IsConstructedGenericMethod == true
+                MethodBase bindingMethod = method.IsGenericMethod == true && method.IsGenericMethodDefinition == false
                     ? ((MethodInfo)method).GetGenericMethodDefinition()
                     : method;
 

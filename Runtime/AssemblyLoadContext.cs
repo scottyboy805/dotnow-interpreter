@@ -295,7 +295,7 @@ namespace dotnow
                         int row = MetadataTokens.GetRowNumber(handle);
 
                         // Check for already resolved
-                        if (typeDefinitions[row].Type != null)
+                        if (typeDefinitions[row] != null)
                             return;
 
                         // Resolve the definition
@@ -482,7 +482,7 @@ namespace dotnow
                         int row = MetadataTokens.GetRowNumber(handle);
 
                         // Check for already resolved
-                        if (fieldDefinitions[row].Field != null)
+                        if (fieldDefinitions[row] != null)
                             return;
 
                         // Get the field definition
@@ -532,7 +532,7 @@ namespace dotnow
                         int row = MetadataTokens.GetRowNumber(handle);
 
                         // Check for already resolved
-                        if (methodDefinitions[row].Method != null)
+                        if (methodDefinitions[row] != null)
                             return;
 
                         // Resolve the definition

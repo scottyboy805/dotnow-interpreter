@@ -149,7 +149,7 @@ namespace dotnow
             string msg = string.Format(new string('\t', executionCallDepth) + "{0:X4}: {1}{2}", offset, DebugOp(op), value);
 
             // Log output
-            UnityEngine.Debug.Log(msg);
+            UnityEngine.Debug.Log(msg);            
             //System.Diagnostics.Debug.WriteLine(msg);
         }
 

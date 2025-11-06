@@ -173,7 +173,7 @@ namespace dotnow.Interop
                 if ((method.Flags & CILMethodFlags.This) != 0)
                 {
                     // Get instance type - check for optional constraint
-                    CILTypeInfo thisTypeInfo = constrainedType.Type == null
+                    CILTypeInfo thisTypeInfo = constrainedType == null
                         ? method.DeclaringType
                         : constrainedType;
 
@@ -205,7 +205,7 @@ namespace dotnow.Interop
                 if ((method.Flags & CILMethodFlags.This) != 0 && threadContext.stack[spFirstArg].Ref is ValueType)
                 {
                     // Get instance type
-                    CILTypeInfo thisTypeInfo = constrainedType.Type == null
+                    CILTypeInfo thisTypeInfo = constrainedType == null
                         ? method.DeclaringType
                         : constrainedType;
 

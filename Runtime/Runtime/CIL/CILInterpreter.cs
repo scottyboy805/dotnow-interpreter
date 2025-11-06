@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using dotnow.Interop;
+using System;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace dotnow.Runtime.CIL
 {
@@ -18,8 +16,14 @@ namespace dotnow.Runtime.CIL
             if ((method.Flags & CILMethodFlags.Interpreted) == 0)
                 throw new InvalidOperationException("Not supported for interop methods");
 
+            // Get the stack
+            StackData[] stack = threadContext.stack;
+
             // Get local
             int spLoc = spArg + ((method.Flags & CILMethodFlags.This) != 0 ? 1 : 0) + method.ParameterTypes.Length;
+
+            // Copy locals
+            Array.Copy(method.Locals, 0, stack, spLoc, method.LocalCount);
 
             // Get sp
             int sp = spLoc + method.LocalCount;
@@ -30,9 +34,6 @@ namespace dotnow.Runtime.CIL
             // Check overflow - we'll handle this differently since we can't use unsafe
             if (spMax >= threadContext.stack.Length)
                 throw new StackOverflowException();
-
-            // Get the stack
-            StackData[] stack = threadContext.stack;
 
             // Get the instructions
             byte[] instructions = method.Instructions;
@@ -45,7 +46,7 @@ namespace dotnow.Runtime.CIL
             while (pc < pcMax && threadContext.abort == false)
             {
                 // Fetch the op code
-                ILOpCode op = FetchDecode<ILOpCode>(instructions, ref pc);
+                ILOpCode op = (ILOpCode)FetchDecode<byte>(instructions, ref pc);
 
                 // Check for 2-byte encoded instructions
                 if ((byte)op == 0xFE)
@@ -333,6 +334,32 @@ namespace dotnow.Runtime.CIL
                             Debug.Instruction(op, pc - 5, stack[sp - 1]);
                             break;
                         }
+                    case ILOpCode.Ldarga_s:
+                        {
+                            // Read the offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Copy from arg offset
+                            stack[sp].Ref = IByRef.MakeByRefStack(stack, spArg + offset);
+                            stack[sp].Type = StackType.ByRef;
+                            sp++;
+
+                            Debug.Instruction(op, pc - 2, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldarga:
+                        {
+                            // Read the offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Copy from arg offset
+                            stack[sp].Ref = IByRef.MakeByRefStack(stack, spArg + offset);
+                            stack[sp].Type = StackType.ByRef;
+                            sp++;
+
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
 
                     case ILOpCode.Starg_s:
                         {
@@ -414,6 +441,32 @@ namespace dotnow.Runtime.CIL
 
                             // Copy from local offset to stack
                             stack[sp] = stack[spLoc + offset];
+                            sp++;
+
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldloca_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Copy from local offset to stack
+                            stack[sp].Ref = IByRef.MakeByRefStack(stack, spLoc + offset);
+                            stack[sp].Type = StackType.ByRef;
+                            sp++;
+
+                            Debug.Instruction(op, pc - 2, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldloca:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Copy from local offset to stack
+                            stack[sp].Ref = IByRef.MakeByRefStack(stack, spLoc + offset);
+                            stack[sp].Type = StackType.ByRef;
                             sp++;
 
                             Debug.Instruction(op, pc - 5, stack[sp - 1]);
@@ -713,7 +766,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.I32:
                                         {
                                             // Check for divide by zero
-                                            if (stack[sp].I32 == 0) 
+                                            if (stack[sp].I32 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I32 = stack[sp - 1].I32 / stack[sp].I32;
@@ -722,7 +775,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.U32:
                                         {
                                             // Check for divide by zero
-                                            if (stack[sp].I32 == 0) 
+                                            if (stack[sp].I32 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I32 = stack[sp - 1].I32 / stack[sp].I32; // Treat as signed
@@ -731,7 +784,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.I64:
                                         {
                                             // Check for divide by zero
-                                            if (stack[sp].I64 == 0) 
+                                            if (stack[sp].I64 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I64 = stack[sp - 1].I64 / stack[sp].I64;
@@ -740,7 +793,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.U64:
                                         {
                                             // Check for divide by zero
-                                            if (stack[sp].I64 == 0) 
+                                            if (stack[sp].I64 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I64 = stack[sp - 1].I64 / stack[sp].I64; // Treat as signed
@@ -770,7 +823,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.I32:
                                         {
                                             // Check for divide by zero
-                                            if ((uint)stack[sp].I32 == 0) 
+                                            if ((uint)stack[sp].I32 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 / (uint)stack[sp].I32);
@@ -788,7 +841,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.I64:
                                         {
                                             // Check for divide by zero
-                                            if ((ulong)stack[sp].I64 == 0) 
+                                            if ((ulong)stack[sp].I64 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 / (ulong)stack[sp].I64);
@@ -797,7 +850,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.U64:
                                         {
                                             // Check for divide by zero
-                                            if ((ulong)stack[sp].I64 == 0) 
+                                            if ((ulong)stack[sp].I64 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 / (ulong)stack[sp].I64);
@@ -827,7 +880,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.I32:
                                         {
                                             // Check for divide by zero
-                                            if (stack[sp].I32 == 0) 
+                                            if (stack[sp].I32 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I32 = stack[sp - 1].I32 % stack[sp].I32;
@@ -836,7 +889,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.U32:
                                         {
                                             // Check for divide by zero
-                                            if (stack[sp].I32 == 0) 
+                                            if (stack[sp].I32 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I32 = stack[sp - 1].I32 % stack[sp].I32; // Treat as signed
@@ -845,7 +898,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.I64:
                                         {
                                             // Check for divide by zero
-                                            if (stack[sp].I64 == 0) 
+                                            if (stack[sp].I64 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I64 = stack[sp - 1].I64 % stack[sp].I64;
@@ -854,7 +907,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.U64:
                                         {
                                             // Check for divide by zero
-                                            if (stack[sp].I64 == 0) 
+                                            if (stack[sp].I64 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I64 = stack[sp - 1].I64 % stack[sp].I64; // Treat as signed
@@ -884,7 +937,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.I32:
                                         {
                                             // Check for divide by zero
-                                            if ((uint)stack[sp].I32 == 0) 
+                                            if ((uint)stack[sp].I32 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 % (uint)stack[sp].I32);
@@ -893,7 +946,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.U32:
                                         {
                                             // Check for divide by zero
-                                            if ((uint)stack[sp].I32 == 0) 
+                                            if ((uint)stack[sp].I32 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 % (uint)stack[sp].I32);
@@ -902,7 +955,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.I64:
                                         {
                                             // Check for divide by zero
-                                            if ((ulong)stack[sp].I64 == 0) 
+                                            if ((ulong)stack[sp].I64 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 % (ulong)stack[sp].I64);
@@ -911,7 +964,7 @@ namespace dotnow.Runtime.CIL
                                     case StackType.U64:
                                         {
                                             // Check for divide by zero
-                                            if ((ulong)stack[sp].I64 == 0) 
+                                            if ((ulong)stack[sp].I64 == 0)
                                                 throw new DivideByZeroException();
 
                                             stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 % (ulong)stack[sp].I64);
@@ -1072,6 +1125,1152 @@ namespace dotnow.Runtime.CIL
                             break;
                         }
                     #endregion
+
+                    #region Convert
+                    case ILOpCode.Conv_i:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].Ptr = (IntPtr)stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].Ptr = (IntPtr)(uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].Ptr = (IntPtr)stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].Ptr = (IntPtr)(ulong)stack[sp - 1].I64; break;
+                            }
+                            // Convert to Ptr/native int
+                            stack[sp - 1].Type = StackType.Ptr;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_u:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].Ptr = (IntPtr)(uint)stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].Ptr = (IntPtr)(uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].Ptr = (IntPtr)(ulong)stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].Ptr = (IntPtr)(ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: stack[sp - 1].Ptr = (IntPtr)(uint)stack[sp - 1].F32; break;
+                                case StackType.F64: stack[sp - 1].Ptr = (IntPtr)(uint)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].Ptr = (IntPtr)(ulong)(long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].Ptr = stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to UPtr/unsigned native int
+                            stack[sp - 1].Type = StackType.UPtr;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_i1:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = (sbyte)stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (sbyte)(uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].I32 = (sbyte)stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].I32 = (sbyte)(ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: stack[sp - 1].I32 = (sbyte)stack[sp - 1].F32; break;
+                                case StackType.F64: stack[sp - 1].I32 = (sbyte)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].I32 = (sbyte)(long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].I32 = (sbyte)(ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to I32 (signed byte is promoted to I32 on stack)
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_u1:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = (byte)stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (byte)(uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].I32 = (byte)stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].I32 = (byte)(ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: stack[sp - 1].I32 = (byte)stack[sp - 1].F32; break;
+                                case StackType.F64: stack[sp - 1].I32 = (byte)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].I32 = (byte)(long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].I32 = (byte)(ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to I32 (unsigned byte is promoted to I32 on stack)
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_i2:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = (short)stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (short)(uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].I32 = (short)stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].I32 = (short)(ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: stack[sp - 1].I32 = (short)stack[sp - 1].F32; break;
+                                case StackType.F64: stack[sp - 1].I32 = (short)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].I32 = (short)(long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].I32 = (short)(ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to I32 (signed short is promoted to I32 on stack)
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_u2:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = (ushort)stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (ushort)(uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].I32 = (ushort)stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].I32 = (ushort)(ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: stack[sp - 1].I32 = (ushort)stack[sp - 1].F32; break;
+                                case StackType.F64: stack[sp - 1].I32 = (ushort)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].I32 = (ushort)(long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].I32 = (ushort)(ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to I32 (unsigned short is promoted to I32 on stack)
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_i4:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: /* already I32 */ break;
+                                case StackType.U32: stack[sp - 1].I32 = (int)(uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].I32 = (int)stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].I32 = (int)(ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: stack[sp - 1].I32 = (int)stack[sp - 1].F32; break;
+                                case StackType.F64: stack[sp - 1].I32 = (int)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].I32 = (int)(long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].I32 = (int)(ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to I32
+                            stack[sp - 1].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_u4:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = (int)(uint)stack[sp - 1].I32; break;
+                                case StackType.U32: /* already U32 as I32 */ break;
+                                case StackType.I64: stack[sp - 1].I32 = (int)(uint)stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].I32 = (int)(uint)(ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: stack[sp - 1].I32 = (int)(uint)stack[sp - 1].F32; break;
+                                case StackType.F64: stack[sp - 1].I32 = (int)(uint)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].I32 = (int)(uint)(long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].I32 = (int)(uint)(ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to U32 (stored as I32)
+                            stack[sp - 1].Type = StackType.U32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_i8:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I64 = stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].I64 = (uint)stack[sp - 1].I32; break;
+                                case StackType.I64: /* already I64 */ break;
+                                case StackType.U64: stack[sp - 1].I64 = (long)(ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: stack[sp - 1].I64 = (long)stack[sp - 1].F32; break;
+                                case StackType.F64: stack[sp - 1].I64 = (long)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].I64 = (long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].I64 = (long)(ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to I64
+                            stack[sp - 1].Type = StackType.I64;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_u8:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I64 = (long)(uint)stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].I64 = (long)(uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].I64 = (long)(ulong)stack[sp - 1].I64; break;
+                                case StackType.U64: /* already U64 as I64 */ break;
+                                case StackType.F32: stack[sp - 1].I64 = (long)(ulong)stack[sp - 1].F32; break;
+                                case StackType.F64: stack[sp - 1].I64 = (long)(ulong)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].I64 = (long)(ulong)(long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].I64 = (long)(ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to U64 (stored as I64)
+                            stack[sp - 1].Type = StackType.U64;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_r4:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].F32 = stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].F32 = (uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].F32 = stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].F32 = (ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: /* already F32 */ break;
+                                case StackType.F64: stack[sp - 1].F32 = (float)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].F32 = (long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].F32 = (ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to F32
+                            stack[sp - 1].Type = StackType.F32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_r8:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].F64 = stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].F64 = (uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].F64 = stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].F64 = (ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: stack[sp - 1].F64 = stack[sp - 1].F32; break;
+                                case StackType.F64: /* already F64 */ break;
+                                case StackType.Ptr: stack[sp - 1].F64 = (long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].F64 = (ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to F64
+                            stack[sp - 1].Type = StackType.F64;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    #endregion
+
+                    #region Branch
+                    case ILOpCode.Br_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Update offset
+                            pc += offset;
+                            break;
+                        }
+                    case ILOpCode.Br:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Update offset
+                            pc += offset;
+                            break;
+                        }
+                    case ILOpCode.Brtrue_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop value
+                            sp--;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (stack[sp].I32 == 1)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+                    case ILOpCode.Brtrue:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop value
+                            sp--;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (stack[sp].I32 == 1)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+                    case ILOpCode.Brfalse_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop value
+                            sp--;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (stack[sp].I32 == 0)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+                    case ILOpCode.Brfalse:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop value
+                            sp--;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (stack[sp].I32 == 0)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+                    #endregion
+
+                    #region Array
+                    case ILOpCode.Newarr:
+                        {
+                            // Read the element token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle typeHandle = MetadataTokens.EntityHandle(token);
+
+                            // Get the element type info
+                            CILTypeInfo elementType = loadContext.GetTypeHandle(typeHandle);
+
+                            // Check for long length
+                            if (stack[sp - 1].Type == StackType.I64)
+                            {
+                                // Allocate array long form
+                                GC.AllocateArrayL(loadContext.AppDomain, elementType, stack[sp - 1].I64, ref stack[sp - 1]);
+                            }
+                            // Use int length
+                            else
+                            {
+                                // Allocate array short form
+                                GC.AllocateArrayS(loadContext.AppDomain, elementType, stack[sp - 1].I32, ref stack[sp - 1]);
+                            }
+
+                            // Log execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldlen:
+                        {
+                            // Pop array reference
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Push length to stack as native int
+                            stack[sp].Ptr = (IntPtr)array.Length;
+                            stack[sp++].Type = StackType.Ptr;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_i:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack
+                            stack[sp].Ptr = ((IntPtr[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.Ptr;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_i1:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack as I32 (signed byte promoted to I32)
+                            stack[sp].I32 = ((sbyte[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_u1:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack as I32 (unsigned byte promoted to I32)
+                            stack[sp].I32 = ((byte[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_i2:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack as I32 (signed short promoted to I32)
+                            stack[sp].I32 = ((short[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_u2:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack as I32 (unsigned short promoted to I32)
+                            stack[sp].I32 = ((ushort[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_i4:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                    ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack as I32
+                            stack[sp].I32 = ((int[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_u4:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack as U32 (stored as I32)
+                            stack[sp].I32 = (int)((uint[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.U32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_i8:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack as I64
+                            stack[sp].I64 = ((long[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.I64;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_r4:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack as F32
+                            stack[sp].F32 = ((float[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.F32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_r8:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack as F64
+                            stack[sp].F64 = ((double[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.F64;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem_ref:
+                        {
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Push to stack as reference
+                            stack[sp].Ref = ((object[])array)[explicitIndex];
+                            stack[sp++].Type = StackType.Ref;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Stelem_i:
+                        {
+                            // Pop value, index and instance
+                            StackData value = stack[--sp];
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Store value to array
+                            ((IntPtr[])array)[explicitIndex] = value.Ptr;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1);
+                            break;
+                        }
+
+                    case ILOpCode.Stelem_i1:
+                        {
+                            // Pop value, index and instance
+                            StackData value = stack[--sp];
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Store value to array (truncate to signed byte)
+                            ((sbyte[])array)[explicitIndex] = (sbyte)value.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1);
+                            break;
+                        }
+
+                    case ILOpCode.Stelem_i2:
+                        {
+                            // Pop value, index and instance
+                            StackData value = stack[--sp];
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Store value to array (truncate to signed short)
+                            ((short[])array)[explicitIndex] = (short)value.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1);
+                            break;
+                        }
+
+                    case ILOpCode.Stelem_i4:
+                        {
+                            // Pop value, index and instance
+                            StackData value = stack[--sp];
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Store value to array
+                            ((int[])array)[explicitIndex] = value.I32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1);
+                            break;
+                        }
+
+                    case ILOpCode.Stelem_i8:
+                        {
+                            // Pop value, index and instance
+                            StackData value = stack[--sp];
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Store value to array
+                            ((long[])array)[explicitIndex] = value.I64;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1);
+                            break;
+                        }
+
+                    case ILOpCode.Stelem_r4:
+                        {
+                            // Pop value, index and instance
+                            StackData value = stack[--sp];
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Store value to array
+                            ((float[])array)[explicitIndex] = value.F32;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1);
+                            break;
+                        }
+
+                    case ILOpCode.Stelem_r8:
+                        {
+                            // Pop value, index and instance
+                            StackData value = stack[--sp];
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Store value to array
+                            ((double[])array)[explicitIndex] = value.F64;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1);
+                            break;
+                        }
+
+                    case ILOpCode.Stelem_ref:
+                        {
+                            // Pop value, index and instance
+                            StackData value = stack[--sp];
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Store value to array
+                            ((object[])array)[explicitIndex] = value.Ref;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelem:
+                        {
+                            // Read the element token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle typeHandle = MetadataTokens.EntityHandle(token);
+
+                            // Get the element type info
+                            CILTypeInfo elementType = loadContext.GetTypeHandle(typeHandle);
+
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Get the element value and wrap it onto stack
+                            object value = array.GetValue(explicitIndex);
+                            StackData.Wrap(elementType, value, ref stack[sp]);
+                            sp++;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Stelem:
+                        {
+                            // Read the element token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle typeHandle = MetadataTokens.EntityHandle(token);
+
+                            // Get the element type info
+                            CILTypeInfo elementType = loadContext.GetTypeHandle(typeHandle);
+
+                            // Pop value, index and instance
+                            StackData value = stack[--sp];
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Unwrap the value and store it in the array
+                            object unwrappedValue = null;
+                            StackData.Unwrap(elementType, ref value, ref unwrappedValue);
+                            array.SetValue(unwrappedValue, explicitIndex);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5);
+                            break;
+                        }
+
+                    case ILOpCode.Ldelema:
+                        {
+                            // Read the element token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle typeHandle = MetadataTokens.EntityHandle(token);
+
+                            // Get the element type info
+                            CILTypeInfo elementType = loadContext.GetTypeHandle(typeHandle);
+
+                            // Pop index and instance
+                            StackData index = stack[--sp];
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            Array array;
+                            if ((array = instance.Ref as Array) == null)
+                                throw new NullReferenceException();
+
+                            // Get index
+                            long explicitIndex = index.Type == StackType.I64
+                                ? index.I64 : index.I32;
+
+                            // Check bounds
+                            if (explicitIndex < 0 || explicitIndex >= array.Length)
+                                throw new IndexOutOfRangeException();
+
+                            // Create a managed reference to the array element
+                            stack[sp].Ref = IByRef.MakeByRefElement(array, (int)explicitIndex);
+                            stack[sp++].Type = StackType.ByRef;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+                    #endregion
+
+                    #region Object
+                    case ILOpCode.Call:
+                    case ILOpCode.Callvirt:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle callHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            CILMethodInfo callMethod = loadContext.GetMethodHandle(callHandle);
+
+                            // Get load context
+                            AssemblyLoadContext callLoadContext = callMethod.Method.GetLoadContext();
+
+                            // Debug execution
+                            //Debug.Instruction(threadContext, op, pc - 5, methodInfo.Method, sp - methodInfo.ParameterTypes.Length, callHandle.Signature.ArgCount);
+
+                            // Get argument count including instance
+                            int argCount = (callMethod.Flags & CILMethodFlags.This) != 0
+                                ? callMethod.ParameterTypes.Length + 1
+                                : callMethod.ParameterTypes.Length;
+
+                            // Get the stack index where the method arguments were loaded
+                            int spArgCaller = sp - argCount;
+
+                            // Push the frame
+                            threadContext.PushMethodFrame(loadContext.AppDomain, callMethod, spArgCaller, sp, out int spCall);
+                            int spReturn = sp;
+
+                            // Check for interpreted
+                            if ((callMethod.Flags & CILMethodFlags.Interpreted) != 0)
+                            {
+                                // Handle virtual calls
+#warning TODO - virtual
+
+                                // Execute the method
+                                spReturn = ExecuteMethod(threadContext, callLoadContext, callMethod, spCall);
+                            }
+                            else if ((callMethod.Flags & CILMethodFlags.Interop) != 0)
+                            {
+                                // Call interop method
+                                __marshal.InvokeMethodInterop(threadContext, callLoadContext, null, callMethod, spReturn, spCall);
+                            }
+                            else
+                                throw new NotSupportedException("Method cannot be executed: " + callMethod);
+
+                            // Copy return value
+                            if ((callMethod.Flags & CILMethodFlags.Return) != 0)
+                            {
+                                // Note we do not do a frame copy here - just a simple copy
+                                stack[sp] = stack[spReturn];
+                                sp++;
+                            }
+
+                            // Pop the frame
+                            threadContext.PopMethodFrame();
+
+                            break;
+                        }
+                    case ILOpCode.Ret:
+                        {
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, sp - 1);
+
+                            // Abort execution - set pc to max value and execution will finish naturally
+                            pc = pcMax;
+                            break;
+                        }
+                        #endregion
 
                 } // End switch
             } // End loop

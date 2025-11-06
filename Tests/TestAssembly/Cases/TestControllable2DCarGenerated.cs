@@ -40,8 +40,8 @@ public class CubeCarController : MonoBehaviour
             carRigidbody = gameObject.AddComponent<Rigidbody>();
         }
         carRigidbody.mass = 1f;
-        carRigidbody.linearDamping = 2f;
-        carRigidbody.angularDamping = 5f;
+        carRigidbody.drag = 2f;
+        carRigidbody.angularDrag = 5f;
 		carRigidbody.useGravity = false;
     }
     

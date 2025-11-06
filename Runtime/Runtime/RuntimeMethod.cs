@@ -44,6 +44,9 @@ namespace dotnow.Runtime
             // Execute method with interpreter
             int spReturn = CILInterpreter.ExecuteMethod(threadContext, assemblyLoadContext, methodInfo, spArg);
 
+            // Complete the method frame
+            threadContext.PopMethodFrame();
+
             object returnValue = null;
 
             // Check for return type

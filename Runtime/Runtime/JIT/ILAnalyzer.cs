@@ -125,7 +125,7 @@ namespace dotnow.Runtime.JIT
             while (pc < pcMax)
             {
                 // Fetch decode opcode
-                opCode = CILInterpreter.FetchDecode<ILOpCode>(instructions, ref pc);
+                opCode = (ILOpCode)CILInterpreter.FetchDecode<byte>(instructions, ref pc);
 
                 // Check for 2-byte encoded instructions
                 if ((byte)opCode == 0xFE)

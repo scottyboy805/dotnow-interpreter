@@ -3,6 +3,9 @@ using dotnow.Reflection;
 using dotnow.Runtime.CIL;
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
+using System.Security.Cryptography;
+using UnityEngine;
 
 namespace dotnow.Runtime
 {
@@ -68,11 +71,33 @@ namespace dotnow.Runtime
         [FieldOffset(8)]
         public double F64;
         [FieldOffset(8)]
-        public IntPtr Ptr;
-        [FieldOffset(8)]
-        public object Ref; // 16 bytes        
+        public IntPtr Ptr;      // 16 bytes
+
+        [FieldOffset(16)]
+        public object Ref;      // 24 bytes        
+
+        // Properties
+        public bool IsByRef => Type == StackType.ByRef && Ref is IByRef;
 
         // Methods
+        public override string ToString()
+        {
+            return Type switch
+            {
+                StackType.I32 => $"I32, {I32}",
+                StackType.U32 => $"U32, {(uint)I32}",
+                StackType.I64 => $"I64, {I64}",
+                StackType.U64 => $"U64, {(ulong)I64}",
+                StackType.F32 => $"F32, {F32}",
+                StackType.F64 => $"F64, {F64}",
+                StackType.Ptr => $"Ptr, {Ptr}",
+                StackType.UPtr => $"UPtr, {(UIntPtr)(ulong)Ptr}",
+                StackType.Ref => $"Ref, {Ref}",
+                StackType.ByRef => $"ByRef, {Ref}",
+                _ => "Invalid",
+            };
+        }
+
         internal bool IsPrimitiveEqual(in StackData other)
         {
             // Check type
@@ -97,6 +122,90 @@ namespace dotnow.Runtime
 
         public static void Wrap(CILTypeInfo typeInfo, object obj, ref StackData dst)
         {
+            // ### Handle by ref
+            if (dst.IsByRef == true)
+            {
+                // Get the by ref object
+                IByRef byRef = (IByRef)dst.Ref;
+
+                switch (typeInfo.TypeCode)
+                {
+                    default: throw new NotSupportedException();
+
+                    case TypeCode.Boolean:
+                        {
+                            byRef.SetReferenceValueI1(((bool)obj) == true ? (sbyte)1 : (sbyte)0);
+                            break;
+                        }
+                    case TypeCode.Char:
+                        {
+                            byRef.SetReferenceValueI2((short)(char)obj);
+                            break;
+                        }
+
+                    case TypeCode.SByte:
+                        {
+                            byRef.SetReferenceValueI1((sbyte)obj);
+                            break;
+                        }
+                    case TypeCode.Byte:
+                        {
+                            byRef.SetReferenceValueI1((sbyte)(byte)obj);
+                            break;
+                        }
+                    case TypeCode.Int16:
+                        {
+                            byRef.SetReferenceValueI2((short)obj);
+                            break;
+                        }
+                    case TypeCode.UInt16:
+                        {
+                            byRef.SetReferenceValueI2((short)(ushort)obj);
+                            break;
+                        }
+                    case TypeCode.Int32:
+                        {
+                            byRef.SetReferenceValueI4((int)obj);
+                            break;
+                        }
+                    case TypeCode.UInt32:
+                        {
+                            byRef.SetReferenceValueI4((int)(uint)obj);
+                            break;
+                        }
+                    case TypeCode.Int64:
+                        {
+                            byRef.SetReferenceValueI8((long)obj);
+                            break;
+                        }
+                    case TypeCode.UInt64:
+                        {
+                            byRef.SetReferenceValueI8((long)(ulong)obj);
+                            break;
+                        }
+                    case TypeCode.Single:
+                        {
+                            byRef.SetReferenceValueR4((float)obj);
+                            break;
+                        }
+                    case TypeCode.Double:
+                        {
+                            byRef.SetReferenceValueR8((double)obj);
+                            break;
+                        }
+
+                    case TypeCode.Decimal:
+                    case TypeCode.String:
+                    case TypeCode.Object:
+                        {
+                            byRef.SetReferenceValue(obj);
+                            break;
+                        }
+                }
+                return;
+            }
+
+
             // ### Handle enum types
             // Check for interpreted enum or as enum
             if ((typeInfo.Flags & CILTypeFlags.Enum) != 0)
@@ -274,6 +383,40 @@ namespace dotnow.Runtime
 
         public static void Unwrap(CILTypeInfo typeInfo, ref StackData src, ref object unwrapped)
         {
+            // ### Handle by ref
+            if(src.IsByRef == true)
+            {
+                // Get the by ref object
+                IByRef byRef = (IByRef)src.Ref;
+
+                switch (typeInfo.TypeCode)
+                {
+                    default: throw new NotSupportedException();
+
+                    case TypeCode.Boolean: unwrapped = byRef.GetReferenceValueI1() == 1 ? true : false; break;
+                    case TypeCode.Char: unwrapped = (char)byRef.GetReferenceValueI2(); break;
+
+                    case TypeCode.SByte: unwrapped = (sbyte)byRef.GetReferenceValueI1(); break;
+                    case TypeCode.Byte: unwrapped = (byte)byRef.GetReferenceValueU1(); break;
+                    case TypeCode.Int16: unwrapped = (short)byRef.GetReferenceValueI2(); break;
+                    case TypeCode.UInt16: unwrapped = (ushort)byRef.GetReferenceValueU2(); break;
+                    case TypeCode.Int32: unwrapped = (int)byRef.GetReferenceValueU4(); break;
+                    case TypeCode.UInt32: unwrapped = (uint)byRef.GetReferenceValueU4(); break;
+                    case TypeCode.Int64: unwrapped = (long)byRef.GetReferenceValueI8(); break;
+                    case TypeCode.UInt64: unwrapped = (ulong)byRef.GetReferenceValueU8(); break;
+                    case TypeCode.Single: unwrapped = (float)byRef.GetReferenceValueR4(); break;
+                    case TypeCode.Double: unwrapped = (double)byRef.GetReferenceValueR8(); break;
+                    case TypeCode.Decimal:
+                    case TypeCode.String:
+                    case TypeCode.Object:
+                        {
+                            unwrapped = byRef.GetReferenceValue();
+                            break;
+                        }
+                }
+                return;
+            }
+
             // ### Handle enums
             // Check for interpreted enum or as enum
             if ((typeInfo.Flags & CILTypeFlags.Enum) != 0)
@@ -358,6 +501,131 @@ namespace dotnow.Runtime
 
                 // Log implicit marshalling of type - it can cause strange behaviour if not expected, but can lead to a crash if no marshalling occurs
                 Debug.LineFormat("CLRType '{0}' was marshalled to interop base type '{1}'", clrType, current);
+            }
+        }
+
+        public static StackData Default(CILTypeInfo typeInfo)
+        {
+            StackData dst = default;
+
+            switch (typeInfo.TypeCode)
+            {
+                case TypeCode.Boolean:
+                    {
+                        dst.Type = StackType.I32;
+                        dst.I32 = default(bool) ? 1 : 0;
+                        break;
+                    }
+                case TypeCode.Char:
+                    {
+                        dst.Type = StackType.I32;
+                        dst.I32 = default(char);
+                        break;
+                    }
+
+                case TypeCode.SByte:
+                    {
+                        dst.Type = StackType.I32;
+                        dst.I32 = default(sbyte);
+                        break;
+                    }
+                case TypeCode.Byte:
+                    {
+                        dst.Type = StackType.I32;
+                        dst.I32 = default(byte);
+                        break;
+                    }
+                case TypeCode.Int16:
+                    {
+                        dst.Type = StackType.I32;
+                        dst.I32 = default(short);
+                        break;
+                    }
+                case TypeCode.UInt16:
+                    {
+                        dst.Type = StackType.I32;
+                        dst.I32 = default(ushort);
+                        break;
+                    }
+                case TypeCode.Int32:
+                    {
+                        dst.Type = StackType.I32;
+                        dst.I32 = default(int);
+                        break;
+                    }
+                case TypeCode.UInt32:
+                    {
+                        dst.Type = StackType.U32;
+                        dst.I32 = (int)default(uint);
+                        break;
+                    }
+                case TypeCode.Int64:
+                    {
+                        dst.Type = StackType.I64;
+                        dst.I64 = default(long);
+                        break;
+                    }
+                case TypeCode.UInt64:
+                    {
+                        dst.Type = StackType.I64;
+                        dst.I64 = (long)default(ulong);
+                        break;
+                    }
+                case TypeCode.Single:
+                    {
+                        dst.Type = StackType.F32;
+                        dst.F32 = default(float);
+                        break;
+                    }
+                case TypeCode.Double:
+                    {
+                        dst.Type = StackType.F64;
+                        dst.F64 = default(double);
+                        break;
+                    }
+                case TypeCode.Decimal:
+                    {
+                        dst.Type = StackType.Ref;
+                        dst.Ref = default(decimal);
+                        break;
+                    }
+                case TypeCode.String:
+                    {
+                        dst.Type = StackType.Ref;
+                        dst.Ref = default(string);
+                        break;
+                    }
+                case TypeCode.Object:
+                    {
+                        // Check for value type
+                        if((typeInfo.Flags & CILTypeFlags.ValueType) != 0)
+                        {
+                            // Create default instance
+                            dst.Ref = FormatterServices.GetUninitializedObject(typeInfo.Type);
+                        }
+                        else
+                        {
+                            dst.Ref = null;
+                        }
+                        dst.Type = StackType.Ref;
+                        break;
+                    }
+            }
+            return dst;
+        }
+
+        internal static void CopyFrame(CILTypeInfo typeInfo, in StackData src, ref StackData dst)
+        {
+            // Check for value type but not a primitive
+            if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0 && (typeInfo.Flags & CILTypeFlags.PrimitiveType) == 0 && src.IsByRef == false)
+            {
+                // Perform value type copy
+                dst.Ref = __marshal.CopyInteropBoxedValueTypeSlow(src.Ref);
+            }
+            else
+            {
+                // Simply copy is fine
+                dst = src;
             }
         }
     }
