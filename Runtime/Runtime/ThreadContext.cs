@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 
@@ -13,14 +14,24 @@ namespace dotnow.Runtime
 {
     internal sealed class ThreadContext
     {
+        // Type
+        internal struct CallFrame
+        {
+            // Public
+            public CILMethodInfo MethodInfo;
+        }
+
         // Private
         private static readonly FieldInfo exceptionStackTraceField = typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo remoteStackTraceString = typeof(Exception).GetField("_remoteStackTraceString", BindingFlags.Instance | BindingFlags.NonPublic);
+
 
         // Public
         public const int DefaultStackSize = 4096;
 
         // Internal
-        internal readonly StackData[] stack = default;        
+        internal readonly StackData[] stack = default;
+        internal readonly Stack<CallFrame> callStack = new();
         internal readonly Thread thread = null;
         internal int callDepth = 0;
         internal bool abort = false;
@@ -38,36 +49,36 @@ namespace dotnow.Runtime
             get { return thread == Thread.CurrentThread; }
         }
 
-        //public CILMethodHandle CurrentMethodHandle
-        //{
-        //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //    get
-        //    {
-        //        // Get if available
-        //        if (callStack.Count > 0)
-        //            return callStack.Peek().Method;
+        public CILMethodInfo CurrentMethodHandle
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                // Get if available
+                if (callStack.Count > 0)
+                    return callStack.Peek().MethodInfo;
 
-        //        return default;
-        //    }
-        //}
+                return default;
+            }
+        }
 
-        //public MethodBase CurrentMethod
-        //{
-        //    get
-        //    {
-        //        // Get meta method if available
-        //        if (callStack.Count > 0)
-        //            return callStack.Peek().Method.MetaMethod;
+        public MethodBase CurrentMethod
+        {
+            get
+            {
+                // Get meta method if available
+                if (callStack.Count > 0)
+                    return callStack.Peek().MethodInfo.Method;
 
-        //        // Not running any method
-        //        return null;
-        //    }
-        //}
+                // Not running any method
+                return null;
+            }
+        }
 
-        //public Assembly CurrentAssembly
-        //{
-        //    get { return CurrentMethod?.DeclaringType.Assembly; }                
-        //}
+        public Assembly CurrentAssembly
+        {
+            get { return CurrentMethod?.DeclaringType.Assembly; }
+        }
 
         // Constructor
         public ThreadContext(int stackSize = DefaultStackSize)
@@ -88,11 +99,14 @@ namespace dotnow.Runtime
 
         public void Throw(Exception e)
         {
-            // Inject stack trace
-            exceptionStackTraceField.SetValue(e, "Hello World");
+            // Get the call stack
+            string stackTrace = GetCallStack();
 
-            // Raise - TODO - We should search for the handler and only throw if no handler was found
-            throw e;
+            // Replace the call stack
+            remoteStackTraceString.SetValue(e, stackTrace);
+
+            // Throw the exception
+            ExceptionDispatchInfo.Capture(e).Throw();
         }
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -216,7 +230,7 @@ namespace dotnow.Runtime
                 throw new StackOverflowException();
 
             // Start where the previous stack pointer is currently at
-            spArg = spCaller;// + requiredStackArgInst;
+            spArg = spCaller;
 
             // Copy instance
             int srcOffset = 0;
@@ -239,65 +253,76 @@ namespace dotnow.Runtime
                 // Copy the value to the new frame
                 StackData.CopyFrame(methodInfo.ParameterTypes[i], stack[spArgCaller + i + srcOffset], ref stack[spArg + i + dstOffset]);
             }
+
+            // Push the frame
+            callStack.Push(new CallFrame
+            {
+                MethodInfo = methodInfo,
+            });
         }
 
         public void PopMethodFrame()
         {
-
+            // Pop the frame
+            callStack.Pop();
         }
 
-        //public string GetCallStack()
-        //{
-        //    // Check for no call
-        //    if (callStack.Count == 0)
-        //        return "Null";
+        public string GetCallStack()
+        {
+            // Check for no call
+            if (callStack.Count == 0)
+                return string.Empty;
 
-        //    StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new StringBuilder();
 
-        //    // Process all methods
-        //    foreach(CallContext call in callStack.Reverse())
-        //    {
-        //        // Get the method
-        //        CILMethodHandle methodHandle = call.Method;
+            // Process all methods
+            foreach (CallFrame call in callStack)
+            {
+                // Get the method
+                CILMethodInfo methodInfo = call.MethodInfo;
 
-        //        // Check for interop
-        //        if((methodHandle.Flags & CILMethodFlags.Interop) != 0)
-        //        {
-        //            // Append method
-        //            builder.AppendLine(call.Method.MetaMethod.ToString());
-        //        }
-        //        else
-        //        {
-        //            // Append method name
-        //            builder.Append(call.Method.MetaMethod.ToString());
+                // Check for interop
+                if ((methodInfo.Flags & CILMethodFlags.Interop) != 0)
+                {
+                    // Append method
+                    builder.Append("   at ");
+                    builder.AppendLine(call.MethodInfo.Method.ToString());
+                }
+                else
+                {
+                    // Append method name
+                    builder.Append("   at ");
+                    builder.Append(call.MethodInfo.Method.ToString());
 
-        //            MetadataDebugInformation debugInfo = null;
+                    MetadataDebugInformation debugInfo = null;
 
-        //            // Check for clr method
-        //            if(call.Method.MetaMethod is CLRMethodInfo clrMethod)
-        //            {
-        //                // Get debug info
-        //                debugInfo = clrMethod.DebugInformation;
-        //            }
-        //            // Check for clr constructor
-        //            else if(call.Method.MetaMethod is CLRConstructorInfo clrConstructor)
-        //            {
-        //                // Get debug info
-        //                debugInfo = clrConstructor.DebugInformation;
-        //            }
+                    // Check for clr method
+                    if (call.MethodInfo.Method is CLRMethodInfo clrMethod)
+                    {
+                        // Get debug info
+                        debugInfo = clrMethod.DebugInformation;
+                    }
+                    // Check for clr constructor
+                    else if (call.MethodInfo.Method is CLRConstructorInfo clrConstructor)
+                    {
+                        // Get debug info
+                        debugInfo = clrConstructor.DebugInformation;
+                    }
 
-        //            // Check for debug info available
-        //            if(debugInfo != null)
-        //            {
+                    // Check for debug info available
+                    if (debugInfo != null)
+                    {
 
-        //            }
+                    }
 
-        //            // Add line
-        //            builder.AppendLine();
-        //        }
-        //    }
+                    // Add line
+                    builder.AppendLine();
+                }
+            }
 
-        //    return builder.ToString();
-        //}
+            builder.AppendLine("   at --- [dotnow Call Stack] ---");
+
+            return builder.ToString();
+        }
     }
 }
