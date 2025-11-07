@@ -1771,7 +1771,766 @@ namespace dotnow.Runtime.CIL
                             }
                             break;
                         }
+                    case ILOpCode.Beq_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch(left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 == right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 == (uint)right.I32; break;
+                                case StackType.I64: jmp = left.I64 == right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 == (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = left.Ptr == right.Ptr; break;
+                                case StackType.UPtr: jmp = (UIntPtr)(ulong)left.Ptr == (UIntPtr)(ulong)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 == right.F32; break;
+                                case StackType.F64: jmp = left.F64 == right.F64; break;
+                                case StackType.Ref: jmp = left.Ref == right.Ref; break;
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+                    case ILOpCode.Beq:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 == right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 == (uint)right.I32; break;
+                                case StackType.I64: jmp = left.I64 == right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 == (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = left.Ptr == right.Ptr; break;
+                                case StackType.UPtr: jmp = (UIntPtr)(ulong)left.Ptr == (UIntPtr)(ulong)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 == right.F32; break;
+                                case StackType.F64: jmp = left.F64 == right.F64; break;
+                                case StackType.Ref: jmp = left.Ref == right.Ref; break;
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Bne_un_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 != right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 != (uint)right.I32; break;
+                                case StackType.I64: jmp = left.I64 != right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 != (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = left.Ptr != right.Ptr; break;
+                                case StackType.UPtr: jmp = (UIntPtr)(ulong)left.Ptr != (UIntPtr)(ulong)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 != right.F32; break;
+                                case StackType.F64: jmp = left.F64 != right.F64; break;
+                                case StackType.Ref: jmp = left.Ref != right.Ref; break;
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Bne_un:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 != right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 != (uint)right.I32; break;
+                                case StackType.I64: jmp = left.I64 != right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 != (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = left.Ptr != right.Ptr; break;
+                                case StackType.UPtr: jmp = (UIntPtr)(ulong)left.Ptr != (UIntPtr)(ulong)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 != right.F32; break;
+                                case StackType.F64: jmp = left.F64 != right.F64; break;
+                                case StackType.Ref: jmp = left.Ref != right.Ref; break;
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Bge_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 >= right.I32; break;
+                                case StackType.U32: jmp = left.I32 >= right.I32; break; // Treat as signed
+                                case StackType.I64: jmp = left.I64 >= right.I64; break;
+                                case StackType.U64: jmp = left.I64 >= right.I64; break; // Treat as signed
+                                case StackType.Ptr: jmp = (long)left.Ptr >= (long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (long)left.Ptr >= (long)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 >= right.F32; break;
+                                case StackType.F64: jmp = left.F64 >= right.F64; break;
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with >=
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Bge:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 >= right.I32; break;
+                                case StackType.U32: jmp = left.I32 >= right.I32; break; // Treat as signed
+                                case StackType.I64: jmp = left.I64 >= right.I64; break;
+                                case StackType.U64: jmp = left.I64 >= right.I64; break; // Treat as signed
+                                case StackType.Ptr: jmp = (long)left.Ptr >= (long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (long)left.Ptr >= (long)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 >= right.F32; break;
+                                case StackType.F64: jmp = left.F64 >= right.F64; break;
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with >=
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Bge_un_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = (uint)left.I32 >= (uint)right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 >= (uint)right.I32; break;
+                                case StackType.I64: jmp = (ulong)left.I64 >= (ulong)right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 >= (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = (ulong)(long)left.Ptr >= (ulong)(long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (ulong)(long)left.Ptr >= (ulong)(long)right.Ptr; break;
+                                case StackType.F32: jmp = !(left.F32 < right.F32); break; // Handle NaN properly
+                                case StackType.F64: jmp = !(left.F64 < right.F64); break; // Handle NaN properly
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with >=
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Bge_un:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = (uint)left.I32 >= (uint)right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 >= (uint)right.I32; break;
+                                case StackType.I64: jmp = (ulong)left.I64 >= (ulong)right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 >= (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = (ulong)(long)left.Ptr >= (ulong)(long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (ulong)(long)left.Ptr >= (ulong)(long)right.Ptr; break;
+                                case StackType.F32: jmp = !(left.F32 < right.F32); break; // Handle NaN properly
+                                case StackType.F64: jmp = !(left.F64 < right.F64); break; // Handle NaN properly
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with >=
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Bgt_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 > right.I32; break;
+                                case StackType.U32: jmp = left.I32 > right.I32; break; // Treat as signed
+                                case StackType.I64: jmp = left.I64 > right.I64; break;
+                                case StackType.U64: jmp = left.I64 > right.I64; break; // Treat as signed
+                                case StackType.Ptr: jmp = (long)left.Ptr > (long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (long)left.Ptr > (long)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 > right.F32; break;
+                                case StackType.F64: jmp = left.F64 > right.F64; break;
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with >
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Bgt:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 > right.I32; break;
+                                case StackType.U32: jmp = left.I32 > right.I32; break; // Treat as signed
+                                case StackType.I64: jmp = left.I64 > right.I64; break;
+                                case StackType.U64: jmp = left.I64 > right.I64; break; // Treat as signed
+                                case StackType.Ptr: jmp = (long)left.Ptr > (long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (long)left.Ptr > (long)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 > right.F32; break;
+                                case StackType.F64: jmp = left.F64 > right.F64; break;
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with >
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Bgt_un_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = (uint)left.I32 > (uint)right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 > (uint)right.I32; break;
+                                case StackType.I64: jmp = (ulong)left.I64 > (ulong)right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 > (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = (ulong)(long)left.Ptr > (ulong)(long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (ulong)(long)left.Ptr > (ulong)(long)right.Ptr; break;
+                                case StackType.F32: jmp = !(left.F32 <= right.F32); break; // Handle NaN properly
+                                case StackType.F64: jmp = !(left.F64 <= right.F64); break; // Handle NaN properly
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with >
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Bgt_un:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = (uint)left.I32 > (uint)right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 > (uint)right.I32; break;
+                                case StackType.I64: jmp = (ulong)left.I64 > (ulong)right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 > (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = (ulong)(long)left.Ptr > (ulong)(long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (ulong)(long)left.Ptr > (ulong)(long)right.Ptr; break;
+                                case StackType.F32: jmp = !(left.F32 <= right.F32); break; // Handle NaN properly
+                                case StackType.F64: jmp = !(left.F64 <= right.F64); break; // Handle NaN properly
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with >
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Ble_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 <= right.I32; break;
+                                case StackType.U32: jmp = left.I32 <= right.I32; break; // Treat as signed
+                                case StackType.I64: jmp = left.I64 <= right.I64; break;
+                                case StackType.U64: jmp = left.I64 <= right.I64; break; // Treat as signed
+                                case StackType.Ptr: jmp = (long)left.Ptr <= (long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (long)left.Ptr <= (long)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 <= right.F32; break;
+                                case StackType.F64: jmp = left.F64 <= right.F64; break;
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with <=
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Ble:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 <= right.I32; break;
+                                case StackType.U32: jmp = left.I32 <= right.I32; break; // Treat as signed
+                                case StackType.I64: jmp = left.I64 <= right.I64; break;
+                                case StackType.U64: jmp = left.I64 <= right.I64; break; // Treat as signed
+                                case StackType.Ptr: jmp = (long)left.Ptr <= (long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (long)left.Ptr <= (long)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 <= right.F32; break;
+                                case StackType.F64: jmp = left.F64 <= right.F64; break;
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with <=
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Ble_un_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = (uint)left.I32 <= (uint)right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 <= (uint)right.I32; break;
+                                case StackType.I64: jmp = (ulong)left.I64 <= (ulong)right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 <= (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = (ulong)(long)left.Ptr <= (ulong)(long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (ulong)(long)left.Ptr <= (ulong)(long)right.Ptr; break;
+                                case StackType.F32: jmp = !(left.F32 > right.F32); break; // Handle NaN properly
+                                case StackType.F64: jmp = !(left.F64 > right.F64); break; // Handle NaN properly
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with <=
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Ble_un:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = (uint)left.I32 <= (uint)right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 <= (uint)right.I32; break;
+                                case StackType.I64: jmp = (ulong)left.I64 <= (ulong)right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 <= (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = (ulong)(long)left.Ptr <= (ulong)(long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (ulong)(long)left.Ptr <= (ulong)(long)right.Ptr; break;
+                                case StackType.F32: jmp = !(left.F32 > right.F32); break; // Handle NaN properly
+                                case StackType.F64: jmp = !(left.F64 > right.F64); break; // Handle NaN properly
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with <=
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Blt_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 < right.I32; break;
+                                case StackType.U32: jmp = left.I32 < right.I32; break; // Treat as signed
+                                case StackType.I64: jmp = left.I64 < right.I64; break;
+                                case StackType.U64: jmp = left.I64 < right.I64; break; // Treat as signed
+                                case StackType.Ptr: jmp = (long)left.Ptr < (long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (long)left.Ptr < (long)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 < right.F32; break;
+                                case StackType.F64: jmp = left.F64 < right.F64; break;
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with <
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Blt:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = left.I32 < right.I32; break;
+                                case StackType.U32: jmp = left.I32 < right.I32; break; // Treat as signed
+                                case StackType.I64: jmp = left.I64 < right.I64; break;
+                                case StackType.U64: jmp = left.I64 < right.I64; break; // Treat as signed
+                                case StackType.Ptr: jmp = (long)left.Ptr < (long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (long)left.Ptr < (long)right.Ptr; break;
+                                case StackType.F32: jmp = left.F32 < right.F32; break;
+                                case StackType.F64: jmp = left.F64 < right.F64; break;
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with <
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Blt_un_s:
+                        {
+                            // Fetch offset
+                            sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = (uint)left.I32 < (uint)right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 < (uint)right.I32; break;
+                                case StackType.I64: jmp = (ulong)left.I64 < (ulong)right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 < (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = (ulong)(long)left.Ptr < (ulong)(long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (ulong)(long)left.Ptr < (ulong)(long)right.Ptr; break;
+                                case StackType.F32: jmp = !(left.F32 >= right.F32); break; // Handle NaN properly
+                                case StackType.F64: jmp = !(left.F64 >= right.F64); break; // Handle NaN properly
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with <
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
+
+                    case ILOpCode.Blt_un:
+                        {
+                            // Fetch offset
+                            int offset = FetchDecode<int>(instructions, ref pc);
+
+                            // Pop values
+                            StackData right = stack[--sp];
+                            StackData left = stack[--sp];
+
+                            bool jmp = false;
+
+                            switch (left.Type)
+                            {
+                                default: throw new NotSupportedException(left.Type.ToString());
+
+                                case StackType.I32: jmp = (uint)left.I32 < (uint)right.I32; break;
+                                case StackType.U32: jmp = (uint)left.I32 < (uint)right.I32; break;
+                                case StackType.I64: jmp = (ulong)left.I64 < (ulong)right.I64; break;
+                                case StackType.U64: jmp = (ulong)left.I64 < (ulong)right.I64; break;
+                                case StackType.Ptr: jmp = (ulong)(long)left.Ptr < (ulong)(long)right.Ptr; break;
+                                case StackType.UPtr: jmp = (ulong)(long)left.Ptr < (ulong)(long)right.Ptr; break;
+                                case StackType.F32: jmp = !(left.F32 >= right.F32); break; // Handle NaN properly
+                                case StackType.F64: jmp = !(left.F64 >= right.F64); break; // Handle NaN properly
+                                case StackType.Ref: jmp = false; break; // References cannot be compared with <
+                            }
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, offset);
+
+                            // Conditional
+                            if (jmp == true)
+                            {
+                                // Update offset
+                                pc += offset;
+                            }
+                            break;
+                        }
                     #endregion
+
                     #region Indirect
                     case ILOpCode.Ldind_i:
                         {
@@ -2021,29 +2780,6 @@ namespace dotnow.Runtime.CIL
                             Debug.Instruction(op, pc - 1, value);
                             break;
                         }
-
-                    case ILOpCode.Stobj:
-                        {
-                            // Get method token
-                            int token = FetchDecode<int>(instructions, ref pc);
-
-                            // Get handle
-                            EntityHandle typeHandle = MetadataTokens.EntityHandle(token);
-
-                            // Get the type info
-                            CILTypeInfo objType = loadContext.GetTypeHandle(typeHandle);
-
-                            // Pop value and address
-                            StackData value = stack[--sp];
-                            StackData address = stack[--sp];
-
-                            // Write reference
-                            ((IByRef)address.Ref).SetValueRef(value.Ref);
-
-                            // Debug execution
-                            Debug.Instruction(op, pc - 1, value);
-                            break;
-                        }
                     #endregion
 
                     #region Array
@@ -2062,13 +2798,13 @@ namespace dotnow.Runtime.CIL
                             if (stack[sp - 1].Type == StackType.I64)
                             {
                                 // Allocate array long form
-                                GC.AllocateArrayL(loadContext.AppDomain, elementType, stack[sp - 1].I64, ref stack[sp - 1]);
+                                __gc.AllocateArrayL(loadContext.AppDomain, elementType, stack[sp - 1].I64, ref stack[sp - 1]);
                             }
                             // Use int length
                             else
                             {
                                 // Allocate array short form
-                                GC.AllocateArrayS(loadContext.AppDomain, elementType, stack[sp - 1].I32, ref stack[sp - 1]);
+                                __gc.AllocateArrayS(loadContext.AppDomain, elementType, stack[sp - 1].I32, ref stack[sp - 1]);
                             }
 
                             // Log execution
@@ -2760,18 +3496,21 @@ namespace dotnow.Runtime.CIL
                             // Get the stack index where the method arguments were loaded
                             int spArgCaller = sp - ctorMethod.ParameterTypes.Length;
 
-                            // Prepare the call
-                            threadContext.PushMethodFrame(loadContext.AppDomain, ctorMethod, true, spArgCaller, sp, out int spCall);
+                            // Check for interop
+                            bool interop = (ctorMethod.Flags & CILMethodFlags.Interop) != 0;
 
-                            // Create instance at slot
-                            GC.AllocateObject(loadContext.AppDomain, ctorMethod.DeclaringType, ref stack[spCall]);
+                            // Prepare the call
+                            threadContext.PushMethodFrame(loadContext.AppDomain, ctorMethod, interop ? CallInstance.NoInstance : CallInstance.NewObjectInstance, spArgCaller, sp, out int spCall);
 
                             // Debug execution
-                            Debug.Instruction(op, pc - 5, ctorMethod.Method, spCall, ctorMethod.ParameterTypes.Length + 1);
+                            Debug.Instruction(op, pc - 5, ctorMethod.Method, spCall, ctorMethod.ParameterTypes.Length);
 
                             // Execute the method
                             if ((ctorMethod.Flags & CILMethodFlags.Interpreted) != 0)
                             {
+                                // Create the new instance
+                                __gc.AllocateObject(loadContext.AppDomain, ctorMethod.DeclaringType, ref stack[spCall]);
+
                                 // Execute the method
                                 ExecuteMethod(threadContext, ctorLoadContext, ctorMethod, spCall);
                             }
@@ -2779,7 +3518,8 @@ namespace dotnow.Runtime.CIL
                             else if((ctorMethod.Flags & CILMethodFlags.Interop) != 0)
                             {
                                 // Invoke with marshal
-                                __marshal.InvokeConstructorInterop(threadContext, loadContext.AppDomain, ctorMethod.DeclaringType, ctorMethod, spCall);
+                                // The instance may be created by an interop binding, otherwise it will be allocated by the interop ctor
+                                __marshal.InvokeConstructorInterop(threadContext, loadContext.AppDomain, ctorMethod.DeclaringType, ctorMethod, spCall, spCall);
                             }
                             else
                                 throw new NotSupportedException("Constructor cannot be executed: " + ctorMethod);
@@ -2825,7 +3565,7 @@ namespace dotnow.Runtime.CIL
                                 threadContext.Throw<NullReferenceException>();
 
                             // Push the frame
-                            threadContext.PushMethodFrame(loadContext.AppDomain, callMethod, false, spArgCaller, sp, out int spCall);
+                            threadContext.PushMethodFrame(loadContext.AppDomain, callMethod, CallInstance.ExistingObjectInstance, spArgCaller, sp, out int spCall);
                             int spReturn = sp;
 
                             // Debug execution
@@ -2919,6 +3659,29 @@ namespace dotnow.Runtime.CIL
 
                             // Debug execution
                             Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+
+                    case ILOpCode.Stobj:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle typeHandle = MetadataTokens.EntityHandle(token);
+
+                            // Get the type info
+                            CILTypeInfo objType = loadContext.GetTypeHandle(typeHandle);
+
+                            // Pop value and address
+                            StackData value = stack[--sp];
+                            StackData address = stack[--sp];
+
+                            // Write reference
+                            ((IByRef)address.Ref).SetValueRef(value.Ref);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, value);
                             break;
                         }
                         #endregion

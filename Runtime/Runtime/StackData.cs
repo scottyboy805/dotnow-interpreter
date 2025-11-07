@@ -2,6 +2,7 @@
 using dotnow.Reflection;
 using dotnow.Runtime.CIL;
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
@@ -123,7 +124,7 @@ namespace dotnow.Runtime
         public static void Wrap(CILTypeInfo typeInfo, object obj, ref StackData dst)
         {
             // Check for CLR proxy - should be passed as derived instance
-            if(obj is ICLRProxy proxy)
+            if (obj is ICLRProxy proxy)
             {
                 // Pass the actual instance for this case
                 Wrap(typeInfo, proxy.Instance, ref dst);
@@ -392,7 +393,7 @@ namespace dotnow.Runtime
         public static void Unwrap(CILTypeInfo typeInfo, in StackData src, ref object unwrapped)
         {
             // ### Handle by ref
-            if(src.IsByRef == true)
+            if (src.IsByRef == true)
             {
                 // Get the by ref object
                 IByRef byRef = (IByRef)src.Ref;
@@ -512,9 +513,114 @@ namespace dotnow.Runtime
             }
         }
 
+        public static bool TryUnwrapAs<T>(in StackData src, ref T unwrapped) where T : struct
+        {
+            try
+            {
+                // Get the type code of T to determine how to extract the value
+                TypeCode typeCode = System.Type.GetTypeCode(typeof(T));
+
+                switch (typeCode)
+                {
+                    case TypeCode.Boolean:
+                        {
+                            bool value = src.I32 == 1;
+                            unwrapped = Unsafe.As<bool, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.Char:
+                        {
+                            char value = (char)src.I32;
+                            unwrapped = Unsafe.As<char, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.SByte:
+                        {
+                            sbyte value = (sbyte)src.I32;
+                            unwrapped = Unsafe.As<sbyte, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.Byte:
+                        {
+                            byte value = (byte)src.I32;
+                            unwrapped = Unsafe.As<byte, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.Int16:
+                        {
+                            short value = (short)src.I32;
+                            unwrapped = Unsafe.As<short, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.UInt16:
+                        {
+                            ushort value = (ushort)src.I32;
+                            unwrapped = Unsafe.As<ushort, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.Int32:
+                        {
+                            int value = src.I32;
+                            unwrapped = Unsafe.As<int, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.UInt32:
+                        {
+                            uint value = (uint)src.I32;
+                            unwrapped = Unsafe.As<uint, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.Int64:
+                        {
+                            long value = src.I64;
+                            unwrapped = Unsafe.As<long, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.UInt64:
+                        {
+                            ulong value = (ulong)src.I64;
+                            unwrapped = Unsafe.As<ulong, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.Single:
+                        {
+                            float value = src.F32;
+                            unwrapped = Unsafe.As<float, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.Double:
+                        {
+                            double value = src.F64;
+                            unwrapped = Unsafe.As<double, T>(ref value);
+                            break;
+                        }
+                    case TypeCode.Decimal:
+                    case TypeCode.Object:
+                        {
+                            // Try to convert
+                            unwrapped = (T)src.Ref;
+                            break;
+                        }
+                    default:
+                        {
+                            // For non-primitive types or unsupported types, set to default
+                            unwrapped = default;
+                            return false;
+                        }
+                }
+            }
+            catch
+            {
+                // On any error, set to default value
+                unwrapped = default;
+                return false;
+            }
+            return true;
+        }
+
         public static void Box(CILTypeInfo typeInfo, ref StackData obj)
         {
-            switch(typeInfo.TypeCode)
+            switch (typeInfo.TypeCode)
             {
                 default: throw new NotSupportedException(typeInfo.ToString());
 
@@ -636,7 +742,7 @@ namespace dotnow.Runtime
                 case TypeCode.Object:
                     {
                         // Check for value type
-                        if((typeInfo.Flags & CILTypeFlags.ValueType) != 0)
+                        if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0)
                         {
                             // Create default instance
                             dst.Ref = FormatterServices.GetUninitializedObject(typeInfo.Type);
@@ -655,8 +761,8 @@ namespace dotnow.Runtime
         internal static void CopyFrame(CILTypeInfo typeInfo, in StackData src, ref StackData dst)
         {
             // Check for value type but not a primitive
-            if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0 
-                && (typeInfo.Flags & CILTypeFlags.PrimitiveType) == 0 
+            if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0
+                && (typeInfo.Flags & CILTypeFlags.PrimitiveType) == 0
                 && src.Type == StackType.Ref)
             {
                 // Perform value type copy

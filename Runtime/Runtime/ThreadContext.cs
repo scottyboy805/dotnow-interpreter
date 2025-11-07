@@ -12,6 +12,13 @@ using System.Threading;
 
 namespace dotnow.Runtime
 {
+    internal enum CallInstance
+    {
+        NoInstance,
+        NewObjectInstance,
+        ExistingObjectInstance
+    }
+
     internal sealed class ThreadContext
     {
         // Type
@@ -109,80 +116,6 @@ namespace dotnow.Runtime
             ExceptionDispatchInfo.Capture(e).Throw();
         }
 
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //public unsafe void PushCall(in CILMethodHandle method)
-        //{
-        //    callStack.Push(new CallContext(method, managedStack.Count));
-
-        //    // Increment call depth
-        //    callDepth++;
-        //}
-
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //public unsafe void PopCall(out CILMethodHandle method)
-        //{
-        //    // Check for any
-        //    if (callStack.Count == 0)
-        //        throw new InvalidOperationException("No call loaded onto stack");
-
-        //    // Pop from stack
-        //    CallContext call = callStack.Pop();
-
-        //    // Return to previous call
-        //    method = call.Method;
-            
-        //    if (callDepth > 1)
-        //    {
-        //        // Pop managed stack - allow references to be reclaimed by gc
-        //        while (managedStack.Count > call.ManagedStackOffset)
-        //            managedStack.RemoveAt(managedStack.Count - 1);
-        //    }
-
-        //    // Decrement call depth
-        //    callDepth--;
-        //}
-
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //public unsafe void PushManagedObject(StackTypeCode type, object obj, StackData* sp)
-        //{
-        //    // Check type
-        //    if (type != StackTypeCode.ManagedStackValueTypeReference && type != StackTypeCode.ManagedStackClassReference)
-        //        throw new InvalidOperationException("Not a valid managed stack object");
-
-        //    // Check for null
-        //    if (type == StackTypeCode.ManagedStackValueTypeReference && obj == null)
-        //        throw new InvalidOperationException("Object cannot be null when a value type is specified");
-
-        //    // Check for null - we can save growing the managed stack unnecessarily
-        //    if(type == StackTypeCode.ManagedStackClassReference && obj == null)
-        //    {
-        //        // Set stack object to a null reference
-        //        sp->Type = type;
-        //        sp->Register = 0;
-        //        sp->Ptr = IntPtr.Zero;
-
-        //        // Exit early
-        //        return;
-        //    }
-
-        //    // Get stack index
-        //    int index = managedStack.Count;
-
-        //    // Push stack object
-        //    managedStack.Add(obj);
-
-        //    // Update pushed object
-        //    sp->Type = type;
-        //    sp->Register = index;
-        //    sp->Ptr = IntPtr.Zero;
-        //}
-
-        //public void ClearManagedStack()
-        //{
-        //    managedStack.Clear();
-        //    managedStack.Add(null);
-        //}
-
         public void PushReflectionMethodFrame(AppDomain appDomain, in CILMethodInfo methodHandle, object instance, object[] args, out int spArg)
         {
             int sp = 0;
@@ -199,7 +132,7 @@ namespace dotnow.Runtime
             }
 
             // Push the frame
-            PushMethodFrame(appDomain, methodHandle, false, 0, 0, out spArg);
+            PushMethodFrame(appDomain, methodHandle, CallInstance.ExistingObjectInstance, 0, 0, out spArg);
         }
 
         /// <summary>
@@ -209,7 +142,7 @@ namespace dotnow.Runtime
         /// <param name="body"></param>
         /// <param name="spArg">The stack address where arguments passed into this method begin. Arguments will be copied from this location into the new method frame</param>
         /// <param name="sp">The stack pointer where the evaluation stack for the new frame begins</param>
-        public void PushMethodFrame(AppDomain appDomain, in CILMethodInfo methodInfo, bool isNewObj, int spArgCaller, int spCaller, out int spArg)
+        public void PushMethodFrame(AppDomain appDomain, in CILMethodInfo methodInfo, CallInstance pushThis, int spArgCaller, int spCaller, out int spArg)
         {
             // Get instance and argument size
             int requiredStackArgInst = methodInfo.ParameterTypes.Length;
@@ -235,10 +168,11 @@ namespace dotnow.Runtime
             // Copy instance
             int srcOffset = 0;
             int dstOffset = 0;
-            if((methodInfo.Flags & CILMethodFlags.This) != 0)
+            if((methodInfo.Flags & CILMethodFlags.This) != 0 && pushThis != CallInstance.NoInstance) //isNewObj == false)
             {
                 // No instance is provided for constructors
-                if (isNewObj == false)
+                //if (isNewObj == false)
+                if(pushThis == CallInstance.ExistingObjectInstance)
                 {
                     // Copy the instance
                     StackData.CopyFrame(methodInfo.DeclaringType, stack[spArgCaller], ref stack[spArg]);

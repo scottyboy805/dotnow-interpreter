@@ -57,8 +57,13 @@ namespace dotnow.Interop
             // Check bounds
             CheckArgBounds(offset);
 
-            // Get managed object
-            return (T)stackArguments[offset].Ref;
+            // Try to unwrap the value
+            T val = default;
+            if (StackData.TryUnwrapAs(stackArguments[offset], ref val) == false)
+                throw new InvalidOperationException($"Attempt to read argument '{offset}' as type: '{typeof(T)}', but it is stored on the stack as '{stackArguments[offset].Type}'");
+
+            // Get the value
+            return val;
         }
 
         public StackType ReadArgStackType(int offset)

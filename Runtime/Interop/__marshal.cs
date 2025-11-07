@@ -52,7 +52,7 @@ namespace dotnow.Interop
             field.Field.SetValue(unwrappedInstance, unwrappedValue);
         }
 
-        public static void InvokeConstructorInterop(ThreadContext threadContext, AppDomain appDomain, in CILTypeInfo type, in CILMethodInfo ctor, int spArg)
+        public static void InvokeConstructorInterop(ThreadContext threadContext, AppDomain appDomain, in CILTypeInfo type, in CILMethodInfo ctor, int spReturn, int spArg)
         {
             // Check for delegate
             if((ctor.Flags & CILMethodFlags.DirectInstanceDelegate) != 0)
@@ -62,7 +62,7 @@ namespace dotnow.Interop
 
                 // Create spans for view of stack argument and return slots
                 Span<StackData> stackArgs = new Span<StackData>(threadContext.stack, spArg, argCount);
-                Span<StackData> stackReturn = default;
+                Span<StackData> stackReturn = new Span<StackData>(threadContext.stack, spReturn, 1);
 
                 // Create the stack context
                 StackContext directCallContext = new StackContext(appDomain, stackArgs, stackReturn);
@@ -86,10 +86,9 @@ namespace dotnow.Interop
                 object instance = null;
                 object[] paramList = GetParameterList(ctor.ParameterTypes.Length);
 
-
-                // Load instance
-                StackData.Unwrap(type, threadContext.stack[spArg], ref instance);
-                spArg++;
+                //// Load instance
+                //StackData.Unwrap(type, defaultInstance, ref instance);
+                //spArg++;
 
                 // Copy parameters
                 if ((ctor.Flags & CILMethodFlags.Parameters) != 0)
@@ -104,8 +103,30 @@ namespace dotnow.Interop
                     }
                 }
 
-                // Reflection invoke - do not pass instance because it should be created as part of the call
-                ((ConstructorInfo)ctor.Method).Invoke(instance, paramList);
+                // Create instance
+                StackData defaultInstance = default;
+
+                // Check for multi array
+                if ((type.Flags & CILTypeFlags.MultiArray) != 0)
+                {
+                    // Invoke ctor
+                    instance = ((ConstructorInfo)ctor.Method).Invoke(paramList);
+                }
+                // Must be object
+                else
+                {
+                    // Create instance of object
+                    __gc.AllocateObject(appDomain, type, ref defaultInstance);
+
+                    // Unwrap instance
+                    StackData.Unwrap(type, defaultInstance, ref instance);
+
+                    // Reflection invoke - do not pass instance because it should be created as part of the call
+                    ((ConstructorInfo)ctor.Method).Invoke(instance, paramList);
+                }
+
+                // Wrap the instance for return
+                StackData.Wrap(type, instance, ref threadContext.stack[spReturn]);
             }
         }
 
@@ -232,7 +253,7 @@ namespace dotnow.Interop
                     StackData.Wrap(thisTypeInfo, instance, ref threadContext.stack[spFirstArg]);
                 }
 
-                // TODO - marshal by ref arguments in a similar way
+                // For byRef parameters we need to write the interop result value back to the by ref stack location
                 for(int i = 0; i < method.ParameterTypes.Length; i++)
                 {
                     // Check for by ref

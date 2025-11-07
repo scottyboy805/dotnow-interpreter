@@ -47,6 +47,7 @@ namespace dotnow.Examples
 
             // Add component - cannot use 'gameObject.AddComponent' because it would crash the engine.
             //OverrideBindings.AddComponentOverride(domain, null, gameObject, new object[] { mainType });
+            MonoBehaviourProxy.AddComponent(domain, mainType, gameObject);
 
             // IMPORTANT - This is required to keep the following Instatiate methods in the build, otherwise Unity will optimize them out and they will not generate AOT code.
             // This is the best workaround for the moment but is not ideal. Hopefully this can be replaced by direct call bindings at some point if bindings can support generic types.

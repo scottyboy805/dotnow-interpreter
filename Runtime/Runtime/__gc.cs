@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 
 namespace dotnow.Runtime
 {
-    internal static class GC
+    internal static class __gc
     {
         // Methods
         public static void AllocateArrayS(AppDomain domain, CILTypeInfo elementType, int length, ref StackData dst)
