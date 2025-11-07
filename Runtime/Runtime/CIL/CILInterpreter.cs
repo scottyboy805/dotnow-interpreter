@@ -2529,6 +2529,38 @@ namespace dotnow.Runtime.CIL
                             }
                             break;
                         }
+
+                    case ILOpCode.Switch:
+                        {
+                            int pcStart = pc;
+
+                            // Get the number of switch cases
+                            int length = FetchDecode<int>(instructions, ref pc);
+                            int offset = 0; // Fall through??
+
+                            // Pop jump index
+                            StackData index = stack[--sp];
+
+                            // Check bounds
+                            if (index.I32 >= 0 && index.I32 < length)
+                            {
+                                // Calculate the pc where the jump offset is stored
+                                int pcOffset = pc + (sizeof(int) * index.I32);
+
+                                // Try to read the offset from the table
+                                offset = FetchDecode<int>(instructions, ref pcOffset);
+                            }
+
+                            // Update pc to end of the table
+                            pc += sizeof(int) * length;
+
+                            // Jump to offset
+                            pc += offset;
+
+                            // Debug execution
+                            Debug.Instruction(op, pcStart - 1, index);
+                            break;
+                        }
                     #endregion
 
                     #region Indirect
@@ -3662,6 +3694,27 @@ namespace dotnow.Runtime.CIL
                             break;
                         }
 
+                    case ILOpCode.Initobj:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle typeHandle = MetadataTokens.EntityHandle(token);
+
+                            // Get the type info
+                            CILTypeInfo objType = loadContext.GetTypeHandle(typeHandle);
+
+                            // Pop the address
+                            StackData address = stack[--sp];
+
+                            // Init to default
+                            StackData.Default(objType, ref address);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, address);
+                            break;
+                        }
                     case ILOpCode.Stobj:
                         {
                             // Get method token

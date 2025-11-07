@@ -174,6 +174,17 @@ namespace dotnow.Runtime.JIT
                             // Exit early now that we have found the next token
                             return true;
                         }
+                    case ILOperandType.InlineSwitch:
+                        {
+                            // Switch has a variable length table, so we need to read it manually
+                            int length = CILInterpreter.FetchDecode<int>(instructions, ref pc);
+
+                            // Increment counter
+                            length += sizeof(int) * length;
+
+                            // Skip the increment and continue the loop
+                            continue;
+                        }
                 }
 
                 // Increment by operand size

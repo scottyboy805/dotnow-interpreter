@@ -650,10 +650,121 @@ namespace dotnow.Runtime
 
         public static StackData Default(CILTypeInfo typeInfo)
         {
+            // Load default into slot
             StackData dst = default;
+            Default(typeInfo, ref dst);
 
+            return dst;
+        }
+
+        public static void Default(CILTypeInfo typeInfo, ref StackData dst)
+        {
+            // ### Handle by ref
+            if (dst.IsByRef == true)
+            {
+                // Get the by ref object
+                IByRef byRef = (IByRef)dst.Ref;
+
+                switch (typeInfo.TypeCode)
+                {
+                    default: throw new NotSupportedException();
+
+                    case TypeCode.Boolean:
+                        {
+                            byRef.SetValueI1(default);
+                            break;
+                        }
+                    case TypeCode.Char:
+                        {
+                            byRef.SetValueI2(default);
+                            break;
+                        }
+
+                    case TypeCode.SByte:
+                        {
+                            byRef.SetValueI1(default);
+                            break;
+                        }
+                    case TypeCode.Byte:
+                        {
+                            byRef.SetValueI1(default);
+                            break;
+                        }
+                    case TypeCode.Int16:
+                        {
+                            byRef.SetValueI2(default);
+                            break;
+                        }
+                    case TypeCode.UInt16:
+                        {
+                            byRef.SetValueI2(default);
+                            break;
+                        }
+                    case TypeCode.Int32:
+                        {
+                            byRef.SetValueI4(default);
+                            break;
+                        }
+                    case TypeCode.UInt32:
+                        {
+                            byRef.SetValueI4(default);
+                            break;
+                        }
+                    case TypeCode.Int64:
+                        {
+                            byRef.SetValueI8(default);
+                            break;
+                        }
+                    case TypeCode.UInt64:
+                        {
+                            byRef.SetValueI8(default);
+                            break;
+                        }
+                    case TypeCode.Single:
+                        {
+                            byRef.SetValueR4(default);
+                            break;
+                        }
+                    case TypeCode.Double:
+                        {
+                            byRef.SetValueR8(default);
+                            break;
+                        }
+
+                    case TypeCode.Decimal:
+                    case TypeCode.String:
+                    case TypeCode.Object:
+                        {
+                            // Check for value type
+                            if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0)
+                            {
+                                if ((typeInfo.Flags & CILTypeFlags.Interop) != 0)
+                                {
+                                    // Create default instance
+                                    byRef.SetValueRef(FormatterServices.GetUninitializedObject(typeInfo.Type));
+                                }
+                                else
+                                {
+                                    // TODO - Create new value type instance?
+                                    throw new NotImplementedException();
+                                }
+                            }
+                            else
+                            {
+                                byRef.SetValueRef(null);
+                            }
+                            break;
+                        }
+                }
+                return;
+            }
+
+
+            // Handle simple case
             switch (typeInfo.TypeCode)
             {
+                default: throw new NotSupportedException(typeInfo.ToString());
+
                 case TypeCode.Boolean:
                     {
                         dst.Type = StackType.I32;
@@ -744,8 +855,16 @@ namespace dotnow.Runtime
                         // Check for value type
                         if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0)
                         {
-                            // Create default instance
-                            dst.Ref = FormatterServices.GetUninitializedObject(typeInfo.Type);
+                            if ((typeInfo.Flags & CILTypeFlags.Interop) != 0)
+                            {
+                                // Create default instance
+                                dst.Ref = FormatterServices.GetUninitializedObject(typeInfo.Type);
+                            }
+                            else
+                            {
+                                // TODO - Create new value type instance?
+                                throw new NotImplementedException();
+                            }
                         }
                         else
                         {
@@ -755,7 +874,6 @@ namespace dotnow.Runtime
                         break;
                     }
             }
-            return dst;
         }
 
         internal static void CopyFrame(CILTypeInfo typeInfo, in StackData src, ref StackData dst)

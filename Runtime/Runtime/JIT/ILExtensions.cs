@@ -22,6 +22,7 @@ namespace dotnow.Runtime.JIT
         ShortInlineR,           // 4
         InlineI8,               // 8
         InlineR,                // 8
+        InlineSwitch,           // Variable
     }
 
     internal static class ILOpCodeExtensions
@@ -45,6 +46,10 @@ namespace dotnow.Runtime.JIT
         {
             // Get operand type first
             ILOperandType type = op.GetOperandType();
+
+            // Check for switch
+            if (type == ILOperandType.InlineSwitch)
+                throw new InvalidOperationException("Operand InlineSwitch does not have a predetermined size");
 
             // Select size by operand
             return type switch
@@ -168,6 +173,9 @@ namespace dotnow.Runtime.JIT
 
                 // Prefix
                 case ILOpCode.Unaligned: return ILOperandType.ShortInlineVar;
+
+                // Switch
+                case ILOpCode.Switch: return ILOperandType.InlineSwitch;
             }
             return ILOperandType.InlineNone;
         }
