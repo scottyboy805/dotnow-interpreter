@@ -268,6 +268,9 @@ namespace dotnow.Interop
                 // Check for return
                 if ((method.Flags & CILMethodFlags.Return) != 0)
                 {
+                    // Clear return slot so that we do not try to set an old address or something
+                    threadContext.stack[spReturn] = default;
+
                     // Get return type
                     CILTypeInfo returnTypeInfo = method.ReturnType;
 
