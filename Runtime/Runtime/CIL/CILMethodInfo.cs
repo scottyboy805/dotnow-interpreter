@@ -52,7 +52,7 @@ namespace dotnow.Runtime.CIL
         /// <summary>
         /// The type information for the parameter types.
         /// </summary>
-        public readonly CILTypeInfo[] ParameterTypes;
+        public readonly CILTypeInfo[] ParameterTypes;        
         /// <summary>
         /// Contains the default local values for this method.
         /// </summary>

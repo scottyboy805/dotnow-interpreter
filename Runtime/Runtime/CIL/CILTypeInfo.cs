@@ -46,6 +46,10 @@ namespace dotnow.Runtime.CIL
         /// </summary>
         public readonly Type[] InteropImplementationTypes;
         /// <summary>
+        /// The VTable used to get virtual methods from this type.
+        /// </summary>
+        public readonly CILVTable VTable;
+        /// <summary>
         /// The memory where static field data is stored for this type.
         /// </summary>
         public readonly StackData[] StaticFields;
@@ -64,6 +68,10 @@ namespace dotnow.Runtime.CIL
             // Check for CLR
             if((Flags & CILTypeFlags.Interpreted) != 0)
             {
+                // Create VTable
+                if (type.IsSealed == false)
+                    this.VTable = new CILVTable(type);
+
                 // Get the base type
                 this.InteropBaseType = GetInteropBaseType(type);
 

@@ -2820,7 +2820,8 @@ namespace dotnow.Runtime.CIL
                             int spArgCaller = sp - argCount;
 
                             // Check for null
-                            if ((callMethod.Flags & CILMethodFlags.This) != 0 && stack[spArgCaller].Ref == null)
+                            object instance = null;
+                            if ((callMethod.Flags & CILMethodFlags.This) != 0 && (instance = stack[spArgCaller].Ref) == null)
                                 threadContext.Throw<NullReferenceException>();
 
                             // Push the frame
@@ -2834,7 +2835,18 @@ namespace dotnow.Runtime.CIL
                             if ((callMethod.Flags & CILMethodFlags.Interpreted) != 0)
                             {
                                 // Handle virtual calls
-#warning TODO - virtual
+                                // We need to perform late binding based o the instance type, so that the correct derived virtual method is called
+                                if((callMethod.Flags & CILMethodFlags.This) != 0)
+                                {
+                                    // Get instance type
+                                    Type instanceType = instance.GetInterpretedType();
+
+                                    // Get explicit type info
+                                    CILTypeInfo virtualType = instanceType.GetTypeInfo(loadContext.AppDomain);
+
+                                    // Try to get the virtual method
+                                    virtualType.VTable.GetVirtualInstanceMethod(loadContext, ref callMethod);
+                                }
 
                                 // Execute the method
                                 spReturn = ExecuteMethod(threadContext, callLoadContext, callMethod, spCall);
