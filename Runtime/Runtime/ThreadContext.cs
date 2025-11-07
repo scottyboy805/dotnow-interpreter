@@ -27,7 +27,7 @@ namespace dotnow.Runtime
 
 
         // Public
-        public const int DefaultStackSize = 4096;
+        public const int DefaultStackSize = 128;        // Realistically needs to be more, but ok for testing
 
         // Internal
         internal readonly StackData[] stack = default;

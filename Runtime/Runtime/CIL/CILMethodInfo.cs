@@ -30,6 +30,14 @@ namespace dotnow.Runtime.CIL
         InternalCall = 1 << 16,
     }
 
+    [Flags]
+    internal enum CILParameterFlags : uint
+    {
+        None = 0,
+        ByRef = 1 << 1,
+    }
+
+
     internal sealed class CILMethodInfo
     {
         // Public
@@ -52,7 +60,8 @@ namespace dotnow.Runtime.CIL
         /// <summary>
         /// The type information for the parameter types.
         /// </summary>
-        public readonly CILTypeInfo[] ParameterTypes;        
+        public readonly CILTypeInfo[] ParameterTypes;
+        public readonly CILParameterFlags[] ParameterFlags;
         /// <summary>
         /// Contains the default local values for this method.
         /// </summary>
@@ -82,6 +91,7 @@ namespace dotnow.Runtime.CIL
             this.Flags = GetFlags(method, returnType, parameters, out this.InteropCall);
             this.ReturnType = returnType != null ? returnType.GetTypeInfo(domain) : typeof(void).GetTypeInfo(domain);
             this.ParameterTypes = parameters.Select(p => p.ParameterType.GetTypeInfo(domain)).ToArray();
+            this.ParameterFlags = parameters.Select(p => p.ParameterType.IsByRef ? CILParameterFlags.ByRef : 0).ToArray();
 
             // Check for interpreted
             if((Flags & CILMethodFlags.Interpreted) != 0)

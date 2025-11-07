@@ -233,6 +233,16 @@ namespace dotnow.Interop
                 }
 
                 // TODO - marshal by ref arguments in a similar way
+                for(int i = 0; i < method.ParameterTypes.Length; i++)
+                {
+                    // Check for by ref
+                    if ((method.ParameterFlags[i] & CILParameterFlags.ByRef) == 0)
+                        continue;
+
+                    // The argument should be passed by ref
+                    StackData.Wrap(method.ParameterTypes[i], paramList[i], ref threadContext.stack[spArg + i]);
+                }
+
 
                 // Check for return
                 if ((method.Flags & CILMethodFlags.Return) != 0)
