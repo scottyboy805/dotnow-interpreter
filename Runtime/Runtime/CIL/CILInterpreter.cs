@@ -552,8 +552,34 @@ namespace dotnow.Runtime.CIL
                                 threadContext.Throw<NullReferenceException>();
 
                             // Load the field
-                            RuntimeField.GetInstanceFieldDirect(threadContext, loadContext, field, instance, ref stack[sp]);
+                            RuntimeField.GetInstanceFieldDirect(loadContext.AppDomain, field, instance, ref stack[sp]);
                             sp++;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldflda:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle fieldHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
+
+                            // Pop the instance
+                            StackData instance = stack[--sp];
+
+                            // Check for null
+                            if (instance.Ref == null)
+                                threadContext.Throw<NullReferenceException>();
+
+                            // Push the field reference to the stack
+                            stack[sp].Ref = IByRef.MakeByRefInstanceField(loadContext.AppDomain, field, instance);
+                            stack[sp++].Type = StackType.ByRef;
 
                             // Debug execution
                             Debug.Instruction(op, pc - 5, stack[sp - 1]);
@@ -571,8 +597,27 @@ namespace dotnow.Runtime.CIL
                             CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
 
                             // Load the field
-                            RuntimeField.GetStaticFieldDirect(threadContext, loadContext, field, ref stack[sp]);
+                            RuntimeField.GetStaticFieldDirect(loadContext.AppDomain, field, ref stack[sp]);
                             sp++;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Ldsflda:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle fieldHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
+
+                            // Push the field reference to the stack
+                            stack[sp].Ref = IByRef.MakeByRefStaticField(loadContext.AppDomain, field);
+                            stack[sp++].Type = StackType.ByRef;
 
                             // Debug execution
                             Debug.Instruction(op, pc - 5, stack[sp - 1]);
@@ -598,7 +643,7 @@ namespace dotnow.Runtime.CIL
                                 threadContext.Throw<NullReferenceException>();
 
                             // Set the field
-                            RuntimeField.SetInstanceFieldDirect(threadContext, loadContext, field, instance, ref value);
+                            RuntimeField.SetInstanceFieldDirect(loadContext.AppDomain, field, instance, ref value);
 
                             // Debug execution
                             Debug.Instruction(op, pc - 5, value);
@@ -619,7 +664,7 @@ namespace dotnow.Runtime.CIL
                             StackData value = stack[--sp];
 
                             // Load the field
-                            RuntimeField.SetStaticFieldDirect(threadContext, loadContext, field, ref value);
+                            RuntimeField.SetStaticFieldDirect(loadContext.AppDomain, field, ref value);
 
                             // Debug execution
                             Debug.Instruction(op, pc - 5, value);

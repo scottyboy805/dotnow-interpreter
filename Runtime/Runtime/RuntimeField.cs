@@ -8,33 +8,28 @@ namespace dotnow.Runtime
     internal readonly ref struct RuntimeField
     {
         // Private
-        private readonly ThreadContext threadContext;
-        private readonly AssemblyLoadContext assemblyLoadContext;
+        private readonly AppDomain appDomain;
         private readonly CILFieldInfo fieldInfo;
 
         // Constructor
-        public RuntimeField(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILFieldInfo fieldInfo)
+        public RuntimeField(AppDomain appDomain, in CILFieldInfo fieldInfo)
         {
             // Check for null
-            if (threadContext == null)
-                throw new ArgumentNullException(nameof(threadContext));
-
-            if (assemblyLoadContext == null)
-                throw new ArgumentNullException(nameof(assemblyLoadContext));
+            if (appDomain == null)
+                throw new ArgumentNullException(nameof(appDomain));
 
             if (fieldInfo == null)
                 throw new ArgumentNullException(nameof(fieldInfo));
 
-            this.threadContext = threadContext;
-            this.assemblyLoadContext = assemblyLoadContext;
+            this.appDomain = appDomain;
             this.fieldInfo = fieldInfo;
         }
 
         // Methods
-        public void ReflectionSetField(object instance, object value)
+        public void ReflectionSetField(ThreadContext threadContext, object instance, object value)
         {
             // Check write
-            CheckFieldWrite();
+            CheckFieldWrite(threadContext);
 
             // Check for instance
             if ((fieldInfo.Flags & CILFieldFlags.This) != 0 && instance == null)
@@ -63,16 +58,16 @@ namespace dotnow.Runtime
             if ((fieldInfo.Flags & CILFieldFlags.This) != 0)
             {
                 // Set instance field
-                SetInstanceFieldDirect(threadContext, assemblyLoadContext, fieldInfo, inst, ref val);
+                SetInstanceFieldDirect(appDomain, fieldInfo, inst, ref val);
             }
             else
             {
                 // Set static field
-                SetStaticFieldDirect(threadContext, assemblyLoadContext, fieldInfo, ref val);
+                SetStaticFieldDirect(appDomain, fieldInfo, ref val);
             }
         }
 
-        public object ReflectionGetField(object instance)
+        public object ReflectionGetField(ThreadContext threadContext, object instance)
         {
             // Check for instance
             if ((fieldInfo.Flags & CILFieldFlags.This) != 0 && instance == null)
@@ -102,12 +97,12 @@ namespace dotnow.Runtime
             if ((fieldInfo.Flags & CILFieldFlags.This) != 0)
             {
                 // Set instance field
-                GetInstanceFieldDirect(threadContext, assemblyLoadContext, fieldInfo, inst, ref val);
+                GetInstanceFieldDirect(appDomain, fieldInfo, inst, ref val);
             }
             else
             {
                 // Set static field
-                GetStaticFieldDirect(threadContext, assemblyLoadContext, fieldInfo, ref val);
+                GetStaticFieldDirect(appDomain, fieldInfo, ref val);
             }
 
             // Unwrap to managed object
@@ -118,7 +113,7 @@ namespace dotnow.Runtime
             return unwrapped;
         }
 
-        internal static void SetInstanceFieldDirect(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, CILFieldInfo fieldInfo, in StackData instance, ref StackData value)
+        internal static void SetInstanceFieldDirect(AppDomain appDomain, CILFieldInfo fieldInfo, in StackData instance, ref StackData value)
         {
             // Get the type handle
             CILTypeInfo fieldTypeInfo = fieldInfo.FieldType;
@@ -127,7 +122,7 @@ namespace dotnow.Runtime
             if ((fieldInfo.Flags & CILFieldFlags.Interop) != 0)
             {
                 // Set interop field value
-                __marshal.SetFieldInterop(threadContext, assemblyLoadContext, fieldInfo, instance, ref value);
+                __marshal.SetFieldInterop(appDomain, fieldInfo, instance, ref value);
             }
             // Check for interpreted
             else if ((fieldInfo.Flags & CILFieldFlags.Interpreted) != 0)
@@ -149,7 +144,7 @@ namespace dotnow.Runtime
                 throw new NotSupportedException(instance.Type.ToString());
         }
 
-        internal static void SetStaticFieldDirect(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, CILFieldInfo fieldInfo, ref StackData value)
+        internal static void SetStaticFieldDirect(AppDomain appDomain, CILFieldInfo fieldInfo, ref StackData value)
         {
             // Get the type handle
             CILTypeInfo fieldTypeInfo = fieldInfo.FieldType;
@@ -162,7 +157,7 @@ namespace dotnow.Runtime
             if ((fieldInfo.Flags & CILFieldFlags.Interop) != 0)
             {
                 // Get interop field value
-                __marshal.SetFieldInterop(threadContext, assemblyLoadContext, fieldInfo, default, ref value);
+                __marshal.SetFieldInterop(appDomain, fieldInfo, default, ref value);
             }
             // Check for interpreted
             else if ((fieldInfo.Flags & CILFieldFlags.Interpreted) != 0)
@@ -181,7 +176,7 @@ namespace dotnow.Runtime
                 throw new NotSupportedException(fieldInfo.ToString());
         }
 
-        internal static void GetInstanceFieldDirect(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILFieldInfo fieldInfo, in StackData instance, ref StackData value)
+        internal static void GetInstanceFieldDirect(AppDomain appDomain, in CILFieldInfo fieldInfo, in StackData instance, ref StackData value)
         {
             // Get the type handle
             CILTypeInfo fieldTypeInfo = fieldInfo.FieldType;
@@ -190,7 +185,7 @@ namespace dotnow.Runtime
             if ((fieldInfo.Flags & CILFieldFlags.Interop) != 0)
             {
                 // Get interop field value
-                __marshal.GetFieldInterop(threadContext, assemblyLoadContext, fieldInfo, instance, ref value);
+                __marshal.GetFieldInterop(appDomain, fieldInfo, instance, ref value);
             }
             // Check for interpreted
             else if ((fieldInfo.Flags & CILFieldFlags.Interpreted) != 0)
@@ -212,7 +207,7 @@ namespace dotnow.Runtime
                 throw new NotSupportedException(instance.Type.ToString());
         }
 
-        internal static void GetStaticFieldDirect(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILFieldInfo fieldInfo, ref StackData value)
+        internal static void GetStaticFieldDirect(AppDomain appDomain, in CILFieldInfo fieldInfo, ref StackData value)
         {
             // Get the type handle
             CILTypeInfo fieldTypeInfo = fieldInfo.FieldType;
@@ -225,7 +220,7 @@ namespace dotnow.Runtime
             if ((fieldInfo.Flags & CILFieldFlags.Interop) != 0)
             {
                 // Get interop field value
-                __marshal.GetFieldInterop(threadContext, assemblyLoadContext, fieldInfo, default, ref value);
+                __marshal.GetFieldInterop(appDomain, fieldInfo, default, ref value);
             }
             // Check for interpreted
             else if ((fieldInfo.Flags & CILFieldFlags.Interpreted) != 0)
@@ -244,7 +239,7 @@ namespace dotnow.Runtime
                 throw new NotSupportedException(fieldInfo.ToString());
         }
 
-        private void CheckFieldWrite()
+        private void CheckFieldWrite(ThreadContext threadContext)
         {
             // Check for const
             if ((fieldInfo.Flags & CILFieldFlags.Constant) != 0)

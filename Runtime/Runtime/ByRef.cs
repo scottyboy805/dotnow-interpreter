@@ -1,4 +1,6 @@
-﻿using System;
+﻿using dotnow.Runtime.CIL;
+using System;
+using System.Reflection;
 
 namespace dotnow.Runtime
 {
@@ -7,9 +9,9 @@ namespace dotnow.Runtime
         // Type
         private readonly struct ByRefStack : IByRef
         {
-            // Private
-            private readonly StackData[] Stack;
-            private readonly int Index;
+            // Public
+            public readonly StackData[] Stack;
+            public readonly int Index;
 
             // Constructor
             public ByRefStack(StackData[] stack, int index)
@@ -89,6 +91,84 @@ namespace dotnow.Runtime
             public void SetValueR8(double value) => ((double[])Array)[Index] = value;
         }
 
+        private readonly struct ByRefField : IByRef
+        {
+            // Public             
+            public readonly AppDomain AppDomain;
+            public readonly CILFieldInfo Field;
+            public readonly StackData Instance;
+
+            // Constructor
+            public ByRefField(AppDomain appDomain, CILFieldInfo field, StackData instance)
+            {
+                AppDomain = appDomain;
+                this.Field = field;
+                this.Instance = instance;
+            }
+
+            // Methods
+            public override string ToString()
+            {
+                return $"ByRef Field({Field}) = {ReadField()}";
+            }
+
+            public object GetValueRef() => ReadField().Ref;
+            public IntPtr GetValueI() => ReadField().Ptr;
+            public sbyte GetValueI1() => (sbyte)ReadField().I32;
+            public short GetValueI2() => (short)ReadField().I32;
+            public int GetValueI4() => ReadField().I32;
+            public long GetValueI8() => ReadField().I64;
+            public byte GetValueU1() => (byte)ReadField().I32;
+            public ushort GetValueU2() => (ushort)ReadField().I32;
+            public uint GetValueU4() => (uint)ReadField().I32;
+            public ulong GetValueU8() => (ulong)ReadField().I64;
+            public float GetValueR4() => ReadField().F32;
+            public double GetValueR8() => ReadField().F64;
+
+            public void SetValueRef(object value) => SetFieldRef(new StackData { Type = StackType.Ref, Ref = value });
+            public void SetValueI(IntPtr value) => SetFieldRef(new StackData { Type = StackType.Ptr, Ptr = value });
+            public void SetValueI1(sbyte value) => SetFieldRef(new StackData { Type = StackType.I32, I32 = value });
+            public void SetValueI2(short value) => SetFieldRef(new StackData { Type = StackType.I32, I32 = value });
+            public void SetValueI4(int value) => SetFieldRef(new StackData { Type = StackType.I32, I32 = value });
+            public void SetValueI8(long value) => SetFieldRef(new StackData { Type = StackType.I64, I64 = value });
+            public void SetValueR4(float value) => SetFieldRef(new StackData { Type = StackType.F32, F32 = value });
+            public void SetValueR8(double value) => SetFieldRef(new StackData { Type = StackType.F64, F64 = value });
+
+            private StackData ReadField()
+            {
+                StackData val = default;
+                
+                // Check for static or instance
+                if((Field.Flags & CILFieldFlags.This) != 0)
+                {
+                    // Read the instance field value
+                    RuntimeField.GetInstanceFieldDirect(AppDomain, Field, Instance, ref val);
+                }
+                else
+                {
+                    // Read the static value
+                    RuntimeField.GetStaticFieldDirect(AppDomain, Field, ref val);
+                }
+
+                return val;
+            }
+
+            private void SetFieldRef(StackData val)
+            {
+                // Check for static or instance
+                if ((Field.Flags & CILFieldFlags.This) != 0)
+                {
+                    // Read the instance field value
+                    RuntimeField.SetInstanceFieldDirect(AppDomain, Field, Instance, ref val);
+                }
+                else
+                {
+                    // Read the static value
+                    RuntimeField.SetStaticFieldDirect(AppDomain, Field, ref val);
+                }
+            }
+        }
+
         #region GetValue
         object GetValueRef();
         IntPtr GetValueI();
@@ -123,6 +203,16 @@ namespace dotnow.Runtime
         public static IByRef MakeByRefElement(Array array, int index)
         {
             return new ByRefElement(array, index);
+        }
+
+        public static IByRef MakeByRefInstanceField(AppDomain appDomain, CILFieldInfo field, StackData instance)
+        {
+            return new ByRefField(appDomain, field, instance);
+        }
+
+        public static IByRef MakeByRefStaticField(AppDomain appDomain, CILFieldInfo field)
+        {
+            return new ByRefField(appDomain, field, default);
         }
     }
 }

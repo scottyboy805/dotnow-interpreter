@@ -21,12 +21,12 @@ namespace dotnow.Interop
         private static readonly ThreadLocal<Dictionary<int, object[]>> parameterListCache = new (() => new ());
 
         // Methods
-        public static void GetFieldInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILFieldInfo field, in StackData instance, ref StackData value)
+        public static void GetFieldInterop(AppDomain appDomain, in CILFieldInfo field, in StackData instance, ref StackData value)
         {
             throw new NotImplementedException();
         }
 
-        public static void SetFieldInterop(ThreadContext threadContext, AssemblyLoadContext assemblyLoadContext, in CILFieldInfo field, in StackData instance, ref StackData value)
+        public static void SetFieldInterop(AppDomain appDomain, in CILFieldInfo field, in StackData instance, ref StackData value)
         {
             throw new NotImplementedException();
         }

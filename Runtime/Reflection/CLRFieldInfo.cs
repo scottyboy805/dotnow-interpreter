@@ -118,10 +118,10 @@ namespace dotnow.Reflection
 
             {
                 // Create runtime field
-                RuntimeField runtimeField = new RuntimeField(threadContext, AssemblyLoadContext, fieldInfo);
+                RuntimeField runtimeField = new RuntimeField(metadataProvider.AppDomain, fieldInfo);
 
                 // Get value
-                return runtimeField.ReflectionGetField(obj);
+                return runtimeField.ReflectionGetField(threadContext, obj);
             }
         }
 
@@ -136,10 +136,10 @@ namespace dotnow.Reflection
 
             {
                 // Create runtime field
-                RuntimeField runtimeField = new RuntimeField(threadContext, AssemblyLoadContext, fieldInfo);
+                RuntimeField runtimeField = new RuntimeField(metadataProvider.AppDomain, fieldInfo);
 
                 // Get value
-                runtimeField.ReflectionSetField(obj, value);
+                runtimeField.ReflectionSetField(threadContext, obj, value);
             }
         }
         #endregion
