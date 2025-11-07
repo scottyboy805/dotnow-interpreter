@@ -4,7 +4,6 @@ using dotnow.Runtime;
 using dotnow.Runtime.CIL;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -191,6 +190,34 @@ namespace dotnow
             }
         }
 
+        public ICLRInstance CreateInstanceFromProxy(Type type, ICLRProxy proxy)
+        {
+            // Check for null
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+
+            if (proxy == null)
+                throw new ArgumentNullException(nameof(proxy));
+
+            // Check for interop type
+            if (type is not CLRType)
+                throw new ArgumentException("Type must be a CLR type");
+
+            // Get the type handle
+            CILTypeInfo typeInfo = type.GetTypeInfo(this);
+
+            // Create instance
+            ICLRInstance instance = CLRTypeInstance.CreateInstanceFromProxy(this, typeInfo, proxy);
+
+            // Try to find default constructor
+            MethodBase ctor = type.GetConstructor(Type.EmptyTypes);
+
+            // Run default ctor
+            RunInitializer(instance, ctor, null);
+
+            return instance;
+        }
+
         private object CreateCLRInstance(CLRType clrType, MethodBase ctor, object[] args)
         {
             // Check for abstract
@@ -216,12 +243,8 @@ namespace dotnow
                 // Create type instance
                 CLRTypeInstance instance = CLRTypeInstance.CreateInstance(this, typeInfo);
 
-                // Check for constructor provided
-                if(ctor != null)
-                {
-                    // Run constructor
-                    ctor.Invoke(instance, args);
-                }
+                // Run constructor
+                RunInitializer(instance, ctor, args);
 
                 // Get instance
                 return instance;
@@ -230,25 +253,15 @@ namespace dotnow
             throw new NotSupportedException(clrType.ToString());
         }
 
-        public ICLRInstance CreateInstanceFromProxy(Type type, ICLRProxy proxy)
+        private void RunInitializer(ICLRInstance instance, MethodBase ctor, object[] args)
         {
-            // Check for null
-            if(type == null)
-                throw new ArgumentNullException(nameof(type));
+            // Check for none
+            if (ctor == null)
+                return;
 
-            if (proxy == null)
-                throw new ArgumentNullException(nameof(proxy));
-
-            // Check for interop type
-            if (type is not CLRType)
-                throw new ArgumentException("Type must be a CLR type");
-
-            // Get the type handle
-            CILTypeInfo typeInfo = type.GetTypeInfo(this);
-
-            // Create instance
-            return CLRTypeInstance.CreateInstanceFromProxy(this, typeInfo, proxy);
-        }
+            // Invoke the constructor
+            ctor.Invoke(instance, args);
+        }        
         #endregion
 
         #region LoadAssembly

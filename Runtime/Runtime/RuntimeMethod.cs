@@ -56,7 +56,7 @@ namespace dotnow.Runtime
                 CILTypeInfo returnTypeInfo = methodInfo.ReturnType;
 
                 // Attempt to unwrap the resulting type for interop
-                StackData.Unwrap(returnTypeInfo, ref threadContext.stack[spReturn], ref returnValue);
+                StackData.Unwrap(returnTypeInfo, threadContext.stack[spReturn], ref returnValue);
             }
 
             // No return value

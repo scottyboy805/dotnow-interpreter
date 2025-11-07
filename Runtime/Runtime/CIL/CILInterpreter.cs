@@ -2696,7 +2696,7 @@ namespace dotnow.Runtime.CIL
 
                             // Unwrap the value and store it in the array
                             object unwrappedValue = null;
-                            StackData.Unwrap(elementType, ref value, ref unwrappedValue);
+                            StackData.Unwrap(elementType, value, ref unwrappedValue);
                             array.SetValue(unwrappedValue, explicitIndex);
 
                             // Debug execution

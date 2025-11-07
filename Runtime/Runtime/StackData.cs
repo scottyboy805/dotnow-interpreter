@@ -389,7 +389,7 @@ namespace dotnow.Runtime
             }
         }
 
-        public static void Unwrap(CILTypeInfo typeInfo, ref StackData src, ref object unwrapped)
+        public static void Unwrap(CILTypeInfo typeInfo, in StackData src, ref object unwrapped)
         {
             // ### Handle by ref
             if(src.IsByRef == true)

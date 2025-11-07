@@ -84,7 +84,7 @@ namespace dotnow.Runtime
 
             // Get the type - context is not needed here because the enum value should never be and object, but only a primitive integer type
             object unwrapped = null;
-            StackData.Unwrap(typeInfo, ref tempValue, ref unwrapped);
+            StackData.Unwrap(typeInfo, tempValue, ref unwrapped);
 
             return unwrapped;
         }
@@ -126,7 +126,7 @@ namespace dotnow.Runtime
 
             // Get default unwrapped
             object unwrapped = default;
-            StackData.Unwrap(typeInfo, ref tempValue, ref unwrapped);
+            StackData.Unwrap(typeInfo, tempValue, ref unwrapped);
 
             return unwrapped;
         }

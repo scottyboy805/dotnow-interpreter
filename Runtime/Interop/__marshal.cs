@@ -23,12 +23,33 @@ namespace dotnow.Interop
         // Methods
         public static void GetFieldInterop(AppDomain appDomain, in CILFieldInfo field, in StackData instance, ref StackData value)
         {
-            throw new NotImplementedException();
+            // Wrap the instance
+            object unwrappedInstance = null;
+
+            // Unwrap the instance
+            StackData.Unwrap(field.DeclaringType, instance, ref unwrappedInstance);
+
+            // Get the value
+            object unwrappedValue = field.Field.GetValue(unwrappedInstance);
+
+            // Wrap the value
+            StackData.Wrap(field.FieldType, unwrappedValue, ref value);
         }
 
         public static void SetFieldInterop(AppDomain appDomain, in CILFieldInfo field, in StackData instance, ref StackData value)
         {
-            throw new NotImplementedException();
+            // Wrap the instance
+            object unwrappedInstance = null;
+            object unwrappedValue = null;
+
+            // Unwrap the instance
+            StackData.Unwrap(field.DeclaringType, instance, ref unwrappedInstance);
+
+            // Unwrap the value
+            StackData.Unwrap(field.FieldType, value, ref unwrappedValue);
+
+            // Set the value
+            field.Field.SetValue(unwrappedInstance, unwrappedValue);
         }
 
         public static void InvokeConstructorInterop(ThreadContext threadContext, AppDomain appDomain, in CILTypeInfo type, in CILMethodInfo ctor, int spArg)
@@ -67,7 +88,7 @@ namespace dotnow.Interop
 
 
                 // Load instance
-                StackData.Unwrap(type, ref threadContext.stack[spArg], ref instance);
+                StackData.Unwrap(type, threadContext.stack[spArg], ref instance);
                 spArg++;
 
                 // Copy parameters
@@ -79,7 +100,7 @@ namespace dotnow.Interop
                         CILTypeInfo parameterTypeInfo = ctor.ParameterTypes[i];
 
                         // Load parameter
-                        StackData.Unwrap(parameterTypeInfo, ref threadContext.stack[spArg + i], ref paramList[i]);
+                        StackData.Unwrap(parameterTypeInfo, threadContext.stack[spArg + i], ref paramList[i]);
                     }
                 }
 
@@ -176,7 +197,7 @@ namespace dotnow.Interop
                         : constrainedType;
 
                     // Load instance
-                    StackData.Unwrap(thisTypeInfo, ref threadContext.stack[spArg], ref instance);
+                    StackData.Unwrap(thisTypeInfo, threadContext.stack[spArg], ref instance);
 
                     // Increment ptr to step over instance and start for args
                     spArg++;
@@ -191,7 +212,7 @@ namespace dotnow.Interop
                         CILTypeInfo parameterTypeInfo = method.ParameterTypes[i];
 
                         // Load parameter
-                        StackData.Unwrap(parameterTypeInfo, ref threadContext.stack[spArg + i], ref paramList[i]);
+                        StackData.Unwrap(parameterTypeInfo, threadContext.stack[spArg + i], ref paramList[i]);
                     }
                 }
 

@@ -107,7 +107,7 @@ namespace dotnow.Runtime
 
             // Unwrap to managed object
             object unwrapped = null;
-            StackData.Unwrap(fieldTypeInfo, ref val, ref unwrapped);
+            StackData.Unwrap(fieldTypeInfo, val, ref unwrapped);
 
             // Get result
             return unwrapped;
