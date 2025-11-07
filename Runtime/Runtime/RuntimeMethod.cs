@@ -33,7 +33,7 @@ namespace dotnow.Runtime
 
             // Check for instance
             if ((methodInfo.Flags & CILMethodFlags.This) != 0 && obj == null)
-                throw new NullReferenceException("Instance is null");
+                threadContext.Throw<NullReferenceException>();
 
             // Get stack pointers
             int spArg = 0;
@@ -67,11 +67,11 @@ namespace dotnow.Runtime
         {
             // Check for abstract
             if ((methodInfo.Flags & CILMethodFlags.Abstract) != 0)
-                throw new InvalidOperationException("Cannot invoke and abstract method");
+                threadContext.Throw(new InvalidOperationException("Cannot invoke and abstract method"));
 
             // Check for no body
             if ((methodInfo.Flags & CILMethodFlags.Body) == 0 || (methodInfo.Flags & CILMethodFlags.Native) != 0)
-                throw new InvalidOperationException("Cannot invoke a method that is external or has no body");
+                threadContext.Throw(new InvalidOperationException("Cannot invoke a method that is external or has no body"));
         }
     }
 }

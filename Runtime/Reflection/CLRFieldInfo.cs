@@ -84,7 +84,7 @@ namespace dotnow.Reflection
             PEMemoryBlock memoryBlock = metadataProvider.PEReader.GetSectionData(rva);
 
             // Create the unmanaged memory
-            return memoryBlock.GetReader().ReadBytes(layoutSize);// new UnmanagedMemory<byte>((IntPtr)memoryBlock.Pointer, layoutSize);
+            return memoryBlock.GetReader().ReadBytes(layoutSize);
         }
 
         #region MethodInfoMethods
@@ -105,8 +105,12 @@ namespace dotnow.Reflection
 
         public override object GetValue(object obj)
         {
+            // Ensure the field is resolved
+            metadataProvider.AssemblyLoadContext.ResolveField(handle);
+
+
             // Get execution context
-            ThreadContext threadContext = metadataProvider.AppDomain.GetThreadContext();
+            ThreadContext threadContext = metadataProvider.AppDomain.GetThreadContext();            
 
             // Get field handle and declaring type handles
             CILFieldInfo fieldInfo = this.GetFieldInfo(metadataProvider.AppDomain);

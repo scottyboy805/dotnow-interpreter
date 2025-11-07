@@ -34,7 +34,7 @@ namespace dotnow.Runtime.CIL
 
             // Check overflow - we'll handle this differently since we can't use unsafe
             if (spMax >= threadContext.stack.Length)
-                throw new StackOverflowException();
+                threadContext.Throw<StackOverflowException>();
 
             // Get the instructions
             byte[] instructions = method.Instructions;
@@ -549,7 +549,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check for null
                             if (instance.Ref == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Load the field
                             RuntimeField.GetInstanceFieldDirect(threadContext, loadContext, field, instance, ref stack[sp]);
@@ -595,7 +595,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check for null
                             if (instance.Ref == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Set the field
                             RuntimeField.SetInstanceFieldDirect(threadContext, loadContext, field, instance, ref value);
@@ -865,7 +865,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if (stack[sp].I32 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I32 = stack[sp - 1].I32 / stack[sp].I32;
                                             break;
@@ -874,7 +874,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if (stack[sp].I32 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I32 = stack[sp - 1].I32 / stack[sp].I32; // Treat as signed
                                             break;
@@ -883,7 +883,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if (stack[sp].I64 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I64 = stack[sp - 1].I64 / stack[sp].I64;
                                             break;
@@ -892,7 +892,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if (stack[sp].I64 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I64 = stack[sp - 1].I64 / stack[sp].I64; // Treat as signed
                                             break;
@@ -922,7 +922,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if ((uint)stack[sp].I32 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 / (uint)stack[sp].I32);
                                             break;
@@ -931,7 +931,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if ((uint)stack[sp].I32 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 / (uint)stack[sp].I32);
                                             break;
@@ -940,7 +940,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if ((ulong)stack[sp].I64 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 / (ulong)stack[sp].I64);
                                             break;
@@ -949,7 +949,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if ((ulong)stack[sp].I64 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 / (ulong)stack[sp].I64);
                                             break;
@@ -979,7 +979,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if (stack[sp].I32 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I32 = stack[sp - 1].I32 % stack[sp].I32;
                                             break;
@@ -988,7 +988,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if (stack[sp].I32 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I32 = stack[sp - 1].I32 % stack[sp].I32; // Treat as signed
                                             break;
@@ -997,7 +997,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if (stack[sp].I64 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I64 = stack[sp - 1].I64 % stack[sp].I64;
                                             break;
@@ -1006,7 +1006,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if (stack[sp].I64 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I64 = stack[sp - 1].I64 % stack[sp].I64; // Treat as signed
                                             break;
@@ -1036,7 +1036,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if ((uint)stack[sp].I32 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 % (uint)stack[sp].I32);
                                             break;
@@ -1045,7 +1045,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if ((uint)stack[sp].I32 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 % (uint)stack[sp].I32);
                                             break;
@@ -1054,7 +1054,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if ((ulong)stack[sp].I64 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 % (ulong)stack[sp].I64);
                                             break;
@@ -1063,7 +1063,7 @@ namespace dotnow.Runtime.CIL
                                         {
                                             // Check for divide by zero
                                             if ((ulong)stack[sp].I64 == 0)
-                                                throw new DivideByZeroException();
+                                                threadContext.Throw<DivideByZeroException>();
 
                                             stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 % (ulong)stack[sp].I64);
                                             break;
@@ -1217,6 +1217,132 @@ namespace dotnow.Runtime.CIL
                                     case StackType.I64: stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 * (ulong)stack[sp].I64); break;
                                     case StackType.U64: stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 * (ulong)stack[sp].I64); break;
                                 }
+                            }
+
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    #endregion
+
+                    #region Bitwise
+                    case ILOpCode.And:
+                        {
+                            // Decrement ptr
+                            sp--;
+
+                            switch (stack[sp].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = stack[sp - 1].I32 & stack[sp].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 & (uint)stack[sp].I32); break;
+                                case StackType.I64: stack[sp - 1].I64 = stack[sp - 1].I64 & stack[sp].I64; break;
+                                case StackType.U64: stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 & (ulong)stack[sp].I64); break;
+                            }
+
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Or:
+                        {
+                            // Decrement ptr
+                            sp--;
+
+                            switch (stack[sp].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = stack[sp - 1].I32 | stack[sp].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 | (uint)stack[sp].I32); break;
+                                case StackType.I64: stack[sp - 1].I64 = stack[sp - 1].I64 | stack[sp].I64; break;
+                                case StackType.U64: stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 | (ulong)stack[sp].I64); break;
+                            }
+
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Xor:
+                        {
+                            // Decrement ptr
+                            sp--;
+
+                            switch (stack[sp].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = stack[sp - 1].I32 ^ stack[sp].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 ^ (uint)stack[sp].I32); break;
+                                case StackType.I64: stack[sp - 1].I64 = stack[sp - 1].I64 ^ stack[sp].I64; break;
+                                case StackType.U64: stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 ^ (ulong)stack[sp].I64); break;
+                            }
+
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Not:
+                        {
+                            switch (stack[sp- 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = ~stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (int)~(uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].I64 = ~stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].I64 = (long)~(ulong)stack[sp - 1].I64; break;
+                            }
+
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Shl:
+                        {
+                            // Decrement ptr
+                            sp--;
+
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = stack[sp - 1].I32 << stack[sp].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 << stack[sp].I32); break;
+                                case StackType.I64: stack[sp - 1].I64 = stack[sp - 1].I64 << stack[sp].I32; break;
+                                case StackType.U64: stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 << stack[sp].I32); break;
+                            }
+
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Shr:
+                        {
+                            // Decrement ptr
+                            sp--;
+
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = stack[sp - 1].I32 >> stack[sp].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 >> stack[sp].I32); break;
+                                case StackType.I64: stack[sp - 1].I64 = stack[sp - 1].I64 >> stack[sp].I32; break;
+                                case StackType.U64: stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 >> stack[sp].I32); break;
+                            }
+
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Shr_un:
+                        {
+                            // Decrement ptr
+                            sp--;
+
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = stack[sp - 1].I32 >> stack[sp].I32; break;
+                                case StackType.U32: stack[sp - 1].I32 = (int)((uint)stack[sp - 1].I32 >> stack[sp].I32); break;
+                                case StackType.I64: stack[sp - 1].I64 = stack[sp - 1].I64 >> stack[sp].I32; break;
+                                case StackType.U64: stack[sp - 1].I64 = (long)((ulong)stack[sp - 1].I64 >> stack[sp].I32); break;
                             }
 
                             Debug.Instruction(op, pc - 1, stack[sp - 1]);
@@ -1913,7 +2039,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Push length to stack as native int
                             stack[sp].Ptr = (IntPtr)array.Length;
@@ -1933,7 +2059,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -1941,7 +2067,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack
                             stack[sp].Ptr = ((IntPtr[])array)[explicitIndex];
@@ -1961,7 +2087,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -1969,7 +2095,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack as I32 (signed byte promoted to I32)
                             stack[sp].I32 = ((sbyte[])array)[explicitIndex];
@@ -1989,7 +2115,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -1997,7 +2123,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack as I32 (unsigned byte promoted to I32)
                             stack[sp].I32 = ((byte[])array)[explicitIndex];
@@ -2017,7 +2143,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2025,7 +2151,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack as I32 (signed short promoted to I32)
                             stack[sp].I32 = ((short[])array)[explicitIndex];
@@ -2045,7 +2171,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2053,7 +2179,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack as I32 (unsigned short promoted to I32)
                             stack[sp].I32 = ((ushort[])array)[explicitIndex];
@@ -2073,7 +2199,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2081,7 +2207,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack as I32
                             stack[sp].I32 = ((int[])array)[explicitIndex];
@@ -2101,7 +2227,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2109,7 +2235,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack as U32 (stored as I32)
                             stack[sp].I32 = (int)((uint[])array)[explicitIndex];
@@ -2129,7 +2255,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2137,7 +2263,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack as I64
                             stack[sp].I64 = ((long[])array)[explicitIndex];
@@ -2157,7 +2283,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2165,7 +2291,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack as F32
                             stack[sp].F32 = ((float[])array)[explicitIndex];
@@ -2185,7 +2311,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2193,7 +2319,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack as F64
                             stack[sp].F64 = ((double[])array)[explicitIndex];
@@ -2213,7 +2339,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2221,7 +2347,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Push to stack as reference
                             stack[sp].Ref = ((object[])array)[explicitIndex];
@@ -2242,7 +2368,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2250,7 +2376,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Store value to array
                             ((IntPtr[])array)[explicitIndex] = value.Ptr;
@@ -2270,7 +2396,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2278,7 +2404,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Store value to array (truncate to signed byte)
                             ((sbyte[])array)[explicitIndex] = (sbyte)value.I32;
@@ -2298,7 +2424,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2306,7 +2432,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Store value to array (truncate to signed short)
                             ((short[])array)[explicitIndex] = (short)value.I32;
@@ -2326,7 +2452,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2334,7 +2460,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Store value to array
                             ((int[])array)[explicitIndex] = value.I32;
@@ -2354,7 +2480,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2362,7 +2488,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Store value to array
                             ((long[])array)[explicitIndex] = value.I64;
@@ -2382,7 +2508,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2390,7 +2516,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Store value to array
                             ((float[])array)[explicitIndex] = value.F32;
@@ -2410,7 +2536,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2418,7 +2544,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Store value to array
                             ((double[])array)[explicitIndex] = value.F64;
@@ -2438,7 +2564,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2446,7 +2572,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Store value to array
                             ((object[])array)[explicitIndex] = value.Ref;
@@ -2474,7 +2600,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2482,7 +2608,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Get the element value and wrap it onto stack
                             object value = array.GetValue(explicitIndex);
@@ -2513,7 +2639,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2521,7 +2647,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Unwrap the value and store it in the array
                             object unwrappedValue = null;
@@ -2551,7 +2677,7 @@ namespace dotnow.Runtime.CIL
                             // Check for null
                             Array array;
                             if ((array = instance.Ref as Array) == null)
-                                throw new NullReferenceException();
+                                threadContext.Throw<NullReferenceException>();
 
                             // Get index
                             long explicitIndex = index.Type == StackType.I64
@@ -2559,7 +2685,7 @@ namespace dotnow.Runtime.CIL
 
                             // Check bounds
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
-                                throw new IndexOutOfRangeException();
+                                threadContext.Throw<IndexOutOfRangeException>();
 
                             // Create a managed reference to the array element
                             stack[sp].Ref = IByRef.MakeByRefElement(array, (int)explicitIndex);
@@ -2647,6 +2773,10 @@ namespace dotnow.Runtime.CIL
 
                             // Get the stack index where the method arguments were loaded
                             int spArgCaller = sp - argCount;
+
+                            // Check for null
+                            if ((callMethod.Flags & CILMethodFlags.This) != 0 && stack[spArgCaller].Ref == null)
+                                threadContext.Throw<NullReferenceException>();
 
                             // Push the frame
                             threadContext.PushMethodFrame(loadContext.AppDomain, callMethod, false, spArgCaller, sp, out int spCall);

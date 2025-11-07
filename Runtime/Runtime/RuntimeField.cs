@@ -22,6 +22,9 @@ namespace dotnow.Runtime
             if (assemblyLoadContext == null)
                 throw new ArgumentNullException(nameof(assemblyLoadContext));
 
+            if (fieldInfo == null)
+                throw new ArgumentNullException(nameof(fieldInfo));
+
             this.threadContext = threadContext;
             this.assemblyLoadContext = assemblyLoadContext;
             this.fieldInfo = fieldInfo;
@@ -35,7 +38,7 @@ namespace dotnow.Runtime
 
             // Check for instance
             if ((fieldInfo.Flags & CILFieldFlags.This) != 0 && instance == null)
-                throw new NullReferenceException("Instance is null");
+                threadContext.Throw<NullReferenceException>();
 
             StackData inst = default;
             StackData val = default;
@@ -73,7 +76,7 @@ namespace dotnow.Runtime
         {
             // Check for instance
             if ((fieldInfo.Flags & CILFieldFlags.This) != 0 && instance == null)
-                throw new NullReferenceException("Instance is null");
+                threadContext.Throw<NullReferenceException>();
 
             // Check for constant
             if ((fieldInfo.Flags & CILFieldFlags.Constant) != 0)
@@ -245,7 +248,7 @@ namespace dotnow.Runtime
         {
             // Check for const
             if ((fieldInfo.Flags & CILFieldFlags.Constant) != 0)
-                throw new InvalidOperationException("Cannot write to a constant field");
+                threadContext.Throw(new InvalidOperationException("Cannot write to a constant field"));
         }
     }
 }

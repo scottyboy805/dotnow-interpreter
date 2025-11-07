@@ -118,6 +118,10 @@ namespace dotnow.Reflection
 
         public override object Invoke(object obj, BindingFlags invokeAttr, Binder binder, object[] parameters, CultureInfo culture)
         {
+            // Ensure that the method is resolved
+            metadataProvider.AssemblyLoadContext.ResolveMethod(handle);
+
+
             // Get execution context
             ThreadContext threadContext = metadataProvider.AppDomain.GetThreadContext();
 
