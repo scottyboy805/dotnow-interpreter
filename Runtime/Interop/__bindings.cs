@@ -433,7 +433,7 @@ namespace dotnow.Interop
 #if DEBUG
             Debug.LineFormat(format, args);
 #else
-            throw new TargetException("CLR binding error: " + string.Format(format, args));
+            //throw new TargetException("CLR binding error: " + string.Format(format, args));
 #endif
         }
     }

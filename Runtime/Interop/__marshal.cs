@@ -320,38 +320,6 @@ namespace dotnow.Interop
             return paramList;
         }
 
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //public static void BoxUnmanagedInteropValueType(in CILTypeHandle typeHandle, void* src, out object boxedValueType)
-        //{
-        //    // Initialize new default instance
-        //    boxedValueType = FormatterServices.GetUninitializedObject(typeHandle.MetaType);
-
-        //    // Pin the boxed object
-        //    GCHandle handle = GCHandle.Alloc(boxedValueType, GCHandleType.Pinned);
-        //    try
-        //    {
-        //        // Get pointer to the pinned object's data
-        //        void* dst = (void*)handle.AddrOfPinnedObject();
-
-        //        // Get size of the struct
-        //        int size = Marshal.SizeOf(typeHandle.MetaType);
-
-        //        // Copy memory
-        //        Buffer.MemoryCopy(src, dst, size, size);
-        //    }
-        //    finally
-        //    {
-        //        handle.Free(); // Always free pinned handle
-        //    }
-        //}
-
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //public static void UnboxUnmanagedInteropValueType(object boxedValueType, void* dst)
-        //{
-        //    // Maybe this is the best way to achieve it??
-        //    Marshal.StructureToPtr(boxedValueType, (IntPtr)dst, false);
-        //}
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static object CopyInteropBoxedValueTypeSlow(object boxedValueType)
         {
