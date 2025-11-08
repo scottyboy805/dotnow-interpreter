@@ -78,6 +78,7 @@ namespace dotnow.Runtime
         public object Ref;      // 24 bytes        
 
         // Properties
+        public int Address => Ref != null ? 1 : 0;
         public bool IsByRef => Type == StackType.ByRef && Ref is IByRef;
 
         // Methods

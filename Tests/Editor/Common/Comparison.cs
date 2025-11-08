@@ -91,5 +91,75 @@ namespace dotnow.Common
             // Check for equal elements
             CollectionAssert.AreEqual(expected, actual);
         }
+
+        [Test]
+        public void TestBranchEqualityComparisons()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestComparison), nameof(TestComparison.TestBranchEqualityComparisons));
+
+            // Call original
+            object[] expected = TestComparison.TestBranchEqualityComparisons();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void TestBranchSignedComparisons()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestComparison), nameof(TestComparison.TestBranchSignedComparisons));
+
+            // Call original
+            object[] expected = TestComparison.TestBranchSignedComparisons();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void TestBranchUnsignedComparisons()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestComparison), nameof(TestComparison.TestBranchUnsignedComparisons));
+
+            // Call original
+            object[] expected = TestComparison.TestBranchUnsignedComparisons();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void TestBranchFloatingPointComparisons()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestComparison), nameof(TestComparison.TestBranchFloatingPointComparisons));
+
+            // Call original
+            object[] expected = TestComparison.TestBranchFloatingPointComparisons();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void TestBranchMixedTypeComparisons()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestComparison), nameof(TestComparison.TestBranchMixedTypeComparisons));
+
+            // Call original
+            object[] expected = TestComparison.TestBranchMixedTypeComparisons();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
     }
 }

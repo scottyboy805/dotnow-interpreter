@@ -1,11 +1,14 @@
 ﻿using dotnow.Reflection;
 using dotnow.Runtime.CIL;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace dotnow.Runtime.JIT
 {
@@ -137,11 +140,7 @@ namespace dotnow.Runtime.JIT
             while (pc < pcMax)
             {
                 // Fetch decode opcode
-                opCode = (ILOpCode)CILInterpreter.FetchDecode<byte>(instructions, ref pc);
-
-                // Check for 2-byte encoded instructions
-                if ((byte)opCode == 0xFE)
-                    opCode = (ILOpCode)(((byte)opCode << 8) | CILInterpreter.FetchDecode<byte>(instructions, ref pc));
+                opCode = CILInterpreter.FetchOpCode(instructions, ref pc);
 
                 // Get operand type
                 operandType = opCode.GetOperandType();
@@ -193,6 +192,59 @@ namespace dotnow.Runtime.JIT
 
             // No next metadata token instruction found
             return false;
+        }
+
+        public static string DebugBytecodeInstructions(byte[] bytecode)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            int pc = 0;
+            int pcMax = bytecode.Length;
+
+            // Process all instructions
+            while (pc < pcMax)
+            {
+                // Fetch decode opcode
+                ILOpCode opCode = CILInterpreter.FetchOpCode(bytecode, ref pc);
+
+                // Get operand type
+                ILOperandType operandType = opCode.GetOperandType();
+
+                // Log the instruction
+                builder.AppendLine(Debug.DebugOp(opCode));
+
+                // Check for prefix
+                if (opCode.IsPrefix() == true)
+                {
+                    // Add the operand size
+                    pc += opCode.GetOperandSize();
+
+                    // Skip over the prefix instruction
+                    continue;
+                }
+
+                // Select operand
+                switch (operandType)
+                {
+                    case ILOperandType.InlineSwitch:
+                        {
+                            // Switch has a variable length table, so we need to read it manually
+                            int length = CILInterpreter.FetchDecode<int>(bytecode, ref pc);
+
+                            // Increment counter
+                            length += sizeof(int) * length;
+
+                            // Skip the increment and continue the loop
+                            continue;
+                        }
+                }
+
+                // Increment by operand size
+                pc += opCode.GetOperandSize();
+            }
+
+
+            return builder.ToString();
         }
     }
 }

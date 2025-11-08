@@ -45,6 +45,10 @@ namespace dotnow.Examples
 
             Debug.Log("Using main type: " + mainType);
 
+            //byte[] bytecode = mainType.GetMethod("BuildMap", BindingFlags.Instance | BindingFlags.NonPublic).GetMethodBody().GetILAsByteArray();
+
+            //Debug.Log(domain.GetBytecodeDebugString(bytecode));
+
             // Add component - cannot use 'gameObject.AddComponent' because it would crash the engine.
             //OverrideBindings.AddComponentOverride(domain, null, gameObject, new object[] { mainType });
             MonoBehaviourProxy.AddComponent(domain, mainType, gameObject);

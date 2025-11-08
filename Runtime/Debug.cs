@@ -153,7 +153,7 @@ namespace dotnow
             //System.Diagnostics.Debug.WriteLine(msg);
         }
 
-        private static string DebugOp(ILOpCode op)
+        internal static string DebugOp(ILOpCode op)
         {
             int fixedSize = 12;
             string opString = op.ToString();

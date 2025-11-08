@@ -66,11 +66,26 @@ namespace dotnow.Interop
             return val;
         }
 
-        public StackType ReadArgStackType(int offset)
+        public object ReadArgAny(Type asType, int offset)
         {
             // Check bounds
             CheckArgBounds(offset);
 
+            // Get the type info
+            CILTypeInfo typeInfo = asType.GetTypeInfo(appDomain);
+
+            // Unwrap the value
+            object unwrapped = null;
+            StackData.Unwrap(typeInfo, stackArguments[offset], ref unwrapped);
+
+            return unwrapped;
+        }
+
+        public StackType ReadArgStackType(int offset)
+        {
+            // Check bounds
+            CheckArgBounds(offset);
+            
             // Get stack type
             return stackArguments[offset].Type;
         }
@@ -149,6 +164,15 @@ namespace dotnow.Interop
 
             // Write to return slot
             ReturnWrap(typeof(T), val);
+        }
+
+        public void ReturnAny(Type type, object val)
+        {
+            // Check return slot
+            CheckReturn();
+
+            // Write to return slot
+            ReturnWrap(type, val);
         }
 
         internal void ReturnWrap(Type type, object obj)

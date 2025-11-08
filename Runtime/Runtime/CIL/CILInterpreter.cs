@@ -47,11 +47,7 @@ namespace dotnow.Runtime.CIL
             while (pc < pcMax && threadContext.abort == false)
             {
                 // Fetch the op code
-                ILOpCode op = (ILOpCode)FetchDecode<byte>(instructions, ref pc);
-
-                // Check for 2-byte encoded instructions
-                if ((byte)op == 0xFE)
-                    op = (ILOpCode)(((byte)op << 8) | FetchDecode<byte>(instructions, ref pc));
+                ILOpCode op = FetchOpCode(instructions, ref pc);
 
                 // Switch (OpCode)
                 switch (op)
@@ -719,7 +715,7 @@ namespace dotnow.Runtime.CIL
                                 case StackType.UPtr: stack[sp - 1].I32 = (long)stack[sp - 1].Ptr > (long)stack[sp].Ptr ? 1 : 0; break;
                                 case StackType.F32: stack[sp - 1].I32 = stack[sp - 1].F32 > stack[sp].F32 ? 1 : 0; break;
                                 case StackType.F64: stack[sp - 1].I32 = stack[sp - 1].F64 > stack[sp].F64 ? 1 : 0; break;
-                                case StackType.Ref: stack[sp - 1].I32 = 0; break; // References cannot be compared with >
+                                case StackType.Ref: stack[sp - 1].I32 = stack[sp - 1].Address > stack[sp].Address ? 1 : 0; break;
                             }
 
                             // Set type to boolean - I32 on stack
@@ -747,7 +743,7 @@ namespace dotnow.Runtime.CIL
                                 case StackType.UPtr: stack[sp - 1].I32 = (ulong)(long)stack[sp - 1].Ptr > (ulong)(long)stack[sp].Ptr ? 1 : 0; break;
                                 case StackType.F32: stack[sp - 1].I32 = !(stack[sp - 1].F32 <= stack[sp].F32) ? 1 : 0; break; // Handle NaN properly
                                 case StackType.F64: stack[sp - 1].I32 = !(stack[sp - 1].F64 <= stack[sp].F64) ? 1 : 0; break; // Handle NaN properly
-                                case StackType.Ref: stack[sp - 1].I32 = 0; break; // References cannot be compared with >
+                                case StackType.Ref: stack[sp - 1].I32 = stack[sp - 1].Address > stack[sp].Address ? 1 : 0; break;
                             }
 
                             // Set type to boolean - I32 on stack
@@ -775,7 +771,7 @@ namespace dotnow.Runtime.CIL
                                 case StackType.UPtr: stack[sp - 1].I32 = (long)stack[sp - 1].Ptr < (long)stack[sp].Ptr ? 1 : 0; break;
                                 case StackType.F32: stack[sp - 1].I32 = stack[sp - 1].F32 < stack[sp].F32 ? 1 : 0; break;
                                 case StackType.F64: stack[sp - 1].I32 = stack[sp - 1].F64 < stack[sp].F64 ? 1 : 0; break;
-                                case StackType.Ref: stack[sp - 1].I32 = 0; break; // References cannot be compared with <
+                                case StackType.Ref: stack[sp - 1].I32 = stack[sp - 1].Address < stack[sp].Address ? 1 : 0; break;
                             }
 
                             // Set type to boolean - I32 on stack
@@ -803,7 +799,7 @@ namespace dotnow.Runtime.CIL
                                 case StackType.UPtr: stack[sp - 1].I32 = (ulong)(long)stack[sp - 1].Ptr < (ulong)(long)stack[sp].Ptr ? 1 : 0; break;
                                 case StackType.F32: stack[sp - 1].I32 = !(stack[sp - 1].F32 >= stack[sp].F32) ? 1 : 0; break; // Handle NaN properly
                                 case StackType.F64: stack[sp - 1].I32 = !(stack[sp - 1].F64 >= stack[sp].F64) ? 1 : 0; break; // Handle NaN properly
-                                case StackType.Ref: stack[sp - 1].I32 = 0; break; // References cannot be compared with <
+                                case StackType.Ref: stack[sp - 1].I32 = stack[sp - 1].Address < stack[sp].Address ? 1 : 0; break;
                             }
 
                             // Set type to boolean - I32 on stack
@@ -1702,12 +1698,21 @@ namespace dotnow.Runtime.CIL
 
                             // Pop value
                             sp--;
+                            bool jmp = false;
 
                             // Debug execution
                             Debug.Instruction(op, pc - 2, offset);
 
+                            switch(stack[sp].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp].Type.ToString());
+
+                                case StackType.I32: jmp = stack[sp].I32 != 0; break;
+                                //case StackType.Ref: jmp = stack[sp].Address != 0; break;
+                            }
+
                             // Conditional
-                            if (stack[sp].I32 == 1)
+                            if (jmp == true)
                             {
                                 // Update offset
                                 pc += offset;
@@ -1721,12 +1726,21 @@ namespace dotnow.Runtime.CIL
 
                             // Pop value
                             sp--;
+                            bool jmp = false;
 
                             // Debug execution
-                            Debug.Instruction(op, pc - 5, offset);
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            switch (stack[sp].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp].Type.ToString());
+
+                                case StackType.I32: jmp = stack[sp].I32 != 0; break;
+                                case StackType.Ref: jmp = stack[sp].Address != 0; break;
+                            }
 
                             // Conditional
-                            if (stack[sp].I32 == 1)
+                            if (jmp == true)
                             {
                                 // Update offset
                                 pc += offset;
@@ -1740,12 +1754,21 @@ namespace dotnow.Runtime.CIL
 
                             // Pop value
                             sp--;
+                            bool jmp = false;
 
                             // Debug execution
                             Debug.Instruction(op, pc - 2, offset);
 
+                            switch (stack[sp].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp].Type.ToString());
+
+                                case StackType.I32: jmp = stack[sp].I32 == 0; break;
+                                case StackType.Ref: jmp = stack[sp].Address == 0; break;
+                            }
+
                             // Conditional
-                            if (stack[sp].I32 == 0)
+                            if (jmp == true)
                             {
                                 // Update offset
                                 pc += offset;
@@ -1759,12 +1782,21 @@ namespace dotnow.Runtime.CIL
 
                             // Pop value
                             sp--;
+                            bool jmp = false;
 
                             // Debug execution
-                            Debug.Instruction(op, pc - 5, offset);
+                            Debug.Instruction(op, pc - 2, offset);
+
+                            switch (stack[sp].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp].Type.ToString());
+
+                                case StackType.I32: jmp = stack[sp].I32 == 0; break;
+                                case StackType.Ref: jmp = stack[sp].Address == 0; break;
+                            }
 
                             // Conditional
-                            if (stack[sp].I32 == 0)
+                            if (jmp == true)
                             {
                                 // Update offset
                                 pc += offset;
@@ -3521,7 +3553,7 @@ namespace dotnow.Runtime.CIL
 
                             // Load the method
                             CILMethodInfo ctorMethod = loadContext.GetMethodHandle(ctorHandle);
-
+                            
                             // Get load context
                             AssemblyLoadContext ctorLoadContext = ctorMethod.Method.GetLoadContext();
 
@@ -3743,6 +3775,19 @@ namespace dotnow.Runtime.CIL
             } // End loop
 
             return sp - 1; // Return the final stack pointer
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static ILOpCode FetchOpCode(byte[] instructions, ref int pc)
+        {
+            // Fetch the op code
+            ILOpCode op = (ILOpCode)FetchDecode<byte>(instructions, ref pc);
+
+            // Check for 2-byte encoded instructions
+            if ((byte)op == 0xFE)
+                op = (ILOpCode)(((byte)op << 8) | FetchDecode<byte>(instructions, ref pc));
+
+            return op;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -2,6 +2,7 @@
 using dotnow.Reflection;
 using dotnow.Runtime;
 using dotnow.Runtime.CIL;
+using dotnow.Runtime.JIT;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -84,7 +85,7 @@ namespace dotnow
             // TODO - support unloading domain
         }
 
-        internal ThreadContext GetThreadContext(int stackSize = 4096)
+        internal ThreadContext GetThreadContext(int stackSize = ThreadContext.DefaultStackSize)
         {
             // Try to get context for thread
             ThreadContext context;
@@ -97,6 +98,11 @@ namespace dotnow
             // Add context
             threadContexts[Thread.CurrentThread] = context;
             return context;
+        }
+
+        public string GetBytecodeDebugString(byte[] bytecode)
+        {
+            return ILAnalyzer.DebugBytecodeInstructions(bytecode);
         }
 
         /// <summary>
