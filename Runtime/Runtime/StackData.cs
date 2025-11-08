@@ -621,6 +621,41 @@ namespace dotnow.Runtime
 
         public static void Box(CILTypeInfo typeInfo, ref StackData obj)
         {
+            // ### Handle enums
+            // Check for interpreted enum or as enum
+            if ((typeInfo.Flags & CILTypeFlags.Enum) != 0)
+            {
+                // Check for interpreted
+                if ((typeInfo.Flags & CILTypeFlags.Interpreted) != 0)
+                {
+                    // Create the enum object
+                    obj.Ref = new CLREnumInstance(typeInfo, obj);
+                    return;
+                }
+                // Must be interop
+                else
+                {
+                    // Get the enum type code
+                    TypeCode enumTypeCode = System.Type.GetTypeCode(typeInfo.Type.GetEnumUnderlyingType());
+
+                    // Select type code
+                    switch (enumTypeCode)
+                    {
+                        case TypeCode.SByte: obj.Ref = Enum.ToObject(typeInfo.Type, (sbyte)obj.I32); break;
+                        case TypeCode.Byte: obj.Ref = Enum.ToObject(typeInfo.Type, (byte)obj.I32); break;
+                        case TypeCode.Int16: obj.Ref = Enum.ToObject(typeInfo.Type, (short)obj.I32); break;
+                        case TypeCode.UInt16: obj.Ref = Enum.ToObject(typeInfo.Type, (ushort)obj.I32); break;
+                        case TypeCode.Int32: obj.Ref = Enum.ToObject(typeInfo.Type, (int)obj.I32); break;
+                        case TypeCode.UInt32: obj.Ref = Enum.ToObject(typeInfo.Type, (uint)obj.I32); break;
+                        case TypeCode.Int64: obj.Ref = Enum.ToObject(typeInfo.Type, (long)obj.I64); break;
+                        case TypeCode.UInt64: obj.Ref = Enum.ToObject(typeInfo.Type, (ulong)obj.I64); break;
+                        default:
+                            throw new NotSupportedException(enumTypeCode.ToString());
+                    }
+                    return;
+                }
+            }
+
             switch (typeInfo.TypeCode)
             {
                 default: throw new NotSupportedException(typeInfo.ToString());

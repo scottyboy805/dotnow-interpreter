@@ -1708,7 +1708,7 @@ namespace dotnow.Runtime.CIL
                                 default: throw new NotSupportedException(stack[sp].Type.ToString());
 
                                 case StackType.I32: jmp = stack[sp].I32 != 0; break;
-                                //case StackType.Ref: jmp = stack[sp].Address != 0; break;
+                                case StackType.Ref: jmp = stack[sp].Address != 0; break;
                             }
 
                             // Conditional

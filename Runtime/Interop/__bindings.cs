@@ -297,8 +297,8 @@ namespace dotnow.Interop
                     // Check for attribute
                     CLRMethodBindingAttribute attribute = method.GetCustomAttribute<CLRMethodBindingAttribute>(false);
 
-                    // Check for found
-                    if (attribute == null)
+                    // Check for found - Prevent finding derived attributes
+                    if (attribute == null || attribute.GetType() != typeof(CLRMethodBindingAttribute))
                         continue;
 
                     // Check static
@@ -433,7 +433,7 @@ namespace dotnow.Interop
 #if DEBUG
             Debug.LineFormat(format, args);
 #else
-            //throw new TargetException("CLR binding error: " + string.Format(format, args));
+            throw new TargetException("CLR binding error: " + string.Format(format, args));
 #endif
         }
     }
