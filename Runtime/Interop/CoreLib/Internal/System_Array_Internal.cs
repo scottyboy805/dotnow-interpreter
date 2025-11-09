@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace dotnow.Interop.Runtime.Internal
+namespace dotnow.Interop.CoreLib.Internal
 {
     internal static class System_Array_Internal
     {

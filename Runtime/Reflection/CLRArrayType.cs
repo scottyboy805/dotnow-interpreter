@@ -1,4 +1,4 @@
-﻿using dotnow.Interop.Runtime.Internal;
+﻿using dotnow.Interop.CoreLib.Internal;
 using dotnow.Reflection.Internal;
 using System;
 using System.Globalization;

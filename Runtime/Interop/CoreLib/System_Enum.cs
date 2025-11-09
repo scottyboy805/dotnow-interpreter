@@ -4,7 +4,7 @@ using dotnow.Runtime.CIL;
 using System;
 using System.Linq;
 
-namespace dotnow.Interop.Runtime
+namespace dotnow.Interop.CoreLib
 {
     internal static class System_Enum
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace dotnow.Interop.Runtime
+namespace dotnow.Interop.CoreLib
 {
     internal static class System_Type
     {

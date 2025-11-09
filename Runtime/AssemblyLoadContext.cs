@@ -4,6 +4,7 @@ using dotnow.Runtime.JIT;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -91,9 +92,11 @@ namespace dotnow
         private readonly CILMetadataReference[] memberReferences;
         private readonly CILMetadataReference[] memberSpecificationReferences;
 
-        
+
         // Properties
+        [DebuggerHidden]
         public AppDomain AppDomain => appDomain;
+        [DebuggerHidden]
         public Assembly Assembly => assembly;
 
         // Constructor

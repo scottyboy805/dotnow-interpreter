@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace dotnow.Interop.Runtime.Proxy
+namespace dotnow.Interop.CoreLib.Proxy
 {
     [Preserve]
     [CLRProxyBinding(typeof(object))]

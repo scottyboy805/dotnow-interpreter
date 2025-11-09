@@ -3,7 +3,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace dotnow.Interop.Runtime
+namespace dotnow.Interop.CoreLib
 {
     internal static class System_RuntimeHelpers
     {
