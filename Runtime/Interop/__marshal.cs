@@ -220,6 +220,10 @@ namespace dotnow.Interop
                     // Load instance
                     StackData.Unwrap(thisTypeInfo, threadContext.stack[spArg], ref instance);
 
+                    // Something has gone wrong marshalling the instance
+                    if (instance == null)
+                        throw new Exception("Instance was null after marshalling but an instance of the following type is required: " + thisTypeInfo.Type);
+
                     // Increment ptr to step over instance and start for args
                     spArg++;
                 }
