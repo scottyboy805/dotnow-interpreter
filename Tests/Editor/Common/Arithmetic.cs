@@ -77,5 +77,103 @@ namespace dotnow.Common
             // Check for equal elements
             Assert.AreEqual(expected, actual);
         }
+
+        [Test]
+        public void TestModulo()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestArithmetic), nameof(TestArithmetic.TestModulo));
+
+            // Call original
+            object[] expected = TestArithmetic.TestModulo();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void TestUnaryMinus()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestArithmetic), nameof(TestArithmetic.TestUnaryMinus));
+
+            // Call original
+            object[] expected = TestArithmetic.TestUnaryMinus();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void TestIncrementDecrement()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestArithmetic), nameof(TestArithmetic.TestIncrementDecrement));
+
+            // Call original
+            object[] expected = TestArithmetic.TestIncrementDecrement();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void TestBitwiseArithmetic()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestArithmetic), nameof(TestArithmetic.TestBitwiseArithmetic));
+
+            // Call original
+            object[] expected = TestArithmetic.TestBitwiseArithmetic();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void TestOverflowAndEdgeCases()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestArithmetic), nameof(TestArithmetic.TestOverflowAndEdgeCases));
+
+            // Call original
+            object[] expected = TestArithmetic.TestOverflowAndEdgeCases();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void TestComplexExpressions()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestArithmetic), nameof(TestArithmetic.TestComplexExpressions));
+
+            // Call original
+            object[] expected = TestArithmetic.TestComplexExpressions();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void TestPowerOperations()
+        {
+            // Try to load method
+            MethodInfo method = TestUtils.LoadTestMethod(nameof(TestArithmetic), nameof(TestArithmetic.TestPowerOperations));
+
+            // Call original
+            object[] expected = TestArithmetic.TestPowerOperations();
+            object[] actual = (object[])method.Invoke(null, null);
+
+            // Check for equal elements
+            CollectionAssert.AreEqual(expected, actual);
+        }
     }
 }

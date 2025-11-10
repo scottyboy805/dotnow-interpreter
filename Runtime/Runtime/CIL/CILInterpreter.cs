@@ -1263,6 +1263,21 @@ namespace dotnow.Runtime.CIL
                             Debug.Instruction(op, pc - 1, stack[sp - 1]);
                             break;
                         }
+                    case ILOpCode.Neg:
+                        {
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].I32 = -stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].I64 = -stack[sp - 1].I64; break;
+                                case StackType.F32: stack[sp - 1].F32 = -stack[sp - 1].F32; break;
+                                case StackType.F64: stack[sp - 1].F64 = -stack[sp - 1].F64; break;
+                            }
+
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
                     #endregion
 
                     #region Bitwise
