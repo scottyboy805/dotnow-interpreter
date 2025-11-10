@@ -3804,7 +3804,7 @@ namespace dotnow.Runtime.CIL
                             StackData.Default(objType, ref address);
 
                             // Debug execution
-                            Debug.Instruction(op, pc - 1, address);
+                            Debug.Instruction(op, pc - 5, address);
                             break;
                         }
                     case ILOpCode.Stobj:
@@ -3826,7 +3826,29 @@ namespace dotnow.Runtime.CIL
                             ((IByRef)address.Ref).SetValueRef(value.Ref);
 
                             // Debug execution
-                            Debug.Instruction(op, pc - 1, value);
+                            Debug.Instruction(op, pc - 5, value);
+                            break;
+                        }
+                    case ILOpCode.Ldobj:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle typeHandle = MetadataTokens.EntityHandle(token);
+
+                            // Get the type info
+                            CILTypeInfo objType = loadContext.GetTypeHandle(typeHandle);
+
+                            // Pop value and address
+                            StackData address = stack[sp - 1];
+
+                            // Extract value type object
+                            stack[sp - 1].Ref = ((IByRef)address.Ref).GetValueRef();
+                            stack[sp - 1].Type = StackType.Ref;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
                             break;
                         }
                         #endregion

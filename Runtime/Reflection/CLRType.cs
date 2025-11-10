@@ -403,15 +403,15 @@ namespace dotnow.Reflection
             // Build the match array
             MethodInfo[] matchedMethods = BuildMemberArray<MethodInfo>();
 
-            // Check for no types specified
-            if (types == null || types.Length == 0)
-            {
-                // Get the first matched method
-                if (matchedMethods.Length > 0)
-                    return matchedMethods[0];
+            //// Check for no types specified
+            //if (types == null || types.Length == 0)
+            //{
+            //    // Get the first matched method
+            //    if (matchedMethods.Length > 0)
+            //        return matchedMethods[0];
 
-                return null;
-            }
+            //    return null;
+            //}
 
             //// Check for special methods
             //MethodInfo specialMethod = CLRSpecialMethods.GetSpecialMethod(domain, this, name, bindingAttr, binder, callConvention, types, modifiers);
