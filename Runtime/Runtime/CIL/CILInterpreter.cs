@@ -3688,6 +3688,25 @@ namespace dotnow.Runtime.CIL
                             pc = pcMax;
                             break;
                         }
+                    case ILOpCode.Throw:
+                        {
+                            // Pop the exception
+                            Exception ex = stack[--sp].Ref as Exception;
+
+                            // Check for null
+                            if(ex == null)
+                            {
+                                threadContext.Throw<NullReferenceException>();
+                                break;
+                            }
+
+                            // Throw the user exception
+                            threadContext.Throw(ex);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
                     case ILOpCode.Box:
                         {
                             // Get method token
