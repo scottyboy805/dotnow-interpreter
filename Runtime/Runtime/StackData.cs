@@ -893,8 +893,23 @@ namespace dotnow.Runtime
                         {
                             if ((typeInfo.Flags & CILTypeFlags.Interop) != 0)
                             {
-                                // Create default instance
-                                dst.Ref = FormatterServices.GetUninitializedObject(typeInfo.Type);
+                                // Check for nullable
+                                if ((typeInfo.Flags & CILTypeFlags.NullableType) != 0)
+                                {
+                                    // Create default instance
+                                    Type nullableType = Nullable.GetUnderlyingType(typeInfo.Type);
+
+                                    // Get the default underlying value
+                                    object defaultNullable = FormatterServices.GetUninitializedObject(nullableType);
+
+                                    // Create instance with default value
+                                    dst.Ref = Activator.CreateInstance(typeInfo.Type, new[] { defaultNullable });
+                                }
+                                else
+                                {
+                                    // Create default instance
+                                    dst.Ref = FormatterServices.GetUninitializedObject(typeInfo.Type);
+                                }
                             }
                             else
                             {

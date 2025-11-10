@@ -20,6 +20,7 @@ namespace dotnow.Runtime.CIL
         PrimitiveType = 1 << 8,
         ReferenceType = 1 << 9,
         ValueType = 1 << 10,
+        NullableType = 1 << 11,
     }
 
     internal sealed class CILTypeInfo
@@ -115,6 +116,9 @@ namespace dotnow.Runtime.CIL
 
                 // Value type
                 if ((flags & CILTypeFlags.ReferenceType) == 0 && (flags & CILTypeFlags.PrimitiveType) == 0 && fromType.IsValueType == true) flags |= CILTypeFlags.ValueType;
+
+                // Nullable type
+                if (Nullable.GetUnderlyingType(fromType) != null) flags |= CILTypeFlags.NullableType;
 
                 // Interop
                 if (isCLr == false) flags |= CILTypeFlags.Interop;
