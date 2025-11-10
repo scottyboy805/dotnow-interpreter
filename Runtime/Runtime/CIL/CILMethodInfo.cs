@@ -37,7 +37,6 @@ namespace dotnow.Runtime.CIL
         ByRef = 1 << 1,
     }
 
-
     internal sealed class CILMethodInfo
     {
         // Public
@@ -61,9 +60,18 @@ namespace dotnow.Runtime.CIL
         /// The type information for the parameter types.
         /// </summary>
         public readonly CILTypeInfo[] ParameterTypes;
+        /// <summary>
+        /// The optional parameter flags that specify additional information about how parameters are used.
+        /// </summary>
         public readonly CILParameterFlags[] ParameterFlags;
         /// <summary>
+        /// Contains the exception handler clauses for this method body.
+        /// Only available for interpreted methods.
+        /// </summary>
+        public readonly CILExceptionHandlerInfo[] Handlers;
+        /// <summary>
         /// Contains the default local values for this method.
+        /// Only available for interpreted methods.
         /// </summary>
         public readonly StackData[] Locals;
         /// <summary>
@@ -72,9 +80,18 @@ namespace dotnow.Runtime.CIL
         public readonly Delegate InteropCall;
         /// <summary>
         /// The CIL bytecode instructions for this method if it is a CLR method (interpreted).
+        /// Only available for interpreted methods.
         /// </summary>
         public readonly byte[] Instructions;
+        /// <summary>
+        /// The number of local variable slots required for this method.
+        /// Only available for interpreted methods.
+        /// </summary>
         public readonly int LocalCount;
+        /// <summary>
+        /// The maximum required stack slots for normal execution of this method.
+        /// Only available for interpreted methods.
+        /// </summary>
         public readonly int MaxStack;
 
         // Constructor
@@ -99,7 +116,8 @@ namespace dotnow.Runtime.CIL
                 // Get the body
                 MethodBody body = method.GetMethodBody();
 
-                this.Locals = body.LocalVariables.Select(l => StackData.Default(l.LocalType.GetTypeInfo(domain))).ToArray();
+                this.Handlers = body.ExceptionHandlingClauses != null ? body.ExceptionHandlingClauses.Select(h => new CILExceptionHandlerInfo(h)).ToArray() : Array.Empty<CILExceptionHandlerInfo>();
+                this.Locals = body.LocalVariables != null ? body.LocalVariables.Select(l => StackData.Default(l.LocalType.GetTypeInfo(domain))).ToArray() : Array.Empty<StackData>();
                 this.Instructions = body.GetILAsByteArray();
                 this.LocalCount = body.LocalVariables.Count;
                 this.MaxStack = body.MaxStackSize;

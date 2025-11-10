@@ -380,9 +380,6 @@ namespace dotnow.Reflection
 
         protected override MethodInfo GetMethodImpl(string name, BindingFlags bindingAttr, Binder binder, CallingConventions callConvention, Type[] types, ParameterModifier[] modifiers)
         {
-            if (types == null)
-                types = Type.EmptyTypes;
-
             // Check all methods
             foreach (MethodInfo method in methods)
             {
@@ -403,15 +400,15 @@ namespace dotnow.Reflection
             // Build the match array
             MethodInfo[] matchedMethods = BuildMemberArray<MethodInfo>();
 
-            //// Check for no types specified
-            //if (types == null || types.Length == 0)
-            //{
-            //    // Get the first matched method
-            //    if (matchedMethods.Length > 0)
-            //        return matchedMethods[0];
+            // Check for no types specified and single match
+            if (types == null && matchedMethods.Length <= 1)
+            {
+                // Get the first matched method
+                if (matchedMethods.Length > 0)
+                    return matchedMethods[0];
 
-            //    return null;
-            //}
+                return null;
+            }
 
             //// Check for special methods
             //MethodInfo specialMethod = CLRSpecialMethods.GetSpecialMethod(domain, this, name, bindingAttr, binder, callConvention, types, modifiers);
@@ -430,6 +427,10 @@ namespace dotnow.Reflection
             // Select binder
             if (binder == null)
                 binder = DefaultBinder;
+
+            // Select types
+            if (types == null)
+                types = Type.EmptyTypes;
 
             // Select the correct method
             MethodBase matchedMethod = binder.SelectMethod(bindingAttr, matchedMethods, types, modifiers);

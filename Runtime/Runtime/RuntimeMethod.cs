@@ -43,7 +43,7 @@ namespace dotnow.Runtime
             threadContext.PushReflectionMethodFrame(assemblyLoadContext.AppDomain, methodInfo, obj, args, out spArg);
 
             // Execute method with interpreter
-            int spReturn = CILInterpreter.ExecuteMethod(threadContext, assemblyLoadContext, methodInfo, spArg);
+            int spReturn = CILInterpreter.ExecuteMethodWithHandler(threadContext, assemblyLoadContext, methodInfo, spArg);
 
 
             // Check for return type

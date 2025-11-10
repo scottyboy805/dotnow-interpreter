@@ -11,7 +11,32 @@ namespace dotnow.Runtime.CIL
     internal static class CILInterpreter
     {
         // Methods
-        public static int ExecuteMethod(ThreadContext threadContext, AssemblyLoadContext loadContext, CILMethodInfo method, int spArg)
+        public static int ExecuteMethodWithHandler(ThreadContext threadContext, AssemblyLoadContext loadContext, CILMethodInfo method, int spArg)
+        {
+            int spReturn = 0;
+
+            // Handle any runtime exceptions thrown by user or interpreter code
+            try
+            {
+                // Execute the bytecode
+                spReturn = ExecuteMethod(threadContext, loadContext, method, spArg);
+            }
+            catch(Exception e)
+            {
+
+                // Rethrow
+                throw e;
+            }
+            finally
+            {
+
+            }
+
+            // Get stack return pointer
+            return spReturn;
+        }
+
+        private static int ExecuteMethod(ThreadContext threadContext, AssemblyLoadContext loadContext, CILMethodInfo method, int spArg)
         {
             // Check for interpreted
             if ((method.Flags & CILMethodFlags.Interpreted) == 0)
@@ -3668,7 +3693,7 @@ namespace dotnow.Runtime.CIL
                                 }
 
                                 // Execute the method
-                                spReturn = ExecuteMethod(threadContext, callLoadContext, callMethod, spCall);
+                                spReturn = ExecuteMethodWithHandler(threadContext, callLoadContext, callMethod, spCall);
                             }
                             else if ((callMethod.Flags & CILMethodFlags.Interop) != 0)
                             {

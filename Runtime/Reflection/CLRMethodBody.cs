@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Reflection.Metadata;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace dotnow.Reflection
 {
@@ -14,10 +15,12 @@ namespace dotnow.Reflection
 
         // Private
         private readonly MethodBase method = null;
+        private readonly Lazy<CLRExceptionHandlingClause[]> handlers = null;
         private readonly Lazy<CLRVariableInfo[]> locals = null;
 
         // Properties
         #region MethodBodyProperties
+        public override IList<ExceptionHandlingClause> ExceptionHandlingClauses => handlers.Value;
         public override IList<LocalVariableInfo> LocalVariables => locals.Value;
         public override int MaxStackSize => bodyBlock.MaxStack;
         public override bool InitLocals => bodyBlock.LocalVariablesInitialized;
@@ -30,7 +33,8 @@ namespace dotnow.Reflection
             this.method = method;
             this.bodyBlock = bodyBlock;
 
-            // Initialize the locals
+            // Initialize the handlers and locals
+            this.handlers = new(InitHandlers);
             this.locals = new(InitLocalVariables);
         }
 
@@ -38,6 +42,18 @@ namespace dotnow.Reflection
         public override byte[] GetILAsByteArray()
         {
             return bodyBlock.GetILBytes();
+        }
+
+        private CLRExceptionHandlingClause[] InitHandlers()
+        {
+            // Check for no handlers
+            if (bodyBlock.ExceptionRegions.Length == 0)
+                return Array.Empty<CLRExceptionHandlingClause>();
+
+            // Create handlers
+            return bodyBlock.ExceptionRegions
+                .Select(r => new CLRExceptionHandlingClause(metadataProvider, r))
+                .ToArray();
         }
 
         private CLRVariableInfo[] InitLocalVariables()
