@@ -3706,6 +3706,24 @@ namespace dotnow.Runtime.CIL
                             Debug.Instruction(op, pc - 5, stack[sp - 1]);
                             break;
                         }
+                    case ILOpCode.Unbox_any:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle boxHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            CILTypeInfo unboxType = loadContext.GetTypeHandle(boxHandle);
+
+                            // Perform the unbox operation
+                            StackData.Unbox(unboxType, ref stack[sp - 1]);
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
                     case ILOpCode.Ldtoken:
                         {
                             // Get token
