@@ -1,7 +1,5 @@
 ﻿using dotnow.Reflection;
 using dotnow.Runtime.CIL;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
 using System;
 using System.Diagnostics;
 using System.Reflection;
@@ -44,14 +42,7 @@ namespace dotnow.Runtime.JIT
             Debug.LineFormat("JIT analyze method: {0}", methodInfo.Method);
             Stopwatch timer = Stopwatch.StartNew();
 
-
-            //// Resolve signature types
-            //ResolveSignatureMetadataTokens(assemblyLoadContext, methodInfo.Signature);
-
-            //// Resolve local types
-            //if(methodInfo.Body.LocalCount > 0)
-            //    ResolveLocalMetadataTokens(assemblyLoadContext, methodInfo.Body.Locals);
-
+            // Get method instructions
             byte[] instructions = methodInfo.Method.GetMethodBody().GetILAsByteArray();
 
             // Get instruction bounds
@@ -162,7 +153,6 @@ namespace dotnow.Runtime.JIT
                     case ILOperandType.InlineType:
                     case ILOperandType.InlineField:
                     case ILOperandType.InlineMethod:
-                    //case ILOperandType.InlineString:
                         {
                             // Fetch the token and increment the pc by the size of the token
                             int token = CILInterpreter.FetchDecode<int>(instructions, ref pc);
@@ -242,7 +232,6 @@ namespace dotnow.Runtime.JIT
                 // Increment by operand size
                 pc += opCode.GetOperandSize();
             }
-
 
             return builder.ToString();
         }

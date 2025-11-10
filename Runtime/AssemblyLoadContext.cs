@@ -382,6 +382,9 @@ namespace dotnow
 
             // Create the type handle
             @ref = new CILTypeInfo(definedType);
+
+            // Run initializer
+            @ref.StaticInitialize();
         }
 
         private void ResolveTypeReference(TypeReferenceHandle typeReferenceHandle, out CILMetadataReference @ref)
@@ -433,8 +436,14 @@ namespace dotnow
                             // Resolve type handle
                             if (referenceContext.typeDefinitions[definitionRow].Type == null)
                             {
+                                // Get the type info
+                                CILTypeInfo typeInfo = new CILTypeInfo(resolvedType);
+
                                 // Initialize the type handle
-                                referenceContext.typeDefinitions[definitionRow] = new CILTypeInfo(resolvedType);
+                                referenceContext.typeDefinitions[definitionRow] = typeInfo;
+
+                                // Run static constructor
+                                typeInfo.StaticInitialize();
                             }
 
                             // Resolve the type handle

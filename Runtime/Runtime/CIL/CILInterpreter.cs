@@ -11,36 +11,11 @@ namespace dotnow.Runtime.CIL
     internal static class CILInterpreter
     {
         // Methods
-        public static int ExecuteMethodWithHandler(ThreadContext threadContext, AssemblyLoadContext loadContext, CILMethodInfo method, int spArg)
-        {
-            int spReturn = 0;
-
-            // Handle any runtime exceptions thrown by user or interpreter code
-            try
-            {
-                // Execute the bytecode
-                spReturn = ExecuteMethod(threadContext, loadContext, method, spArg);
-            }
-            catch(Exception e)
-            {
-
-                // Rethrow
-                throw e;
-            }
-            finally
-            {
-
-            }
-
-            // Get stack return pointer
-            return spReturn;
-        }
-
-        private static int ExecuteMethod(ThreadContext threadContext, AssemblyLoadContext loadContext, CILMethodInfo method, int spArg)
+        public static int ExecuteMethodBytecode(ThreadContext threadContext, AssemblyLoadContext loadContext, CILMethodInfo method, ref int pc, int spArg)
         {
             // Check for interpreted
             if ((method.Flags & CILMethodFlags.Interpreted) == 0)
-                throw new InvalidOperationException("Not supported for interop methods");
+                throw new InvalidOperationException("Not supported for interop or PInvoke methods");
 
             // Get the stack
             StackData[] stack = threadContext.stack;
@@ -48,7 +23,7 @@ namespace dotnow.Runtime.CIL
             // Get local
             int spLoc = spArg + ((method.Flags & CILMethodFlags.This) != 0 ? 1 : 0) + method.ParameterTypes.Length;
 
-            // Copy locals
+            // Copy locals into frame
             Array.Copy(method.Locals, 0, stack, spLoc, method.LocalCount);
 
             // Get sp
@@ -65,7 +40,6 @@ namespace dotnow.Runtime.CIL
             byte[] instructions = method.Instructions;
 
             // Get program counter
-            int pc = 0;
             int pcMax = instructions.Length;
 
             // Main execution loop
@@ -3616,7 +3590,7 @@ namespace dotnow.Runtime.CIL
                                 __gc.AllocateObject(loadContext.AppDomain, ctorMethod.DeclaringType, ref stack[spCall]);
 
                                 // Execute the method
-                                ExecuteMethod(threadContext, ctorLoadContext, ctorMethod, spCall);
+                                RuntimeMethod.Invoke(threadContext, ctorLoadContext, ctorMethod, spCall);
                             }
                             // Check for interop
                             else if((ctorMethod.Flags & CILMethodFlags.Interop) != 0)
@@ -3693,7 +3667,7 @@ namespace dotnow.Runtime.CIL
                                 }
 
                                 // Execute the method
-                                spReturn = ExecuteMethodWithHandler(threadContext, callLoadContext, callMethod, spCall);
+                                spReturn = RuntimeMethod.Invoke(threadContext, callLoadContext, callMethod, spCall);
                             }
                             else if ((callMethod.Flags & CILMethodFlags.Interop) != 0)
                             {

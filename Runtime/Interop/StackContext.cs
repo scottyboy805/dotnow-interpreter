@@ -107,6 +107,7 @@ namespace dotnow.Interop
         #endregion
 
         #region WriteArgs
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteArgObject<T>(int offset, T val) where T : class
         {
             // Check bounds
@@ -116,6 +117,7 @@ namespace dotnow.Interop
             WriteArgWrap(offset, typeof(T), val);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteArgValueType<T>(int offset, T val) where T : struct
         {
             // Check bounds
@@ -148,6 +150,7 @@ namespace dotnow.Interop
         #endregion
 
         #region Return
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReturnObject<T>(T val) where T : class
         {
             // Check return slot
@@ -157,6 +160,7 @@ namespace dotnow.Interop
             ReturnWrap(typeof(T), val);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReturnValueType<T>(T val) where T : struct
         {
             // Check return slot
@@ -166,6 +170,7 @@ namespace dotnow.Interop
             ReturnWrap(typeof(T), val);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReturnAny(Type type, object val)
         {
             // Check return slot

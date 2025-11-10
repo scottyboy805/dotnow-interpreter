@@ -1,8 +1,5 @@
 using dotnow.Reflection;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace dotnow.Runtime.CIL
 {
@@ -25,6 +22,9 @@ namespace dotnow.Runtime.CIL
 
     internal sealed class CILTypeInfo
     {
+        // Private
+        private bool staticInit = false;
+
         // Public
         /// <summary>
         /// The associated metadata type.
@@ -88,6 +88,17 @@ namespace dotnow.Runtime.CIL
         public override string ToString()
         {
             return $"{Type} = {Flags}";
+        }
+
+        public void StaticInitialize()
+        {
+            // Run static initializer
+            if (staticInit == false && Type.TypeInitializer != null)
+            {
+                // Only run initializer once
+                staticInit = true;
+                Type.TypeInitializer.Invoke(null);
+            }
         }
 
         private static CILTypeFlags GetFlags(Type fromType)

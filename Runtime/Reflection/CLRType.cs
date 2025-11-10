@@ -156,7 +156,8 @@ namespace dotnow.Reflection
                     // Check for constructor
                     string specialName = null;
                     if((methodDefinition.Attributes & MethodAttributes.RTSpecialName) != 0 &&
-                        (specialName = metadataProvider.MetadataReader.GetString(methodDefinition.Name)).IndexOf(".ctor") >= 0)
+                        ((specialName = metadataProvider.MetadataReader.GetString(methodDefinition.Name)) == ".ctor" ||
+                        (specialName = metadataProvider.MetadataReader.GetString(methodDefinition.Name)) == ".cctor"))
                     {
                         // Init collection
                         if (constructorDefinitions == null)

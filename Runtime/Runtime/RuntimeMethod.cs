@@ -42,26 +42,77 @@ namespace dotnow.Runtime
             // Load the instance and arguments onto the stack
             threadContext.PushReflectionMethodFrame(assemblyLoadContext.AppDomain, methodInfo, obj, args, out spArg);
 
-            // Execute method with interpreter
-            int spReturn = CILInterpreter.ExecuteMethodWithHandler(threadContext, assemblyLoadContext, methodInfo, spArg);
-
-
-            // Check for return type
-            if ((methodInfo.Flags & CILMethodFlags.Return) != 0)
+            try
             {
-                // Get return type handle
-                CILTypeInfo returnTypeInfo = methodInfo.ReturnType;
+                // Execute method with interpreter
+                int spReturn = Invoke(threadContext, assemblyLoadContext, methodInfo, spArg);
 
-                // Attempt to unwrap the resulting type for interop
-                StackData.Unwrap(returnTypeInfo, threadContext.stack[spReturn], ref returnValue);
+
+                // Check for return type
+                if ((methodInfo.Flags & CILMethodFlags.Return) != 0)
+                {
+                    // Get return type handle
+                    CILTypeInfo returnTypeInfo = methodInfo.ReturnType;
+
+                    // Attempt to unwrap the resulting type for interop
+                    StackData.Unwrap(returnTypeInfo, threadContext.stack[spReturn], ref returnValue);
+                }
             }
-
-            // Complete the method frame
-            // Must run after return value is extracted because it performs stack cleanup
-            threadContext.PopMethodFrame();
+            finally
+            {
+                // Complete the method frame
+                // Must run after return value is extracted because it performs stack cleanup
+                threadContext.PopMethodFrame();
+            }
 
             // No return value
             return returnValue;
+        }
+
+        internal static int Invoke(ThreadContext threadContext, AssemblyLoadContext loadContext, CILMethodInfo method, int spArg)
+        {
+            int pc = 0;         // Instruction pointer
+            int spReturn = 0;   // Stack return pointer
+
+            // Handle any runtime exceptions thrown by user or interpreter code
+            try
+            {
+                // Execute the bytecode
+                spReturn = CILInterpreter.ExecuteMethodBytecode(threadContext, loadContext, method, ref pc, spArg);
+            }
+            catch (Exception e)
+            {
+                // Try to get the handler
+                if (GetHandler(method, e, pc, out CILExceptionHandlerInfo handler) == true)
+                {
+                    // Jump to handler offset
+                    pc = handler.HandlerOffset;
+
+                    // Execute the handler portion
+                    spReturn = CILInterpreter.ExecuteMethodBytecode(threadContext, loadContext, method, ref pc, spArg);
+                }
+                // No handler available - just throw the exception back to the caller
+                else
+                {
+                    // Rethrow
+                    throw e;
+                }
+            }
+            finally
+            {
+
+            }
+
+            // Get stack return pointer
+            return spReturn;
+        }
+
+        internal static bool GetHandler(CILMethodInfo method, Exception exception, int pc, out CILExceptionHandlerInfo handler)
+        {
+
+            // No handler available
+            handler = default;
+            return false;
         }
 
         private void CheckMethod()

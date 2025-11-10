@@ -146,7 +146,17 @@ namespace dotnow.Reflection
 
         public override object Invoke(BindingFlags invokeAttr, Binder binder, object[] parameters, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            // Get execution context
+            ThreadContext threadContext = metadataProvider.AppDomain.GetThreadContext();
+
+            // Get method handle
+            CILMethodInfo methodInfo = this.GetMethodInfo(metadataProvider.AppDomain);
+
+            // Create the runtime method
+            RuntimeMethod runtimeMethod = new RuntimeMethod(threadContext, AssemblyLoadContext, methodInfo);
+
+            // Perform reflection invoke
+            return runtimeMethod.ReflectionInvoke(null, parameters);
         }
         #endregion
 
