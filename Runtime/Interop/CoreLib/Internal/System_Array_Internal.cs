@@ -1,5 +1,4 @@
 ﻿using dotnow.Runtime;
-using Mono.Cecil;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -7,6 +6,10 @@ using System.Threading;
 
 namespace dotnow.Interop.CoreLib.Internal
 {
+    /// <summary>
+    /// Contains runtime intrinsic calls relating to multi arrays.
+    /// These methods are expected to exist in the runtime only, but not in metadata.
+    /// </summary>
     internal static class System_Array_Internal
     {
         // Private
@@ -19,8 +22,8 @@ namespace dotnow.Interop.CoreLib.Internal
             // Get array rank
             int rank = arrayType.GetArrayRank();
 
-            // Create array
-            long[] lengths = new long[rank];
+            // Create array - avoid allocation for length array if possible
+            long[] lengths = GetIndexOrLengthList(rank);
 
             // Read lengths
             for(int i = 0; i < rank; i++)
@@ -47,7 +50,7 @@ namespace dotnow.Interop.CoreLib.Internal
             Array array = context.ReadArgObject<Array>(0);
 
             // Get index list
-            long[] indexes = GetIndexList(array.Rank);
+            long[] indexes = GetIndexOrLengthList(array.Rank);
 
             // Read all indexes
             for (int i = 0; i < indexes.Length; i++)
@@ -73,7 +76,7 @@ namespace dotnow.Interop.CoreLib.Internal
             Array array = context.ReadArgObject<Array>(0);
 
             // Get index list
-            long[] indexes = GetIndexList(array.Rank);
+            long[] indexes = GetIndexOrLengthList(array.Rank);
 
             // Read all indexes
             for (int i = 0; i < indexes.Length; i++)
@@ -106,7 +109,7 @@ namespace dotnow.Interop.CoreLib.Internal
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static long[] GetIndexList(int indexCount)
+        private static long[] GetIndexOrLengthList(int indexCount)
         {
             // Check for 0
             if (indexCount <= 0)
