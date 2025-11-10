@@ -37,6 +37,7 @@ namespace dotnow.Runtime
 
             // Get stack pointers
             int spArg = 0;
+            object returnValue = null;
 
             // Load the instance and arguments onto the stack
             threadContext.PushReflectionMethodFrame(assemblyLoadContext.AppDomain, methodInfo, obj, args, out spArg);
@@ -44,10 +45,6 @@ namespace dotnow.Runtime
             // Execute method with interpreter
             int spReturn = CILInterpreter.ExecuteMethod(threadContext, assemblyLoadContext, methodInfo, spArg);
 
-            // Complete the method frame
-            threadContext.PopMethodFrame();
-
-            object returnValue = null;
 
             // Check for return type
             if ((methodInfo.Flags & CILMethodFlags.Return) != 0)
@@ -58,6 +55,10 @@ namespace dotnow.Runtime
                 // Attempt to unwrap the resulting type for interop
                 StackData.Unwrap(returnTypeInfo, threadContext.stack[spReturn], ref returnValue);
             }
+
+            // Complete the method frame
+            // Must run after return value is extracted because it performs stack cleanup
+            threadContext.PopMethodFrame();
 
             // No return value
             return returnValue;

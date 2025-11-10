@@ -3736,8 +3736,16 @@ namespace dotnow.Runtime.CIL
                             // Load the method
                             CILTypeInfo unboxType = loadContext.GetTypeHandle(boxHandle);
 
-                            // Perform the unbox operation
-                            StackData.Unbox(unboxType, ref stack[sp - 1]);
+                            try
+                            {
+                                // Perform the unbox operation
+                                StackData.Unbox(unboxType, ref stack[sp - 1]);
+                            }
+                            catch (InvalidCastException e)
+                            {
+                                // Throw as runtime exception with interpreted stack trace
+                                threadContext.Throw(e);
+                            }
 
                             // Debug execution
                             Debug.Instruction(op, pc - 5, stack[sp - 1]);

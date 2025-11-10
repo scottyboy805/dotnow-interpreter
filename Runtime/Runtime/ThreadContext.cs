@@ -199,6 +199,13 @@ namespace dotnow.Runtime
         {
             // Pop the frame
             callStack.Pop();
+
+            // Perform thread cleanup
+            if(callStack.Count == 0)
+            {
+                // Clear the stack to allow GC to reclaim any objects
+                Array.Clear(stack, 0, stack.Length);
+            }
         }
 
         public string GetCallStack()
