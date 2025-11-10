@@ -79,17 +79,13 @@ namespace dotnow.Runtime
         // Methods
         private object CreateInteropBase(AppDomain domain, CILTypeInfo typeInfo, ICLRProxy existingProxy)
         {
+            object proxy = existingProxy;
+
             // Create proxy existing
-            object proxy = null;
-            if (existingProxy != null)
+            if (proxy == null)
             {
-                // Try to create the binding
-                __bindings.TryCreateExistingProxyBindingInstance(domain, typeInfo.InteropBaseType, this, existingProxy, out proxy);
-            }
-            else
-            {
-                // Create a new instance of the proxy
-                __bindings.TryCreateProxyBindingInstance(domain, typeInfo.InteropBaseType, this, out proxy);
+                // Try to create the proxy
+                proxy = __bindings.CreateProxyBindingInstance(domain, typeInfo.InteropBaseType, this);
             }
 
             // Check for proxy
@@ -117,21 +113,8 @@ namespace dotnow.Runtime
                 if (typeInfo.InteropImplementationTypes[i].IsCLRType() == true)
                     continue;
 
-                // Create proxy existing
-                object proxy = null;
-                if(existingProxy != null)
-                {
-                    // Try to create the binding
-                    __bindings.TryCreateExistingProxyBindingInstance(domain, typeInfo.InteropImplementationTypes[i], this, existingProxy, out proxy);
-                }
-                else
-                {
-                    // Create a new instance of the proxy
-                    __bindings.TryCreateProxyBindingInstance(domain, typeInfo.InteropImplementationTypes[i], this, out proxy);
-                }
-
-                // Store the binding
-                interfaceProxies[i] = proxy as ICLRProxy;
+                // Create the proxy
+                interfaceProxies[i] = __bindings.CreateProxyBindingInstance(domain, typeInfo.InteropImplementationTypes[i], this);
             }
 
             return interfaceProxies;

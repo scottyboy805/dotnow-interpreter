@@ -40,14 +40,11 @@ namespace dotnow.Interop
             return directCallGenericBindings.ContainsKey(method);
         }
 
-        public static bool TryCreateProxyBindingInstance(AppDomain appDomain, Type forType, ICLRInstance forInstance, out object interopInstance)
+        public static ICLRProxy CreateProxyBindingInstance(AppDomain appDomain, Type forType, ICLRInstance forInstance)
         {
             // Check for binding available
             if (proxyBindings.TryGetValue(forType, out Type proxyType) == false)
-            {
-                interopInstance = null;
-                return false;
-            }
+                throw new Exception("No proxy binding is available for interop type: " + forType);
 
             // Try to create instance
             ICLRProxy proxyInstance = (ICLRProxy)Activator.CreateInstance(proxyType);
@@ -55,40 +52,8 @@ namespace dotnow.Interop
             // Try to initialize instance
             proxyInstance.Initialize(appDomain, forInstance.GetInterpretedType(), forInstance);
 
-            // Set interop instance
-            interopInstance = proxyInstance;
-            return true;
-        }
-
-        public static bool TryCreateExistingProxyBindingInstance(AppDomain appDomain, Type forType, ICLRInstance forInstance, ICLRProxy existingProxy, out object interopInstance)
-        {
-            // Check for binding available
-            if (proxyBindings.TryGetValue(forType, out Type proxyType) == false)
-            {
-                interopInstance = null;
-                return false;
-            }
-
-            // Get existing type
-            Type existingProxyType = existingProxy.GetType();
-
-            // Check for existing
-            if(proxyType == existingProxyType)
-            {
-                // Use the existing proxy
-                interopInstance = existingProxy;
-                return true;
-            }
-
-            // Try to create instance
-            ICLRProxy proxyInstance = (ICLRProxy)Activator.CreateInstance(proxyType);
-
-            // Try to initialize instance
-            proxyInstance.Initialize(appDomain, forInstance.GetInterpretedType(), forInstance);
-
-            // Set interop instance
-            interopInstance = proxyInstance;
-            return true;
+            // Get proxy
+            return proxyInstance;
         }
 
         public static bool TryGetDirectInstanceBinding(MethodBase method, out DirectInstance call)
@@ -106,6 +71,7 @@ namespace dotnow.Interop
             return directCallGenericBindings.TryGetValue(method, out call);
         }
 
+        #region Initialize
         private static void InitializeBindings()
         {
             // Get the name of this assembly
@@ -413,6 +379,7 @@ namespace dotnow.Interop
                 }
             }
         }
+        #endregion
 
         private static MethodBase ResolveMethod(Func<MethodBase> resolveMethod)
         {
