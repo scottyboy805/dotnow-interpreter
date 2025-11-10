@@ -10,6 +10,7 @@ The experimental branch is now pretty stable and can run most LLM generated code
 ✓ Suppoort for interpreted classes, structs and enums  
 ✓ Cross domain (interop) calls to the host game/Unity API  
 ✓ Cross domain inheritance using a proxy binding  
+✓ Full safe managed interpreter, no unsafe code or pointers required for emulation
 Probably more that I can't think of right now.  
 
 ### Pros
