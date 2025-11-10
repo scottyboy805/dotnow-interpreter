@@ -1,5 +1,6 @@
 ﻿using dotnow.Reflection;
 using dotnow.Runtime;
+using dotnow.Runtime.CIL;
 using System;
 using System.Linq;
 
@@ -143,7 +144,7 @@ namespace dotnow.Interop.CoreLib
                     if (valueNamePair.Value == enumString)
                     {
                         // Write to out value
-                        context.WriteArgObject<object>(2, new CLREnumInstance(clrType, valueNamePair.Key));
+                        context.WriteArgAny(2, metaType, new CLREnumInstance(clrType, valueNamePair.Key));
 
                         // Write result
                         context.ReturnValueType(true);
@@ -151,8 +152,8 @@ namespace dotnow.Interop.CoreLib
                     }
                 }
 
-                // Write to out value
-                context.WriteArgObject<object>(2, null);
+                // Write to out value with the default value for the enum
+                context.WriteArgAny(2, metaType, new CLREnumInstance(clrType, StackData.Default(clrType.GetTypeInfo(context.AppDomain))));
 
                 // Write result
                 context.ReturnValueType(false);
@@ -164,7 +165,7 @@ namespace dotnow.Interop.CoreLib
                 bool success = Enum.TryParse(metaType, enumString, out object result);
 
                 // Write to out value
-                context.WriteArgObject(2, result);
+                context.WriteArgAny(2, metaType, result);
 
                 // Write result
                 context.ReturnValueType(success);
@@ -186,7 +187,7 @@ namespace dotnow.Interop.CoreLib
                     if (valueNamePair.Value == enumString)
                     {
                         // Write to out value
-                        context.WriteArgWrap(1, clrType, new CLREnumInstance(clrType, valueNamePair.Key));
+                        context.WriteArgAny(1, clrType, new CLREnumInstance(clrType, valueNamePair.Key));
 
                         // Write result
                         context.ReturnValueType(true);
@@ -194,8 +195,8 @@ namespace dotnow.Interop.CoreLib
                     }
                 }
 
-                // Write a default value to the enum on failure
-                context.WriteArgWrap(1, clrType, 0);
+                // Write to out value with the default value for the enum
+                context.WriteArgAny(1, clrType, new CLREnumInstance(clrType, StackData.Default(clrType.GetTypeInfo(context.AppDomain))));
 
                 // Write result
                 context.ReturnValueType(false);
@@ -207,7 +208,7 @@ namespace dotnow.Interop.CoreLib
                 bool success = Enum.TryParse(genericTypes[0], enumString, out object result);
 
                 // Write to out value as enm
-                context.WriteArgWrap(1, genericTypes[0], result);
+                context.WriteArgAny(1, genericTypes[0], result);
 
                 // Write result
                 context.ReturnValueType(success);

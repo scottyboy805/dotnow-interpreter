@@ -127,6 +127,16 @@ namespace dotnow.Interop
             WriteArgWrap(offset, typeof(T), val);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteArgAny(int offset, Type type, object val)
+        {
+            // Check bounds
+            CheckArgBounds(offset);
+
+            // Write to argument slot
+            WriteArgWrap(offset, type, val);
+        }
+
         internal void WriteArgWrap(int offset, Type type, object obj)
         {
             // Check null
@@ -139,13 +149,8 @@ namespace dotnow.Interop
             // Get type handle
             CILTypeInfo typeInfo = type.GetTypeInfo(appDomain);
 
-            StackData val = default;
-
             // Wrap to stack
-            StackData.Wrap(typeInfo, obj, ref val);
-
-            // Update the argument value
-            stackArguments[offset] = val;
+            StackData.Wrap(typeInfo, obj, ref stackArguments[offset]);
         }
         #endregion
 

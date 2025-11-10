@@ -7,6 +7,8 @@ using System.Reflection.Metadata.Ecma335;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Data;
+using dotnow.Runtime;
+using dotnow.Runtime.CIL;
 
 namespace dotnow.Reflection
 {
