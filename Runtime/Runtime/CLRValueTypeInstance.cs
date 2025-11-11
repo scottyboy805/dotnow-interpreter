@@ -12,18 +12,36 @@ namespace dotnow.Runtime
 
         // Public
         public readonly CLRType Type;
+        public readonly object InteropBase;
 
         // Properties
         public Span<StackData> Fields => fields.Span;
 
         // Constructor
-        private CLRValueTypeInstance(CILTypeInfo typeInfo, Memory<StackData> fields)
+        private CLRValueTypeInstance(AppDomain domain, CILTypeInfo typeInfo, Memory<StackData> fields)
         {
             // Check for CLR
             if ((typeInfo.Flags & CILTypeFlags.Interpreted) == 0)
                 throw new ArgumentException("Only supported for interpreted value types");
 
+            // Create proxy direct for value types, since it is not possible to derive from any other type
+            ICLRProxy proxy = new Interop.CoreLib.Proxy.System_Object_Proxy();
+
             this.Type = (CLRType)typeInfo.Type;
+            this.InteropBase = proxy;
+            this.fields = fields;
+
+            // Initialize proxy
+            proxy.Initialize(domain, typeInfo.Type, this);
+        }
+
+        private CLRValueTypeInstance(CLRType type, object interopBase, Memory<StackData> fields)
+        {
+            if(interopBase == null)
+                throw new ArgumentNullException(nameof(interopBase));
+
+            this.Type = type;
+            this.InteropBase = interopBase;
             this.fields = fields;
         }
 
@@ -40,36 +58,43 @@ namespace dotnow.Runtime
 
         public object Unwrap()
         {
-            throw new NotSupportedException("Not supported for value types");
+            return InteropBase;
         }
 
         public object UnwrapAsType(Type asType)
         {
-            throw new NotSupportedException("Not supported for value types");
+            // Check for identical type
+            if (Type == asType || asType == typeof(object))
+                return InteropBase;
+
+            throw new NotSupportedException("Cannot get value type instance as any type other than System.Object");
         }
 
         public CLRValueTypeInstance Copy(CILTypeInfo typeInfo)
         {
+            // Copy the interop object
+            object interopBase = __marshal.CopyInteropBoxedValueTypeSlow(InteropBase);
+
             // Copy the array
             StackData[] copyFields = fields.ToArray();
 
             // Create instance
-            return new CLRValueTypeInstance(typeInfo, new Memory<StackData>(copyFields));
+            return new CLRValueTypeInstance(Type, interopBase, copyFields);
         }
 
-        internal static CLRValueTypeInstance CreateInstance(CILTypeInfo typeInfo)
+        internal static CLRValueTypeInstance CreateInstance(AppDomain domain, CILTypeInfo typeInfo)
         {
             // Create dedicated memory - used for return to interop called where the stack would not survive
             StackData[] dedicatedFields = new StackData[typeInfo.InstanceSize];
 
             // Create the instance
-            return new CLRValueTypeInstance(typeInfo, new Memory<StackData>(dedicatedFields));
+            return new CLRValueTypeInstance(domain, typeInfo, new Memory<StackData>(dedicatedFields));
         }
 
-        internal static CLRValueTypeInstance CreateInstance(CILTypeInfo typeInfo, StackData[] stack, int sp)
+        internal static CLRValueTypeInstance CreateInstance(AppDomain domain, CILTypeInfo typeInfo, StackData[] stack, int sp)
         {
             // Create the instance
-            return new CLRValueTypeInstance(typeInfo, new Memory<StackData>(stack, sp, typeInfo.InstanceSize));
+            return new CLRValueTypeInstance(domain, typeInfo, new Memory<StackData>(stack, sp, typeInfo.InstanceSize));
         }
     }
 }

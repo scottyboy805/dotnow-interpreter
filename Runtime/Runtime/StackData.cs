@@ -950,7 +950,7 @@ namespace dotnow.Runtime
                                 else
                                 {
                                     // Create default value type instance
-                                    byRef.SetValueRef(CLRValueTypeInstance.CreateInstance(typeInfo));
+                                    byRef.SetValueRef(CLRValueTypeInstance.CreateInstance(domain, typeInfo));
                                 }
                             }
                             else
@@ -1082,7 +1082,7 @@ namespace dotnow.Runtime
                             else
                             {
                                 // Create default value type instance
-                                dst.Ref = (CLRValueTypeInstance.CreateInstance(typeInfo));
+                                dst.Ref = (CLRValueTypeInstance.CreateInstance(domain, typeInfo));
                             }
                         }
                         else

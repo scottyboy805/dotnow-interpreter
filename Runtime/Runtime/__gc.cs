@@ -91,7 +91,7 @@ namespace dotnow.Runtime
                 else if ((type.Flags & CILTypeFlags.ValueType) != 0)
                 {
                     // Create the value type instance
-                    dst.Ref = CLRValueTypeInstance.CreateInstance(type);
+                    dst.Ref = CLRValueTypeInstance.CreateInstance(domain, type);
                     dst.Type = StackType.Ref;
                 }
                 else if ((type.Flags & CILTypeFlags.ReferenceType) != 0)

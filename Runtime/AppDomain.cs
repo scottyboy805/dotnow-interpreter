@@ -253,7 +253,7 @@ namespace dotnow
                 if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0)
                 {
                     // Create value type
-                    instance = CLRValueTypeInstance.CreateInstance(typeInfo);
+                    instance = CLRValueTypeInstance.CreateInstance(this, typeInfo);
                 }
                 else
                 { 

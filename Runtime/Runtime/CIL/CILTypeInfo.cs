@@ -142,6 +142,10 @@ namespace dotnow.Runtime.CIL
 
         private static Type GetInteropBaseType(Type type)
         {
+            // Check for value type
+            if (type.IsValueType == true)
+                return typeof(object);
+
             Type current = type.BaseType;
 
             // Move down the hierarchy until we have a valid system base type

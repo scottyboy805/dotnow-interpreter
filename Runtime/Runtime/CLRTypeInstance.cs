@@ -46,7 +46,7 @@ namespace dotnow.Runtime
         public object UnwrapAsType(Type asType)
         {
             // Check for identical type
-            if (Type == asType)
+            if (Type == asType || asType == typeof(object))
                 return InteropBase;
 
             // Check for subclass
