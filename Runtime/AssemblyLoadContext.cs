@@ -92,12 +92,18 @@ namespace dotnow
         private readonly CILMetadataReference[] memberReferences;
         private readonly CILMetadataReference[] memberSpecificationReferences;
 
-
         // Properties
-        [DebuggerHidden]
-        public AppDomain AppDomain => appDomain;
-        [DebuggerHidden]
-        public Assembly Assembly => assembly;
+        public AppDomain AppDomain
+        {
+            [DebuggerStepThrough]
+            get => appDomain;
+        }
+
+        public Assembly Assembly
+        {
+            [DebuggerStepThrough]
+            get => assembly;
+        }
 
         // Constructor
         // For testing only
@@ -153,7 +159,7 @@ namespace dotnow
         {
             // Check for referenced by other contexts
             if (clrDependenciesContexts.Count > 0)
-                throw new InvalidOperationException($"Cannot unload assembly context because it is referenced by {clrDependenciesContexts.First().metadataReferenceProvider.AssemblyLoadContext.Assembly.FullName}");
+                throw new InvalidOperationException($"Cannot unload assembly context because it is referenced by {clrDependenciesContexts.First().Assembly.FullName}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
