@@ -457,71 +457,72 @@ namespace dotnow.Runtime
                             break;
                         }
                 }
-                return;
             }
-
-            // ### Handle enums
-            // Check for interpreted enum or as enum
-            if ((typeInfo.Flags & CILTypeFlags.Enum) != 0)
+            else
             {
-                // Check for interpreted
-                if ((typeInfo.Flags & CILTypeFlags.Interpreted) != 0)
+                // ### Handle enums
+                // Check for interpreted enum or as enum
+                if ((typeInfo.Flags & CILTypeFlags.Enum) != 0)
                 {
-                    // Create the enum object
-                    unwrapped = new CLREnumInstance(typeInfo, src);
-                    return;
+                    // Check for interpreted
+                    if ((typeInfo.Flags & CILTypeFlags.Interpreted) != 0)
+                    {
+                        // Create the enum object
+                        unwrapped = new CLREnumInstance(typeInfo, src);
+                        return;
+                    }
+                    // Must be interop
+                    else
+                    {
+                        // Get the enum type code
+                        TypeCode enumTypeCode = System.Type.GetTypeCode(typeInfo.Type.GetEnumUnderlyingType());
+
+                        // Select type code
+                        switch (enumTypeCode)
+                        {
+                            case TypeCode.SByte: unwrapped = Enum.ToObject(typeInfo.Type, (sbyte)src.I32); break;
+                            case TypeCode.Byte: unwrapped = Enum.ToObject(typeInfo.Type, (byte)src.I32); break;
+                            case TypeCode.Int16: unwrapped = Enum.ToObject(typeInfo.Type, (short)src.I32); break;
+                            case TypeCode.UInt16: unwrapped = Enum.ToObject(typeInfo.Type, (ushort)src.I32); break;
+                            case TypeCode.Int32: unwrapped = Enum.ToObject(typeInfo.Type, (int)src.I32); break;
+                            case TypeCode.UInt32: unwrapped = Enum.ToObject(typeInfo.Type, (uint)src.I32); break;
+                            case TypeCode.Int64: unwrapped = Enum.ToObject(typeInfo.Type, (long)src.I64); break;
+                            case TypeCode.UInt64: unwrapped = Enum.ToObject(typeInfo.Type, (ulong)src.I64); break;
+                            default:
+                                throw new NotSupportedException(enumTypeCode.ToString());
+                        }
+                        return;
+                    }
                 }
-                // Must be interop
-                else
+
+
+                // ### Handle all other types
+                switch (typeInfo.TypeCode)
                 {
-                    // Get the enum type code
-                    TypeCode enumTypeCode = System.Type.GetTypeCode(typeInfo.Type.GetEnumUnderlyingType());
+                    default: throw new NotSupportedException(typeInfo.ToString());
 
-                    // Select type code
-                    switch (enumTypeCode)
-                    {
-                        case TypeCode.SByte: unwrapped = Enum.ToObject(typeInfo.Type, (sbyte)src.I32); break;
-                        case TypeCode.Byte: unwrapped = Enum.ToObject(typeInfo.Type, (byte)src.I32); break;
-                        case TypeCode.Int16: unwrapped = Enum.ToObject(typeInfo.Type, (short)src.I32); break;
-                        case TypeCode.UInt16: unwrapped = Enum.ToObject(typeInfo.Type, (ushort)src.I32); break;
-                        case TypeCode.Int32: unwrapped = Enum.ToObject(typeInfo.Type, (int)src.I32); break;
-                        case TypeCode.UInt32: unwrapped = Enum.ToObject(typeInfo.Type, (uint)src.I32); break;
-                        case TypeCode.Int64: unwrapped = Enum.ToObject(typeInfo.Type, (long)src.I64); break;
-                        case TypeCode.UInt64: unwrapped = Enum.ToObject(typeInfo.Type, (ulong)src.I64); break;
-                        default:
-                            throw new NotSupportedException(enumTypeCode.ToString());
-                    }
-                    return;
+                    case TypeCode.Boolean: unwrapped = src.I32 == 1 ? true : false; break;
+                    case TypeCode.Char: unwrapped = (char)src.I32; break;
+
+                    case TypeCode.SByte: unwrapped = (sbyte)src.I32; break;
+                    case TypeCode.Byte: unwrapped = (byte)src.I32; break;
+                    case TypeCode.Int16: unwrapped = (short)src.I32; break;
+                    case TypeCode.UInt16: unwrapped = (ushort)src.I32; break;
+                    case TypeCode.Int32: unwrapped = (int)src.I32; break;
+                    case TypeCode.UInt32: unwrapped = (uint)src.I32; break;
+                    case TypeCode.Int64: unwrapped = (long)src.I64; break;
+                    case TypeCode.UInt64: unwrapped = (ulong)src.I64; break;
+                    case TypeCode.Single: unwrapped = (float)src.F32; break;
+                    case TypeCode.Double: unwrapped = (double)src.F64; break;
+                    case TypeCode.Decimal:
+                    case TypeCode.String:
+                    case TypeCode.Object:
+                    case TypeCode.DateTime:
+                        {
+                            unwrapped = src.Ref;
+                            break;
+                        }
                 }
-            }
-
-
-            // ### Handle all other types
-            switch (typeInfo.TypeCode)
-            {
-                default: throw new NotSupportedException(typeInfo.ToString());
-
-                case TypeCode.Boolean: unwrapped = src.I32 == 1 ? true : false; break;
-                case TypeCode.Char: unwrapped = (char)src.I32; break;
-
-                case TypeCode.SByte: unwrapped = (sbyte)src.I32; break;
-                case TypeCode.Byte: unwrapped = (byte)src.I32; break;
-                case TypeCode.Int16: unwrapped = (short)src.I32; break;
-                case TypeCode.UInt16: unwrapped = (ushort)src.I32; break;
-                case TypeCode.Int32: unwrapped = (int)src.I32; break;
-                case TypeCode.UInt32: unwrapped = (uint)src.I32; break;
-                case TypeCode.Int64: unwrapped = (long)src.I64; break;
-                case TypeCode.UInt64: unwrapped = (ulong)src.I64; break;
-                case TypeCode.Single: unwrapped = (float)src.F32; break;
-                case TypeCode.Double: unwrapped = (double)src.F64; break;
-                case TypeCode.Decimal:
-                case TypeCode.String:
-                case TypeCode.Object:
-                case TypeCode.DateTime:
-                    {
-                        unwrapped = src.Ref;
-                        break;
-                    }
             }
 
             // Check for ICLRInstance - should be passed as base type

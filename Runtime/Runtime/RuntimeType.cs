@@ -1,4 +1,5 @@
-﻿using System;
+﻿using dotnow.Runtime.CIL;
+using System;
 using System.Collections.Generic;
 
 namespace dotnow.Runtime
@@ -6,6 +7,19 @@ namespace dotnow.Runtime
     internal static class RuntimeType
     {
         // Methods
+        internal static bool IsInstanceOfType(CILTypeInfo type, object obj)
+        {
+            // Check for null
+            if (obj == null)
+                return false;
+
+            // Get the type
+            Type objType = obj.GetInterpretedType();
+
+            // Check for assignable
+            return IsAssignable(objType, type.Type);
+        }
+
         internal static bool IsAssignable(Type dst, Type src)
         {
             // Check for direct match

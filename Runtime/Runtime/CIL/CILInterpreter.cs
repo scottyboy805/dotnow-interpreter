@@ -3870,7 +3870,29 @@ namespace dotnow.Runtime.CIL
                             stack[sp - 1].Type = StackType.Ref;
 
                             // Debug execution
-                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Isinst:
+                        {
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle typeHandle = MetadataTokens.EntityHandle(token);
+
+                            // Get the type info
+                            CILTypeInfo instType = loadContext.GetTypeHandle(typeHandle);
+
+                            // Check for instance
+                            StackData obj = stack[sp - 1];
+
+                            // Check for instance of type
+                            if (RuntimeType.IsInstanceOfType(instType, obj.Ref) == false)
+                                stack[sp - 1].Ref = null;   // Push null back to the stack because it is not an instance of this type
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 5, stack[sp - 1]);
                             break;
                         }
                         #endregion
