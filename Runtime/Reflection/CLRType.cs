@@ -498,6 +498,17 @@ namespace dotnow.Reflection
             return new CLRArrayType(this, rank);
         }
 
+        public override Type MakeByRefType()
+        {
+            // Create a copy type
+            CLRType byRefType = new CLRType(metadataProvider, handle);
+
+            // Set by ref flag
+            byRefType.isByRef = true;
+
+            return byRefType;
+        }
+
         private bool MatchTypeNameAndAttributes(Type type, BindingFlags bindingAttr, string name)
         {
             // Check for name specified
