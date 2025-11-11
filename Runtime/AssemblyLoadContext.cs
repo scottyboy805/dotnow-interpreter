@@ -11,6 +11,7 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
+using UnityEditor.VersionControl;
 
 namespace dotnow
 {
@@ -577,6 +578,40 @@ namespace dotnow
 
                         // Resolve the declaring type which will force all fields to be initialized
                         ResolveType(declaringTypeHandle);
+
+                        // Get the type handle
+                        CILTypeInfo declaringTypeInfo = GetTypeHandle(declaringTypeHandle);
+
+                        // Get the field name
+                        string fieldName = metadataReferenceProvider.MetadataReader.GetString(memberReference.Name);
+
+                        // Try to get the field
+                        FieldInfo resolvedField = declaringTypeInfo.Type.GetField(fieldName, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public);
+
+                        // Check for found
+                        if (resolvedField == null)
+                            throw new MissingFieldException(fieldName);
+
+                        // Get the assembly context where the method is loaded
+                        AssemblyLoadContext referenceContext = resolvedField.GetLoadContext();
+
+                        // Check for interpreted
+                        if (referenceContext != null)
+                        {
+                            memberReferences[row] = new CILMetadataReference(
+                                referenceContext,
+                                row);
+                        }
+                        else
+                        {
+                            // Ensure that the interop type handle is resolved
+                            int hash = appDomain.ResolveInteropFieldHandle(resolvedField);
+
+                            // Resolve the member
+                            memberReferences[row] = new CILMetadataReference(
+                                null, 
+                                hash);
+                        }
                         break;
                     }
                     throw new NotSupportedException(handle.Kind.ToString());

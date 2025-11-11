@@ -33,19 +33,22 @@ namespace dotnow
         [Conditional("DOTNOW_ENABLE_DEBUG")]
         internal static void Line(string output)
         {
-            System.Diagnostics.Debug.WriteLine(output);
+            //System.Diagnostics.Debug.WriteLine(output);
+            UnityEngine.Debug.Log(output);
         }
 
         [Conditional("DOTNOW_ENABLE_DEBUG")]
         internal static void LineFormat(string format, params object[] args)
         {
-            System.Diagnostics.Debug.WriteLine(format, args);
+            //System.Diagnostics.Debug.WriteLine(format, args);
+            UnityEngine.Debug.LogFormat(format, args);
         }
 
         [Conditional("DOTNOW_ENABLE_DEBUG")]
         internal static void Timer(string label, Stopwatch timer)
         {
-            System.Diagnostics.Debug.WriteLine("{0} took: {1}ms", label, timer.Elapsed.TotalMilliseconds);
+            //System.Diagnostics.Debug.WriteLine("{0} took: {1}ms", label, timer.Elapsed.TotalMilliseconds);
+            UnityEngine.Debug.LogFormat("{0} took: {1}ms", label, timer.Elapsed.TotalMilliseconds);
         }
 
         [Conditional("DOTNOW_ENABLE_DEBUG_INSTRUCTIONS")]
