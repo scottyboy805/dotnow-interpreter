@@ -3492,10 +3492,20 @@ namespace dotnow.Runtime.CIL
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
                                 threadContext.Throw<IndexOutOfRangeException>();
 
-                            // Get the element value and wrap it onto stack
-                            object value = array.GetValue(explicitIndex);
-                            StackData.Wrap(elementType, value, ref stack[sp]);
-                            sp++;
+                            // Check for value type
+                            if ((elementType.Flags & CILTypeFlags.ValueType) != 0 && (elementType.Flags & CILTypeFlags.Interpreted) != 0)
+                            {
+                                // We can just get interpreted value types direct, since it should always be a ICLRInstance
+                                stack[sp].Ref = array.GetValue(explicitIndex);
+                                sp++;
+                            }
+                            else
+                            {
+                                // Get the element value and wrap it onto stack
+                                object value = array.GetValue(explicitIndex);
+                                StackData.Wrap(elementType, value, ref stack[sp]);
+                                sp++;
+                            }
 
                             // Debug execution
                             Debug.Instruction(op, pc - 5, stack[sp - 1]);
@@ -3531,10 +3541,20 @@ namespace dotnow.Runtime.CIL
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
                                 threadContext.Throw<IndexOutOfRangeException>();
 
-                            // Unwrap the value and store it in the array
-                            object unwrappedValue = null;
-                            StackData.Unwrap(elementType, value, ref unwrappedValue);
-                            array.SetValue(unwrappedValue, explicitIndex);
+                            // Check for value type
+                            if ((elementType.Flags & CILTypeFlags.ValueType) != 0 && (elementType.Flags & CILTypeFlags.Interpreted) != 0)
+                            {
+                                // Do not unwrap value types to store it in the array
+                                // Arrays of interpreted types are always converted to `ICLRInstance[]`, so we can just pass the ref element which should always be a ICLRInstance
+                                array.SetValue(value.Ref, explicitIndex);
+                            }
+                            else
+                            {
+                                // Unwrap the value and store it in the array
+                                object unwrappedValue = null;
+                                StackData.Unwrap(elementType, value, ref unwrappedValue);
+                                array.SetValue(unwrappedValue, explicitIndex);
+                            }
 
                             // Debug execution
                             Debug.Instruction(op, pc - 5);
