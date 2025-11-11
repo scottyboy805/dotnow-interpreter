@@ -61,6 +61,12 @@ namespace dotnow.Runtime.CIL
                         }
 
                     case ILOpCode.Volatile: continue;
+                    case ILOpCode.Constrained:
+                        {
+                            // Read type
+                            FetchDecode<int>(instructions, ref pc);
+                            continue;
+                        }
 
                     #region Stack
                     case ILOpCode.Dup:
@@ -2956,8 +2962,16 @@ namespace dotnow.Runtime.CIL
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
                                 threadContext.Throw<IndexOutOfRangeException>();
 
-                            // Push to stack as I32 (signed byte promoted to I32)
-                            stack[sp].I32 = ((sbyte[])array)[explicitIndex];
+                            if (array is bool[])
+                            {
+                                // Push to stack as I32 from bool
+                                stack[sp].I32 = ((bool[])array)[explicitIndex] ? 1 : 0;
+                            }
+                            else
+                            {
+                                // Push to stack as I32 (signed byte promoted to I32)
+                                stack[sp].I32 = ((sbyte[])array)[explicitIndex];
+                            }
                             stack[sp++].Type = StackType.I32;
 
                             // Debug execution
@@ -3265,8 +3279,17 @@ namespace dotnow.Runtime.CIL
                             if (explicitIndex < 0 || explicitIndex >= array.Length)
                                 threadContext.Throw<IndexOutOfRangeException>();
 
-                            // Store value to array (truncate to signed byte)
-                            ((sbyte[])array)[explicitIndex] = (sbyte)value.I32;
+                            // Check for bool
+                            if (array is bool[])
+                            {
+                                // Store value to array (truncate to signed byte)
+                                ((bool[])array)[explicitIndex] = value.I32 != 0;
+                            }
+                            else
+                            {
+                                // Store value to array (truncate to signed byte)
+                                ((sbyte[])array)[explicitIndex] = (sbyte)value.I32;
+                            }
 
                             // Debug execution
                             Debug.Instruction(op, pc - 1);

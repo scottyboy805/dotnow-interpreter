@@ -125,6 +125,34 @@ namespace dotnow.Runtime
             return false;
         }
 
+        internal bool IsAnyEqual(in StackData other)
+        {
+            // Check type
+            if (Type != other.Type)
+                return false;
+
+            switch(Type)
+            {
+                default: throw new NotSupportedException(Type.ToString()); // Cannot compare by ref
+
+                case StackType.I32:
+                case StackType.U32:
+                    return I32 == other.I32;
+                case StackType.I64:
+                case StackType.U64:
+                    return I64 == other.I64;
+                case StackType.F32:
+                    return F32 == other.F32;
+                case StackType.F64:
+                    return F64 == other.F64;
+                case StackType.Ptr:
+                case StackType.UPtr:
+                    return Ptr == other.Ptr;
+                case StackType.Ref:
+                    return Ref == other.Ref;
+            }
+        }
+
         public static void Wrap(CILTypeInfo typeInfo, object obj, ref StackData dst)
         {
             // Check for CLR proxy - should be passed as derived instance

@@ -48,7 +48,28 @@ namespace dotnow.Runtime
         // Methods
         public bool Equals(ICLRInstance otherInstance)
         {
-            return ReferenceEquals(this, otherInstance);
+            // Check value type - no other ICLRInstance could match
+            if (otherInstance is not CLRValueTypeInstance valueInstance)
+                return false;
+
+            // Check for field length - we can exit early if they do not match
+            if (valueInstance.fields.Length != fields.Length)
+                return false;
+
+            // Get spans to compare data by bytes
+            Span<StackData> a = valueInstance.Fields;
+            Span<StackData> b = Fields;
+
+            // Compare elements
+            for(int i = 0; i < fields.Length; i++)
+            {
+                // Check for difference in element
+                if (a[i].IsAnyEqual(b[i]) == false)
+                    return false;
+            }
+
+            // Not equal
+            return false;
         }
 
         public Type GetInterpretedType()
