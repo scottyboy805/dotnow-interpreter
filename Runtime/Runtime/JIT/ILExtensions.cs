@@ -33,6 +33,7 @@ namespace dotnow.Runtime.JIT
         {
             switch (op)
             {
+                case ILOpCode.Constrained:
                 case ILOpCode.Tail:
                 case ILOpCode.Unaligned:
                 case ILOpCode.Volatile:
@@ -172,6 +173,7 @@ namespace dotnow.Runtime.JIT
 
 
                 // Prefix
+                case ILOpCode.Constrained: return ILOperandType.InlineToken;
                 case ILOpCode.Unaligned: return ILOperandType.ShortInlineVar;
 
                 // Switch
