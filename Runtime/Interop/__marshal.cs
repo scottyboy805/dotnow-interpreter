@@ -54,8 +54,11 @@ namespace dotnow.Interop
 
         public static void InvokeConstructorInterop(ThreadContext threadContext, AppDomain appDomain, in CILTypeInfo type, in CILMethodInfo ctor, int spReturn, int spArg)
         {
+            // Set stack offset in case we call back into an interpreted method via reflection
+            threadContext.stackOffset = ctor.ParameterTypes.Length;
+
             // Check for delegate
-            if((ctor.Flags & CILMethodFlags.DirectInstanceDelegate) != 0)
+            if ((ctor.Flags & CILMethodFlags.DirectInstanceDelegate) != 0)
             {
                 // Get arg count
                 int argCount = ctor.ParameterTypes.Length;
@@ -134,14 +137,17 @@ namespace dotnow.Interop
         {
             int spFirstArg = spArg;
 
-             // Check for direct call
+            // Get arg count
+            int argCount = (method.Flags & CILMethodFlags.This) != 0
+                ? method.ParameterTypes.Length + 1
+                : method.ParameterTypes.Length;
+
+            // Set stack offset in case we call back into an interpreted method via reflection
+            threadContext.stackOffset = spFirstArg + argCount;
+
+            // Check for direct call
             if ((method.Flags & CILMethodFlags.DirectCallDelegate) != 0)
             {
-                // Get arg count
-                int argCount = (method.Flags & CILMethodFlags.This) != 0
-                    ? method.ParameterTypes.Length + 1
-                    : method.ParameterTypes.Length;
-
                 // Create spans for view of stack argument and return slots
                 Span<StackData> stackArgs = new Span<StackData>(threadContext.stack, spArg, argCount);
                 Span<StackData> stackReturn = (method.Flags & CILMethodFlags.Return) != 0
@@ -162,11 +168,6 @@ namespace dotnow.Interop
             // Check for generic direct call
             else if((method.Flags & CILMethodFlags.DirectCallGenericDelegate) != 0)
             {
-                // Get arg count
-                int argCount = (method.Flags & CILMethodFlags.This) != 0
-                    ? method.ParameterTypes.Length + 1
-                    : method.ParameterTypes.Length;
-
                 // Create spans for view of stack argument and return slots
                 Span<StackData> stackArgs = new Span<StackData>(threadContext.stack, spArg, argCount);
                 Span<StackData> stackReturn = (method.Flags & CILMethodFlags.Return) != 0

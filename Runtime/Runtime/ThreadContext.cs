@@ -41,6 +41,7 @@ namespace dotnow.Runtime
         internal readonly Stack<CallFrame> callStack = new();
         internal readonly Thread thread = null;
         internal int callDepth = 0;
+        internal int stackOffset = 0;
         internal bool abort = false;
 
         // Properties
@@ -118,21 +119,24 @@ namespace dotnow.Runtime
 
         public void PushReflectionMethodFrame(AppDomain appDomain, in CILMethodInfo methodHandle, object instance, object[] args, out int spArg)
         {
-            int sp = 0;
+            // Get the stack pointer from the thread context, in case we have called a reflection method during interpreted calls
+            int spCallerArg = this.stackOffset;
+            int spCaller = spCallerArg;
+            
 
             // Copy instance to stack
             if ((methodHandle.Flags & CILMethodFlags.This) != 0)
-                StackData.Wrap(methodHandle.DeclaringType, instance, ref stack[sp++]);
+                StackData.Wrap(methodHandle.DeclaringType, instance, ref stack[spCaller++]);
 
             // Copy arguments to the stack
             if (args != null)
             {
                 for (int i = 0; i < args.Length; i++)
-                    StackData.Wrap(methodHandle.ParameterTypes[i], args[i], ref stack[sp++]);
+                    StackData.Wrap(methodHandle.ParameterTypes[i], args[i], ref stack[spCaller++]);
             }
 
             // Push the frame
-            PushMethodFrame(appDomain, methodHandle, CallInstance.ExistingObjectInstance, 0, 0, out spArg);
+            PushMethodFrame(appDomain, methodHandle, CallInstance.ExistingObjectInstance, spCallerArg, spCaller, out spArg);
         }
 
         /// <summary>
@@ -203,6 +207,9 @@ namespace dotnow.Runtime
             // Perform thread cleanup
             if(callStack.Count == 0)
             {
+                // Reset stack pointer
+                stackOffset = 0;
+
                 // Clear the stack to allow GC to reclaim any objects
                 Array.Clear(stack, 0, stack.Length);
             }
