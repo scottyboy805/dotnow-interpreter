@@ -75,33 +75,33 @@ namespace dotnow.Runtime
             int spReturn = 0;   // Stack return pointer
 
             // Handle any runtime exceptions thrown by user or interpreter code
-            try
-            {
+            //try
+            //{
                 // Execute the bytecode
                 spReturn = CILInterpreter.ExecuteMethodBytecode(threadContext, loadContext, method, ref pc, spArg);
-            }
-            catch (Exception e)
-            {
-                // Try to get the handler
-                if (GetHandler(method, e, pc, out CILExceptionHandlerInfo handler) == true)
-                {
-                    // Jump to handler offset
-                    pc = handler.HandlerOffset;
+            //}
+            //catch (Exception e)
+            //{
+            //    // Try to get the handler
+            //    if (GetHandler(method, e, pc, out CILExceptionHandlerInfo handler) == true)
+            //    {
+            //        // Jump to handler offset
+            //        pc = handler.HandlerOffset;
 
-                    // Execute the handler portion
-                    spReturn = CILInterpreter.ExecuteMethodBytecode(threadContext, loadContext, method, ref pc, spArg);
-                }
-                // No handler available - just throw the exception back to the caller
-                else
-                {
-                    // Rethrow
-                    throw e;
-                }
-            }
-            finally
-            {
+            //        // Execute the handler portion
+            //        spReturn = CILInterpreter.ExecuteMethodBytecode(threadContext, loadContext, method, ref pc, spArg);
+            //    }
+            //    // No handler available - just throw the exception back to the caller
+            //    else
+            //    {
+            //        // Rethrow
+            //        throw e;
+            //    }
+            //}
+            //finally
+            //{
 
-            }
+            //}
 
             // Get stack return pointer
             return spReturn;

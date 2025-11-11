@@ -175,7 +175,7 @@ namespace dotnow.Runtime
                 if(pushThis == CallInstance.ExistingObjectInstance)
                 {
                     // Copy the instance
-                    StackData.CopyFrame(methodInfo.DeclaringType, stack[spArgCaller], ref stack[spArg]);
+                    StackData.Copy(methodInfo.DeclaringType, stack[spArgCaller], ref stack[spArg]);
                     srcOffset++;
                 }
                 dstOffset++;
@@ -185,7 +185,7 @@ namespace dotnow.Runtime
             for(int i = 0; i < methodInfo.ParameterTypes.Length; i++)
             {
                 // Copy the value to the new frame
-                StackData.CopyFrame(methodInfo.ParameterTypes[i], stack[spArgCaller + i + srcOffset], ref stack[spArg + i + dstOffset]);
+                StackData.Copy(methodInfo.ParameterTypes[i], stack[spArgCaller + i + srcOffset], ref stack[spArg + i + dstOffset]);
             }
 
             // Push the frame

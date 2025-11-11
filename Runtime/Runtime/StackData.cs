@@ -386,6 +386,7 @@ namespace dotnow.Runtime
                 case TypeCode.Decimal:
                 case TypeCode.String:
                 case TypeCode.Object:
+                case TypeCode.DateTime:
                     {
                         dst.Type = StackType.Ref;
                         dst.Ref = obj;
@@ -422,6 +423,7 @@ namespace dotnow.Runtime
                     case TypeCode.Decimal:
                     case TypeCode.String:
                     case TypeCode.Object:
+                    case TypeCode.DateTime:
                         {
                             unwrapped = byRef.GetValueRef();
                             break;
@@ -487,6 +489,7 @@ namespace dotnow.Runtime
                 case TypeCode.Decimal:
                 case TypeCode.String:
                 case TypeCode.Object:
+                case TypeCode.DateTime:
                     {
                         unwrapped = src.Ref;
                         break;
@@ -849,16 +852,16 @@ namespace dotnow.Runtime
             }
         }
 
-        public static StackData Default(CILTypeInfo typeInfo)
+        public static StackData Default(AppDomain domain, CILTypeInfo typeInfo)
         {
             // Load default into slot
             StackData dst = default;
-            Default(typeInfo, ref dst);
+            Default(domain, typeInfo, ref dst);
 
             return dst;
         }
 
-        public static void Default(CILTypeInfo typeInfo, ref StackData dst)
+        public static void Default(AppDomain domain, CILTypeInfo typeInfo, ref StackData dst)
         {
             // ### Handle by ref
             if (dst.IsByRef == true)
@@ -946,8 +949,8 @@ namespace dotnow.Runtime
                                 }
                                 else
                                 {
-                                    // TODO - Create new value type instance?
-                                    throw new NotImplementedException();
+                                    // Create default value type instance
+                                    byRef.SetValueRef(CLRValueTypeInstance.CreateInstance(typeInfo));
                                 }
                             }
                             else
@@ -1078,8 +1081,8 @@ namespace dotnow.Runtime
                             }
                             else
                             {
-                                // TODO - Create new value type instance?
-                                throw new NotImplementedException();
+                                // Create default value type instance
+                                dst.Ref = (CLRValueTypeInstance.CreateInstance(typeInfo));
                             }
                         }
                         else
@@ -1092,16 +1095,30 @@ namespace dotnow.Runtime
             }
         }
 
-        internal static void CopyFrame(CILTypeInfo typeInfo, in StackData src, ref StackData dst)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void Copy(CILTypeInfo typeInfo, in StackData src, ref StackData dst)
         {
             // Check for value type but not a primitive
             if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0
                 && (typeInfo.Flags & CILTypeFlags.PrimitiveType) == 0
                 && src.Type == StackType.Ref)
             {
-                // Perform value type copy
-                dst.Ref = __marshal.CopyInteropBoxedValueTypeSlow(src.Ref);
-                dst.Type = StackType.Ref;
+                // Check for clr value type
+                if ((typeInfo.Flags & CILTypeFlags.Interpreted) != 0)
+                {
+                    // Perform value type copy for interpreted struct
+                    CLRValueTypeInstance valueSrc = (CLRValueTypeInstance)src.Ref;
+
+                    // Perform copy
+                    dst.Ref = valueSrc.Copy(typeInfo);
+                    dst.Type = StackType.Ref;
+                }
+                else
+                {
+                    // Perform value type copy
+                    dst.Ref = __marshal.CopyInteropBoxedValueTypeSlow(src.Ref);
+                    dst.Type = StackType.Ref;
+                }
             }
             else
             {

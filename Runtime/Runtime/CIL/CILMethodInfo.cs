@@ -70,6 +70,11 @@ namespace dotnow.Runtime.CIL
         /// </summary>
         public readonly CILExceptionHandlerInfo[] Handlers;
         /// <summary>
+        /// Contains type information for local variables.
+        /// Only available for interpreted methods.
+        /// </summary>
+        public readonly CILTypeInfo[] LocalTypes;
+        /// <summary>
         /// Contains the default local values for this method.
         /// Only available for interpreted methods.
         /// </summary>
@@ -117,7 +122,8 @@ namespace dotnow.Runtime.CIL
                 MethodBody body = method.GetMethodBody();
 
                 this.Handlers = body.ExceptionHandlingClauses != null ? body.ExceptionHandlingClauses.Select(h => new CILExceptionHandlerInfo(h)).ToArray() : Array.Empty<CILExceptionHandlerInfo>();
-                this.Locals = body.LocalVariables != null ? body.LocalVariables.Select(l => StackData.Default(l.LocalType.GetTypeInfo(domain))).ToArray() : Array.Empty<StackData>();
+                this.LocalTypes = body.LocalVariables != null ? body.LocalVariables.Select(l => l.LocalType.GetTypeInfo(domain)).ToArray() : Array.Empty<CILTypeInfo>();
+                this.Locals = body.LocalVariables != null ? LocalTypes.Select(t => StackData.Default(domain, t)).ToArray() : Array.Empty<StackData>();
                 this.Instructions = body.GetILAsByteArray();
                 this.LocalCount = body.LocalVariables.Count;
                 this.MaxStack = body.MaxStackSize;

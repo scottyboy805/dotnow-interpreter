@@ -131,14 +131,31 @@ namespace dotnow.Runtime
                 if (fieldInfo.Field is not CLRFieldInfo clrField)
                     throw new FieldAccessException("Field must be a CLR field");
 
-                // Get the CLR instance
-                CLRTypeInstance clrInstance = (CLRTypeInstance)instance.Ref;
+                // Check for by ref
+                if ((fieldInfo.DeclaringType.Flags & CILTypeFlags.ValueType) != 0) //instance.IsByRef == true)
+                {
+                    // Get the value type instance
+                    CLRValueTypeInstance clrValueInstance = instance.IsByRef == true
+                        ? (CLRValueTypeInstance)((IByRef)instance.Ref).GetValueRef()
+                        : (CLRValueTypeInstance)instance.Ref;
 
-                // Get the field offset
-                int offset = clrInstance.Type.GetInstanceFieldOffset(clrField);
+                    // Get the field offset
+                    int offset = clrValueInstance.Type.GetInstanceFieldOffset(clrField);
 
-                // Write the field
-                clrInstance.Fields[offset] = value;
+                    // Write the field
+                    clrValueInstance.Fields[offset] = value;
+                }
+                else
+                {
+                    // Get the CLR instance
+                    CLRTypeInstance clrInstance = (CLRTypeInstance)instance.Ref;
+
+                    // Get the field offset
+                    int offset = clrInstance.Type.GetInstanceFieldOffset(clrField);
+
+                    // Write the field
+                    clrInstance.Fields[offset] = value;
+                }
             }
             else
                 throw new NotSupportedException(instance.Type.ToString());
@@ -194,14 +211,31 @@ namespace dotnow.Runtime
                 if (fieldInfo.Field is not CLRFieldInfo clrField)
                     throw new FieldAccessException("Field must be a CLR field");
 
-                // Get the CLR instance
-                CLRTypeInstance clrInstance = (CLRTypeInstance)instance.Ref;
+                // Check for value type
+                if ((fieldInfo.DeclaringType.Flags & CILTypeFlags.ValueType) != 0)// instance.IsByRef == true)
+                {
+                    // Get the value type instance
+                    CLRValueTypeInstance clrValueInstance = instance.IsByRef == true
+                        ? (CLRValueTypeInstance)((IByRef)instance.Ref).GetValueRef()
+                        : (CLRValueTypeInstance)instance.Ref;
 
-                // Get the field offset
-                int offset = clrInstance.Type.GetInstanceFieldOffset(clrField);
+                    // Get the field offset
+                    int offset = clrValueInstance.Type.GetInstanceFieldOffset(clrField);
 
-                // Write the field
-                value =  clrInstance.Fields[offset];
+                    // Read the field
+                    value = clrValueInstance.Fields[offset];
+                }
+                else
+                {
+                    // Get the CLR instance
+                    CLRTypeInstance clrInstance = (CLRTypeInstance)instance.Ref;
+
+                    // Get the field offset
+                    int offset = clrInstance.Type.GetInstanceFieldOffset(clrField);
+
+                    // Read the field
+                    value = clrInstance.Fields[offset];
+                }
             }
             else
                 throw new NotSupportedException(instance.Type.ToString());

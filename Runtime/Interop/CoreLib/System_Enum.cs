@@ -153,7 +153,7 @@ namespace dotnow.Interop.CoreLib
                 }
 
                 // Write to out value with the default value for the enum
-                context.WriteArgAny(2, metaType, new CLREnumInstance(clrType, StackData.Default(clrType.GetTypeInfo(context.AppDomain))));
+                context.WriteArgAny(2, metaType, new CLREnumInstance(clrType, StackData.Default(context.appDomain, clrType.GetTypeInfo(context.AppDomain))));
 
                 // Write result
                 context.ReturnValueType(false);
@@ -196,7 +196,7 @@ namespace dotnow.Interop.CoreLib
                 }
 
                 // Write to out value with the default value for the enum
-                context.WriteArgAny(1, clrType, new CLREnumInstance(clrType, StackData.Default(clrType.GetTypeInfo(context.AppDomain))));
+                context.WriteArgAny(1, clrType, new CLREnumInstance(clrType, StackData.Default(context.appDomain, clrType.GetTypeInfo(context.AppDomain))));
 
                 // Write result
                 context.ReturnValueType(false);

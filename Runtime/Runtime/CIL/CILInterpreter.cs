@@ -474,7 +474,7 @@ namespace dotnow.Runtime.CIL
                     case ILOpCode.Stloc_0:
                         {
                             // Copy from stack to local offset
-                            stack[spLoc] = stack[--sp];
+                            StackData.Copy(method.LocalTypes[0], stack[--sp], ref stack[spLoc]);
 
                             Debug.Instruction(op, pc - 1, stack[spLoc]);
                             break;
@@ -482,7 +482,7 @@ namespace dotnow.Runtime.CIL
                     case ILOpCode.Stloc_1:
                         {
                             // Copy from stack to local offset
-                            stack[spLoc + 1] = stack[--sp];
+                            StackData.Copy(method.LocalTypes[1], stack[--sp], ref stack[spLoc + 1]);
 
                             Debug.Instruction(op, pc - 1, stack[spLoc]);
                             break;
@@ -490,7 +490,7 @@ namespace dotnow.Runtime.CIL
                     case ILOpCode.Stloc_2:
                         {
                             // Copy from stack to local offset
-                            stack[spLoc + 2] = stack[--sp];
+                            StackData.Copy(method.LocalTypes[2], stack[--sp], ref stack[spLoc + 2]);
 
                             Debug.Instruction(op, pc - 1, stack[spLoc]);
                             break;
@@ -498,7 +498,7 @@ namespace dotnow.Runtime.CIL
                     case ILOpCode.Stloc_3:
                         {
                             // Copy from stack to local offset
-                            stack[spLoc + 3] = stack[--sp];
+                            StackData.Copy(method.LocalTypes[3], stack[--sp], ref stack[spLoc + 3]);
 
                             Debug.Instruction(op, pc - 1, stack[spLoc]);
                             break;
@@ -509,7 +509,7 @@ namespace dotnow.Runtime.CIL
                             sbyte offset = FetchDecode<sbyte>(instructions, ref pc);
 
                             // Copy from stack to local offset
-                            stack[spLoc + offset] = stack[--sp];
+                            StackData.Copy(method.LocalTypes[offset], stack[--sp], ref stack[spLoc + offset]);
 
                             Debug.Instruction(op, pc - 1, stack[spLoc]);
                             break;
@@ -520,7 +520,7 @@ namespace dotnow.Runtime.CIL
                             int offset = FetchDecode<int>(instructions, ref pc);
 
                             // Copy from stack to local offset
-                            stack[spLoc + offset] = stack[--sp];
+                            StackData.Copy(method.LocalTypes[offset], stack[--sp], ref stack[spLoc + offset]);
 
                             Debug.Instruction(op, pc - 1, stack[spLoc]);
                             break;
@@ -3654,7 +3654,7 @@ namespace dotnow.Runtime.CIL
                             {
                                 // Handle virtual calls
                                 // We need to perform late binding based o the instance type, so that the correct derived virtual method is called
-                                if((callMethod.Flags & CILMethodFlags.This) != 0)
+                                if(op == ILOpCode.Callvirt && (callMethod.Flags & CILMethodFlags.This) != 0)
                                 {
                                     // Get instance type
                                     Type instanceType = instance.GetInterpretedType();
@@ -3800,7 +3800,7 @@ namespace dotnow.Runtime.CIL
                             StackData address = stack[--sp];
 
                             // Init to default
-                            StackData.Default(objType, ref address);
+                            StackData.Default(loadContext.AppDomain, objType, ref address);
 
                             // Debug execution
                             Debug.Instruction(op, pc - 5, address);
