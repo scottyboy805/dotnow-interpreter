@@ -6,25 +6,29 @@ using System.Runtime.Serialization;
 
 namespace dotnow.Runtime
 {
-    internal sealed class CLRTypeInstance : ICLRInstance
+    internal readonly struct CLRValueTypeInstance : ICLRInstance
     {
         // Public
         public readonly CLRType Type;
         public readonly object InteropBase;
         public readonly ICLRProxy[] InteropImplementations;
-        public readonly StackData[] Fields;
+        public readonly Memory<StackData> Fields;
 
         // Constructor
-        private CLRTypeInstance(AppDomain domain, CILTypeInfo typeInfo, ICLRProxy existingProxy)
+        private CLRValueTypeInstance(AppDomain domain, CILTypeInfo typeInfo, Memory<StackData> fields)
         {
             // Check for CLR
             if ((typeInfo.Flags & CILTypeFlags.Interpreted) == 0)
-                throw new ArgumentException("Only supported for interpreted types");
+                throw new ArgumentException("Only supported for interpreted value types");
 
             this.Type = (CLRType)typeInfo.Type;
-            this.InteropBase = CreateInteropBase(domain, typeInfo, existingProxy, this);
+            this.InteropBase = null;
+            this.InteropImplementations = null;
+            this.Fields = fields;
+
+            // Initialize proxies
+            this.InteropBase = CreateInteropBase(domain, typeInfo, this);
             this.InteropImplementations = CreateInteropInterfaces(domain, typeInfo, this);
-            this.Fields = new StackData[typeInfo.InstanceSize];
         }
 
         // Methods
@@ -75,16 +79,10 @@ namespace dotnow.Runtime
             return null;
         }
 
-        private static object CreateInteropBase(AppDomain domain, CILTypeInfo typeInfo, ICLRProxy existingProxy, ICLRInstance instance)
+        private static object CreateInteropBase(AppDomain domain, CILTypeInfo typeInfo, ICLRInstance instance)
         {
-            object proxy = existingProxy;
-
-            // Create proxy existing
-            if (proxy == null)
-            {
-                // Try to create the proxy
-                proxy = __bindings.CreateProxyBindingInstance(domain, typeInfo.InteropBaseType, instance);
-            }
+            // Try to create the proxy
+            object proxy = __bindings.CreateProxyBindingInstance(domain, typeInfo.InteropBaseType, instance);
 
             // Check for proxy
             if (proxy == null)
@@ -118,20 +116,19 @@ namespace dotnow.Runtime
             return interfaceProxies;
         }
 
-        internal static CLRTypeInstance CreateInstance(AppDomain domain, CILTypeInfo typeInfo)
+        internal static CLRValueTypeInstance CreateInstance(AppDomain domain, CILTypeInfo typeInfo)
         {
+            // Create dedicated memory - used for return to interop called where the stack would not survive
+            StackData[] dedicatedFields = new StackData[typeInfo.InstanceSize];
+
             // Create the instance
-            return new CLRTypeInstance(domain, typeInfo, null);
+            return new CLRValueTypeInstance(domain, typeInfo, new Memory<StackData>(dedicatedFields));
         }
 
-        internal static CLRTypeInstance CreateInstanceFromProxy(AppDomain domain, CILTypeInfo typeInfo, ICLRProxy proxy)
+        internal static CLRValueTypeInstance CreateInstance(AppDomain domain, CILTypeInfo typeInfo, StackData[] stack, int sp)
         {
             // Create the instance
-            CLRTypeInstance instance = new CLRTypeInstance(domain, typeInfo, proxy);
-
-            // Initialize proxy
-            proxy.Initialize(domain, typeInfo.Type, instance);
-            return instance;
+            return new CLRValueTypeInstance(domain, typeInfo, new Memory<StackData>(stack, sp, typeInfo.InstanceSize));
         }
     }
 }

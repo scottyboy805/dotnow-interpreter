@@ -5,8 +5,6 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
-using System.Security.Cryptography;
-using UnityEngine;
 
 namespace dotnow.Runtime
 {
@@ -50,8 +48,13 @@ namespace dotnow.Runtime
         /// Represents an unsigned pointer stored on the stack (System.UIntPtr).
         /// </summary>
         UPtr,
-
+        /// <summary>
+        /// Represents a reference or boxed value type.
+        /// </summary>
         Ref,
+        /// <summary>
+        /// Represents an address to a by ref element, via a <see cref="IByRef"/>.
+        /// </summary>
         ByRef,
     }
 

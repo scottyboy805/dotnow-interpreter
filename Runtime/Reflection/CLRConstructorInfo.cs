@@ -118,30 +118,6 @@ namespace dotnow.Reflection
 
             // Perform reflection invoke
             return runtimeMethod.ReflectionInvoke(obj, parameters);
-
-            //// Check for body
-            //if ((handle.Flags & CILMethodFlags.Body) == 0 && (handle.Flags & CILMethodFlags.Native) == 0)
-            //    throw new InvalidOperationException("Cannot invoke a method with no body");
-
-            //// Load instance onto stack
-            //if ((handle.Flags & CILMethodFlags.This) != 0)
-            //{
-
-            //}
-
-            //// Load args onto stack
-            //for (int i = 0; i < handle.Signature.ArgCount; i++)
-            //{
-            //    // Get parameter type
-            //    CILTypeHandle parameterTypeHandle = handle.Signature.Parameters[i].ParameterTypeToken.GetTypeHandle(AssemblyLoadContext);
-
-            //    // Load arg
-            //    threadContext.LoadOntoStack(parameterTypeHandle, i, parameters[i]);
-            //}
-
-            //// Call the method
-            //CILInterpreter.ExecuteMethodHandle(threadContext, AssemblyLoadContext, handle);
-            //return null;
         }
 
         public override object Invoke(BindingFlags invokeAttr, Binder binder, object[] parameters, CultureInfo culture)

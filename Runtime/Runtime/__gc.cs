@@ -88,12 +88,20 @@ namespace dotnow.Runtime
                     // Create underlying type
                     throw new NotImplementedException();
                 }
-                else
+                else if ((type.Flags & CILTypeFlags.ValueType) != 0)
+                {
+                    // Create the value type instance
+                    dst.Ref = CLRValueTypeInstance.CreateInstance(domain, type);
+                    dst.Type = StackType.Ref;
+                }
+                else if ((type.Flags & CILTypeFlags.ReferenceType) != 0)
                 {
                     // Create the instance
                     dst.Ref = CLRTypeInstance.CreateInstance(domain, type);
                     dst.Type = StackType.Ref;
                 }
+                else
+                    throw new NotSupportedException(type.ToString());
             }
         }
     }

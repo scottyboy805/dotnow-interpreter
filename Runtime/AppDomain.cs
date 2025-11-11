@@ -231,12 +231,12 @@ namespace dotnow
                 throw new InvalidOperationException("Cannot create instance of abstract type");
 
             // Check for array
-            if(clrType.IsArray == true)
+            if (clrType.IsArray == true)
             {
 
             }
             // Check for enum
-            else if(clrType.IsEnum == true)
+            else if (clrType.IsEnum == true)
             {
 
             }
@@ -246,8 +246,20 @@ namespace dotnow
                 // Get type handle
                 CILTypeInfo typeInfo = clrType.GetTypeInfo(this);
 
-                // Create type instance
-                CLRTypeInstance instance = CLRTypeInstance.CreateInstance(this, typeInfo);
+                // The instance that was created
+                ICLRInstance instance = null;
+
+                // Check for value type
+                if ((typeInfo.Flags & CILTypeFlags.ValueType) != 0)
+                {
+                    // Create value type
+                    instance = CLRValueTypeInstance.CreateInstance(this, typeInfo);
+                }
+                else
+                { 
+                    // Create type instance
+                    instance = CLRTypeInstance.CreateInstance(this, typeInfo);
+                }
 
                 // Run constructor
                 RunInitializer(instance, ctor, args);
