@@ -33,6 +33,7 @@ namespace dotnow.Interop
             object unwrappedValue = field.Field.GetValue(unwrappedInstance);
 
             // Wrap the value
+            value = default;
             StackData.Wrap(field.FieldType, unwrappedValue, ref value);
         }
 
