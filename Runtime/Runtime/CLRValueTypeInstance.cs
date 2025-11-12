@@ -94,7 +94,7 @@ namespace dotnow.Runtime
         public CLRValueTypeInstance Copy(CILTypeInfo typeInfo)
         {
             // Copy the interop object
-            object interopBase = __marshal.CopyInteropBoxedValueTypeSlow(InteropBase);
+            object interopBase = __marshal.CopyInteropBoxedValueTypeSlow(typeInfo.InteropBaseType, InteropBase);
 
             // Copy the array
             StackData[] copyFields = fields.ToArray();

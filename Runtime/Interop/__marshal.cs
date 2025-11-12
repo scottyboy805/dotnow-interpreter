@@ -32,7 +32,7 @@ namespace dotnow.Interop
             // Get the value
             object unwrappedValue = field.Field.GetValue(unwrappedInstance);
 
-            // Wrap the value
+            // Wrap the value - Important to clear the value here so we don't end up setting a by ref value indirect when the intention is to just get the field value as is.
             value = default;
             StackData.Wrap(field.FieldType, unwrappedValue, ref value);
         }
@@ -55,9 +55,6 @@ namespace dotnow.Interop
 
         public static void InvokeConstructorInterop(ThreadContext threadContext, AppDomain appDomain, in CILTypeInfo type, in CILMethodInfo ctor, int spReturn, int spArg)
         {
-            // Set stack offset in case we call back into an interpreted method via reflection
-            threadContext.stackOffset = ctor.ParameterTypes.Length;
-
             // Check for delegate
             if ((ctor.Flags & CILMethodFlags.DirectInstanceDelegate) != 0)
             {
@@ -89,10 +86,6 @@ namespace dotnow.Interop
                 // Get parameter list for reflection
                 object instance = null;
                 object[] paramList = GetParameterList(ctor.ParameterTypes.Length);
-
-                //// Load instance
-                //StackData.Unwrap(type, defaultInstance, ref instance);
-                //spArg++;
 
                 // Copy parameters
                 if ((ctor.Flags & CILMethodFlags.Parameters) != 0)
@@ -142,9 +135,6 @@ namespace dotnow.Interop
             int argCount = (method.Flags & CILMethodFlags.This) != 0
                 ? method.ParameterTypes.Length + 1
                 : method.ParameterTypes.Length;
-
-            // Set stack offset in case we call back into an interpreted method via reflection
-            threadContext.stackOffset = spFirstArg + argCount;
 
             // Check for direct call
             if ((method.Flags & CILMethodFlags.DirectCallDelegate) != 0)
@@ -326,17 +316,20 @@ namespace dotnow.Interop
             return paramList;
         }
 
+        /// <summary>
+        /// This will take in a boxed value type object and return a new copy of that boxed object as if it was a normal struct assignment.
+        /// </summary>
+        /// <param name="boxedValueType"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static object CopyInteropBoxedValueTypeSlow(object boxedValueType)
+        internal static object CopyInteropBoxedValueTypeSlow(Type type, object boxedValueType)
         {
             // Check for null - cannot copy null
             if (boxedValueType == null)
                 throw new ArgumentNullException(nameof(boxedValueType));
 
-            // Get type - note we need to use the system type rather that the interpreted type, and the runtime will copy CLRInstance correctly
-            Type metaType = boxedValueType.GetType();
-
-            object boxedCopy = FormatterServices.GetUninitializedObject(metaType);
+            object boxedCopy = FormatterServices.GetUninitializedObject(type);// metaType);
 
             // Get typed reference
             TypedReference srcRef = __makeref(boxedValueType);

@@ -1145,7 +1145,7 @@ namespace dotnow.Runtime
                 else
                 {
                     // Perform value type copy
-                    dst.Ref = __marshal.CopyInteropBoxedValueTypeSlow(src.Ref);
+                    dst.Ref = __marshal.CopyInteropBoxedValueTypeSlow(typeInfo.Type, src.Ref);
                     dst.Type = StackType.Ref;
                 }
             }

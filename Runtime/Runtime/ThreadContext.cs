@@ -1,9 +1,7 @@
-﻿using dotnow.Interop;
-using dotnow.Reflection;
+﻿using dotnow.Reflection;
 using dotnow.Runtime.CIL;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
@@ -22,10 +20,22 @@ namespace dotnow.Runtime
     internal sealed class ThreadContext
     {
         // Type
-        internal struct CallFrame
+        internal readonly struct CallFrame
         {
             // Public
-            public CILMethodInfo MethodInfo;
+            public readonly CILMethodInfo MethodInfo;
+            public readonly int StackFrameBegin;
+            public readonly int StackMarshalBegin;
+            public readonly int StackFrameLength;
+
+            // Constructor
+            public CallFrame(CILMethodInfo method, int spBegin, int spMarshallBegin, int spLength)
+            {
+                this.MethodInfo = method;
+                this.StackFrameBegin = spBegin;
+                this.StackMarshalBegin = spMarshallBegin;
+                this.StackFrameLength = spLength;
+            }
         }
 
         // Private
@@ -41,20 +51,19 @@ namespace dotnow.Runtime
         internal readonly Stack<CallFrame> callStack = new();
         internal readonly Thread thread = null;
         internal int callDepth = 0;
-        internal int stackOffset = 0;
         internal bool abort = false;
 
         // Properties
         public int StackSize
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return stack.Length; }
+            get => stack.Length;
         }
 
         public bool IsMainThread
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return thread == Thread.CurrentThread; }
+            get => thread == Thread.CurrentThread; 
         }
 
         public CILMethodInfo CurrentMethodHandle
@@ -72,6 +81,7 @@ namespace dotnow.Runtime
 
         public MethodBase CurrentMethod
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 // Get meta method if available
@@ -85,7 +95,14 @@ namespace dotnow.Runtime
 
         public Assembly CurrentAssembly
         {
-            get { return CurrentMethod?.DeclaringType.Assembly; }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => CurrentMethod?.DeclaringType.Assembly;
+        }
+
+        private int StackMarshallOffset
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => callStack.Count > 0 ? callStack.Peek().StackMarshalBegin : 0;
         }
 
         // Constructor
@@ -120,7 +137,7 @@ namespace dotnow.Runtime
         public void PushReflectionMethodFrame(AppDomain appDomain, in CILMethodInfo methodHandle, object instance, object[] args, out int spArg)
         {
             // Get the stack pointer from the thread context, in case we have called a reflection method during interpreted calls
-            int spCallerArg = this.stackOffset;
+            int spCallerArg = this.StackMarshallOffset;// this.stackOffset;
             int spCaller = spCallerArg;
             
 
@@ -193,25 +210,25 @@ namespace dotnow.Runtime
             }
 
             // Push the frame
-            callStack.Push(new CallFrame
-            {
-                MethodInfo = methodInfo,
-            });
+            callStack.Push(new CallFrame(methodInfo, spArg, spArg + requiredStackArgInst, requiredStack));
         }
 
         public void PopMethodFrame()
         {
             // Pop the frame
-            callStack.Pop();
+            CallFrame frame = callStack.Pop();
 
             // Perform thread cleanup
             if(callStack.Count == 0)
             {
-                // Reset stack pointer
-                stackOffset = 0;
-
                 // Clear the stack to allow GC to reclaim any objects
                 Array.Clear(stack, 0, stack.Length);
+            }
+            else
+            {
+                // Clear the stack frame for the current method only
+                // This will release any references to managed objects that are no longer required on the stack so that GC can collect references
+                Array.Clear(stack, frame.StackFrameBegin + 1, frame.StackFrameLength);
             }
         }
 
