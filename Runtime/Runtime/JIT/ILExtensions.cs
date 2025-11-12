@@ -86,7 +86,17 @@ namespace dotnow.Runtime.JIT
                 // Short br
                 case ILOpCode.Br_s:
                 case ILOpCode.Brtrue_s:
-                case ILOpCode.Brfalse_s: return ILOperandType.ShortInlineBrTarget;
+                case ILOpCode.Brfalse_s:
+                case ILOpCode.Blt_s:
+                case ILOpCode.Blt_un_s:
+                case ILOpCode.Bgt_s:
+                case ILOpCode.Bgt_un_s:
+                case ILOpCode.Ble_s:
+                case ILOpCode.Ble_un_s:
+                case ILOpCode.Bge_s:
+                case ILOpCode.Bge_un_s:
+                case ILOpCode.Beq_s:
+                case ILOpCode.Bne_un_s: return ILOperandType.ShortInlineBrTarget;
 
                 // Br
                 case ILOpCode.Br:

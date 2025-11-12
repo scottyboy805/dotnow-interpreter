@@ -2,7 +2,6 @@
 using dotnow.Reflection;
 using dotnow.Runtime.CIL;
 using System;
-using System.Linq;
 using System.Runtime.Serialization;
 
 namespace dotnow.Runtime
