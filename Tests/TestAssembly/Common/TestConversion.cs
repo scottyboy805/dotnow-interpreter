@@ -108,13 +108,10 @@ namespace TestAssembly
         }
 
         // Float implicit conversions
-        public static object[] TestFloatImplicitConversions()
+        public static object TestFloatImplicitConversions()
         {
             float f = 10.5f;
-            return new object[]
-                 {
-        (double)f,  // float -> double
-              };
+            return (double)f;  // float -> double (single conversion)
         }
 
         // === EXPLICIT CONVERSION TESTS ===
@@ -140,12 +137,12 @@ namespace TestAssembly
             return new object[]
           {
       (byte)l,    // long -> byte (may truncate)
-                (sbyte)l,   // long -> sbyte (may truncate)
+       (sbyte)l,   // long -> sbyte (may truncate)
      (short)l,   // long -> short (may truncate)
-                (ushort)l,  // long -> ushort (may truncate)
+          (ushort)l,  // long -> ushort (may truncate)
       (int)l,     // long -> int (may truncate)
-        (uint)l,    // long -> uint (may truncate)
-                (ulong)l,   // long -> ulong
+ (uint)l,    // long -> uint (may truncate)
+      (ulong)l,   // long -> ulong
              };
         }
 
@@ -154,16 +151,16 @@ namespace TestAssembly
         {
             float f = 123.75f;
             return new object[]
-            {
-       (byte)f,    // float -> byte (truncate)
-      (sbyte)f,   // float -> sbyte (truncate)
+           {
+  (byte)f,    // float -> byte (truncate)
+  (sbyte)f,   // float -> sbyte (truncate)
        (short)f,   // float -> short (truncate)
   (ushort)f,  // float -> ushort (truncate)
-                (int)f,     // float -> int (truncate)
-                (uint)f,    // float -> uint (truncate)
-  (long)f,    // float -> long (truncate)
+       (int)f,     // float -> int (truncate)
+    (uint)f,    // float -> uint (truncate)
+  (long)f,  // float -> long (truncate)
       (ulong)f,   // float -> ulong (truncate)
-          };
+                   };
         }
 
         // Double explicit conversions
@@ -171,48 +168,48 @@ namespace TestAssembly
         {
             double d = 456.99;
             return new object[]
-                   {
+            {
      (byte)d,    // double -> byte (truncate)
-          (sbyte)d,   // double -> sbyte (truncate)
+    (sbyte)d,   // double -> sbyte (truncate)
       (short)d,   // double -> short (truncate)
-                (ushort)d,  // double -> ushort (truncate)
+      (ushort)d,  // double -> ushort (truncate)
   (int)d,     // double -> int (truncate)
-     (uint)d,    // double -> uint (truncate)
+(uint)d,    // double -> uint (truncate)
      (long)d,  // double -> long (truncate)
        (ulong)d,// double -> ulong (truncate)
        (float)d,   // double -> float
                      };
-        }        
+        }
 
         // === STRING CONVERSION TESTS ===
 
-        public static object[] TestIntToString()
+        public static object TestIntToString()
         {
             int i = 123;
-            return new object[] { i.ToString() };
+            return i.ToString(); // Single string conversion
         }
 
-        public static object[] TestDoubleToString()
+        public static object TestDoubleToString()
         {
             double d = 45.67;
-            return new object[] { d.ToString() };
+            return d.ToString(); // Single string conversion
         }
 
-        public static object[] TestBoolToString()
+        public static object TestBoolToString()
         {
             bool b = true;
-            return new object[] { b.ToString() };
+            return b.ToString(); // Single string conversion
         }
 
-        public static object[] TestStringToInt()
+        public static object TestStringToInt()
         {
             string str = "123";
-            return new object[] { int.Parse(str) };
+            return int.Parse(str); // Single parsing operation
         }
 
         // === CHECKED/UNCHECKED CONVERSION TESTS ===
 
-        public static object[] TestCheckedConversion()
+        public static object TestCheckedConversion()
         {
             int i = 300; // > byte.MaxValue (255)
             try
@@ -220,309 +217,295 @@ namespace TestAssembly
                 checked
                 {
                     byte result = (byte)i;
-                    return new object[] { result };
+                    return result;
                 }
             }
             catch (System.OverflowException)
             {
-                return new object[] { "OverflowException" };
+                return "OverflowException";
             }
         }
 
-        public static object[] TestUncheckedConversion()
+        public static object TestUncheckedConversion()
         {
             int i = 300; // > byte.MaxValue (255)
             unchecked
             {
-                byte result = (byte)i; // Should wrap around to 44
-                return new object[] { result };
+                return (byte)i; // Should wrap around to 44
             }
         }
 
         // === NULLABLE CONVERSION TESTS ===
 
-        public static object[] TestNullableHasValue()
-        {
-            int? nullableInt = 42;
-            return new object[] { nullableInt.HasValue };
-        }
+        //  public static object TestNullableHasValue()
+        //     {
+        //     int? nullableInt = 42;
+        //      return nullableInt.HasValue; // Single boolean result
+        //       }
 
-        public static object[] TestNullableValue()
-        {
-            int? nullableInt = 42;
-            return new object[] { nullableInt.Value };
-        }
+        //public static object TestNullableValue()
+        //       {
+        //int? nullableInt = 42;
+        //           return nullableInt.Value; // Single value result
+        //     }
 
-        public static object[] TestNullableNoValue()
-        {
-            int? nullInt = null;
-            return new object[] { nullInt.HasValue };
-        }
+        //       public static object TestNullableNoValue()
+        //       {
+        //    int? nullInt = null;
+        //     return nullInt.HasValue; // Single boolean result
+        //    }
 
         // === CASTING OPERATION TESTS ===
 
-        public static object[] TestUnboxingCast()
-        {
-            object obj = 42;
-            return new object[] { (int)obj };
-        }
-
-        public static object[] TestBoxingCast()
-        {
-            int i = 42;
-            return new object[] { (object)i };
-        }
-
-        public static object[] TestAsOperatorSuccess()
+        public static object TestAsOperatorSuccess()
         {
             object obj = "Hello";
-            string result = obj as string;
-            return new object[] { result };
+            return obj as string; // Single 'as' operation
         }
 
-        public static object[] TestAsOperatorFail()
+        public static object TestAsOperatorFail()
         {
             object obj = 42;
             string result = obj as string;
-            return new object[] { result == null };
+            return result == null; // Single boolean result
         }
 
-        public static object[] TestIsOperatorTrue()
+        public static object TestIsOperatorTrue()
         {
             object obj = 42;
-            return new object[] { obj is int };
+            return obj is int; // Single boolean result
         }
 
-        public static object[] TestIsOperatorFalse()
+        public static object TestIsOperatorFalse()
         {
             object obj = 42;
-            return new object[] { obj is string };
+            return obj is string; // Single boolean result
         }
 
         // === SIGNED/UNSIGNED CONVERSION TESTS ===
 
-        public static object[] TestSignedToUnsignedInt()
+        public static object TestSignedToUnsignedInt()
         {
             int negative = -100;
-            return new object[] { (uint)negative };
+            return (uint)negative; // Single conversion
         }
 
-        public static object[] TestUnsignedToSignedInt()
+        public static object TestUnsignedToSignedInt()
         {
             uint positive = 200U;
-            return new object[] { (int)positive };
+            return (int)positive; // Single conversion
         }
 
-        public static object[] TestSignedToUnsignedByte()
+        public static object TestSignedToUnsignedByte()
         {
             sbyte negative = -50;
-            return new object[] { (byte)negative };
+            return (byte)negative; // Single conversion
         }
 
-        public static object[] TestUnsignedToSignedByte()
+        public static object TestUnsignedToSignedByte()
         {
             byte positive = 200;
-            return new object[] { (sbyte)positive };
+            return (sbyte)positive; // Single conversion
         }
 
         // === FLOATING-POINT CONVERSION TESTS ===
 
-        public static object[] TestFloatToDoubleInfinity()
+        public static object TestFloatToDoubleInfinity()
         {
             float posInf = float.PositiveInfinity;
-            return new object[] { (double)posInf };
+            return (double)posInf; // Single conversion
         }
 
-        public static object[] TestFloatToDoubleNegInfinity()
+        public static object TestFloatToDoubleNegInfinity()
         {
             float negInf = float.NegativeInfinity;
-            return new object[] { (double)negInf };
+            return (double)negInf; // Single conversion
         }
 
-        public static object[] TestFloatToDoubleNaN()
+        public static object TestFloatToDoubleNaN()
         {
             float nan = float.NaN;
-            return new object[] { double.IsNaN((double)nan) };
+            return double.IsNaN((double)nan); // Single boolean result
         }
 
-        public static object[] TestDoubleToFloat()
+        public static object TestDoubleToFloat()
         {
             double large = 1e20;
-            return new object[] { (float)large };
+            return (float)large; // Single conversion
         }
 
-        public static object[] TestFloatPrecision()
+        public static object TestFloatPrecision()
         {
             float precision = 0.1f + 0.2f;
-            return new object[] { precision.ToString() };
+            return precision.ToString(); // Single string result
         }
 
         // === CHARACTER CONVERSION TESTS ===
 
-        public static object[] TestCharToInt()
+        public static object TestCharToInt()
         {
             char ch = 'A';
-            return new object[] { (int)ch };
+            return (int)ch; // Single conversion
         }
 
-        public static object[] TestIntToChar()
+        public static object TestIntToChar()
         {
             int ascii = 65;
-            return new object[] { (char)ascii };
+            return (char)ascii; // Single conversion
         }
 
-        public static object[] TestByteToChar()
+        public static object TestByteToChar()
         {
             byte b = 66;
-            return new object[] { (char)b };
+            return (char)b; // Single conversion
         }
 
-        public static object[] TestUShortToChar()
+        public static object TestUShortToChar()
         {
             ushort us = 67;
-            return new object[] { (char)us };
+            return (char)us; // Single conversion
         }
 
-        public static object[] TestCharToUShort()
+        public static object TestCharToUShort()
         {
             char ch = 'A';
-            return new object[] { (ushort)ch };
+            return (ushort)ch; // Single conversion
         }
 
-        public static object[] TestCharIsLetter()
+        public static object TestCharIsLetter()
         {
             char ch = 'A';
-            return new object[] { char.IsLetter(ch) };
+            return char.IsLetter(ch); // Single boolean result
         }
 
-        public static object[] TestCharIsDigit()
+        public static object TestCharIsDigit()
         {
             char ch = '5';
-            return new object[] { char.IsDigit(ch) };
+            return char.IsDigit(ch); // Single boolean result
         }
 
-        public static object[] TestCharToUpper()
+        public static object TestCharToUpper()
         {
             char ch = 'a';
-            return new object[] { char.ToUpper(ch) };
+            return char.ToUpper(ch); // Single conversion
         }
 
         // === ENUM CONVERSION TESTS ===
 
-        public static object[] TestEnumToInt()
+        public static object TestEnumToInt()
         {
             TestConversionEnum enumVal = TestConversionEnum.Second;
-            return new object[] { (int)enumVal };
+            return (int)enumVal; // Single conversion
         }
 
-        public static object[] TestIntToEnum()
+        public static object TestIntToEnum()
         {
             int intVal = 1;
-            return new object[] { (TestConversionEnum)intVal };
+            return (TestConversionEnum)intVal; // Single conversion
         }
 
-        public static object[] TestEnumToString()
+        public static object TestEnumToString()
         {
             TestConversionEnum enumVal = TestConversionEnum.Second;
-            return new object[] { enumVal.ToString() };
+            return enumVal.ToString(); // Single string result
         }
 
-        public static object[] TestEnumConstantToInt()
+        public static object TestEnumConstantToInt()
         {
-            return new object[] { (int)TestConversionEnum.First };
+            return (int)TestConversionEnum.First; // Single conversion
         }
 
-        public static object[] TestZeroToEnum()
+        public static object TestZeroToEnum()
         {
-            return new object[] { (TestConversionEnum)0 };
+            return (TestConversionEnum)0; // Single conversion
         }
 
-        public static object[] TestEnumEquality()
+        public static object TestEnumEquality()
         {
             TestConversionEnum enumVal = TestConversionEnum.Second;
-            return new object[] { enumVal == TestConversionEnum.Second };
+            return enumVal == TestConversionEnum.Second; // Single boolean result
         }
 
         // === REFERENCE CONVERSION TESTS ===
 
-        public static object[] TestDowncastWithAs()
+        public static object TestDowncastWithAs()
         {
             object obj = "Hello";
-            return new object[] { obj as string };
+            return obj as string; // Single 'as' operation
         }
 
-        public static object[] TestDowncastSuccess()
+        public static object TestDowncastSuccess()
         {
             object obj = "Hello";
-            return new object[] { (obj as string) != null };
+            return (obj as string) != null; // Single boolean result
         }
 
-        public static object[] TestDowncastFail()
+        public static object TestDowncastFail()
         {
             object nullObj = null;
-            return new object[] { (nullObj as string) == null };
+            return (nullObj as string) == null; // Single boolean result
         }
 
-        public static object[] TestIsString()
+        public static object TestIsString()
         {
             object obj = "Hello";
-            return new object[] { obj is string };
+            return obj is string; // Single boolean result
         }
 
-        public static object[] TestIsObject()
+        public static object TestIsObject()
         {
             string str = "World";
-            return new object[] { str is object };
+            return str is object; // Single boolean result
         }
 
-        public static object[] TestReferenceEquals()
+        public static object TestReferenceEquals()
         {
             object obj = "Hello";
-            return new object[] { ReferenceEquals(obj, obj) };
+            return ReferenceEquals(obj, obj); // Single boolean result
         }
 
-        public static object[] TestReferenceEqualsNull()
+        public static object TestReferenceEqualsNull()
         {
             string str = "Hello";
-            return new object[] { ReferenceEquals(str, null) };
+            return ReferenceEquals(str, null); // Single boolean result
         }
 
         // === ARRAY CONVERSION TESTS ===
 
-        public static object[] TestArrayAsObject()
+        public static object TestArrayAsObject()
         {
             int[] intArray = { 1, 2, 3 };
-            return new object[] { intArray as object };
+            return intArray as object; // Single 'as' operation
         }
 
-        public static object[] TestArrayTypeCheck()
+        public static object TestArrayTypeCheck()
         {
             int[] intArray = { 1, 2, 3 };
-            return new object[] { intArray.GetType().BaseType == typeof(System.Array) };
+            return intArray.GetType().BaseType == typeof(System.Array); // Single boolean result
         }
 
-        public static object[] TestArrayLength()
+        public static object TestArrayLength()
         {
             object[] objArray = { "a", "b", "c" };
-            return new object[] { objArray.Length };
+            return objArray.Length; // Single property access
         }
 
-        public static object[] TestArrayElementAccess()
+        public static object TestArrayElementAccess()
         {
             int[] intArray = { 1, 2, 3 };
-            return new object[] { intArray[0] };
+            return intArray[0]; // Single element access
         }
 
-        public static object[] TestArrayBoxing()
+        public static object TestArrayBoxing()
         {
             int[] intArray = { 1, 2, 3 };
-            return new object[] { (object)intArray };
+            return (object)intArray; // Single boxing operation
         }
 
-        public static object[] TestArrayIsArray()
+        public static object TestArrayIsArray()
         {
             int[] intArray = { 1, 2, 3 };
-            return new object[] { intArray.GetType().IsArray };
+            return intArray.GetType().IsArray; // Single boolean result
         }
     }
 
