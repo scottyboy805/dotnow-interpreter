@@ -3950,11 +3950,11 @@ namespace dotnow.Runtime.CIL
         internal static ILOpCode FetchOpCode(byte[] instructions, ref int pc)
         {
             // Fetch the op code
-            ILOpCode op = (ILOpCode)FetchDecode<byte>(instructions, ref pc);
+            ILOpCode op = (ILOpCode)instructions[pc++];
 
             // Check for 2-byte encoded instructions
             if ((byte)op == 0xFE)
-                op = (ILOpCode)(((byte)op << 8) | FetchDecode<byte>(instructions, ref pc));
+                op = (ILOpCode)(((byte)op << 8) | instructions[pc++]);
 
             return op;
         }
@@ -3962,15 +3962,18 @@ namespace dotnow.Runtime.CIL
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static T FetchDecode<T>(byte[] instructions, ref int pc) where T : unmanaged
         {
-            // Use ReadOnlySpan to avoid allocations and read directly from memory
-            ReadOnlySpan<byte> span = new ReadOnlySpan<byte>(instructions, pc, Unsafe.SizeOf<T>());
+            // Determine size of T
+            int size = Unsafe.SizeOf<T>();
 
-            // Read as T
-            T result = MemoryMarshal.Read<T>(span);
+            // Create a span slice directly from the array to read the value
+            // (MemoryMarshal.Read works fine with IL2CPP)
+            T value = MemoryMarshal.Read<T>(new ReadOnlySpan<byte>(instructions, pc, size));
 
             // Increment pc offset
-            pc += Unsafe.SizeOf<T>();
-            return result;
+            pc += size;
+
+            // Get inline value
+            return value;
         }
     }
 }
