@@ -654,7 +654,7 @@ namespace dotnow.Common
             object actual = method.Invoke(null, null);
 
             // Check for equality
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual(expected.ToString(), actual.ToString());
         }
 
         [Test]

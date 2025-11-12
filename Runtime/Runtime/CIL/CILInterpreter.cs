@@ -1660,7 +1660,7 @@ namespace dotnow.Runtime.CIL
                             // Debug execution
                             Debug.Instruction(op, pc - 1, stack[sp - 1]);
                             break;
-                        }
+                        }                        
                     case ILOpCode.Conv_r8:
                         {
                             // Check type on stack
@@ -1679,6 +1679,29 @@ namespace dotnow.Runtime.CIL
                             }
                             // Convert to F64
                             stack[sp - 1].Type = StackType.F64;
+
+                            // Debug execution
+                            Debug.Instruction(op, pc - 1, stack[sp - 1]);
+                            break;
+                        }
+                    case ILOpCode.Conv_r_un:
+                        {
+                            // Check type on stack
+                            switch (stack[sp - 1].Type)
+                            {
+                                default: throw new NotSupportedException(stack[sp - 1].Type.ToString());
+
+                                case StackType.I32: stack[sp - 1].F32 = stack[sp - 1].I32; break;
+                                case StackType.U32: stack[sp - 1].F32 = (uint)stack[sp - 1].I32; break;
+                                case StackType.I64: stack[sp - 1].F32 = stack[sp - 1].I64; break;
+                                case StackType.U64: stack[sp - 1].F32 = (ulong)stack[sp - 1].I64; break;
+                                case StackType.F32: /* already F32 */ break;
+                                case StackType.F64: stack[sp - 1].F32 = (float)stack[sp - 1].F64; break;
+                                case StackType.Ptr: stack[sp - 1].F32 = (long)stack[sp - 1].Ptr; break;
+                                case StackType.UPtr: stack[sp - 1].F32 = (ulong)(long)stack[sp - 1].Ptr; break;
+                            }
+                            // Convert to F32
+                            stack[sp - 1].Type = StackType.F32;
 
                             // Debug execution
                             Debug.Instruction(op, pc - 1, stack[sp - 1]);
