@@ -7,6 +7,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -39,6 +40,9 @@ namespace dotnow
         internal readonly ConcurrentDictionary<int, CILTypeInfo> interopTypeHandles = new();
         internal readonly ConcurrentDictionary<int, CILFieldInfo> interopFieldHandles = new();
         internal readonly ConcurrentDictionary<int, CILMethodInfo> interopMethodHandles = new();
+
+        // Private
+        private bool disposed = false;
 
         // Public
 #if !UNITY_EDITOR && ENABLE_IL2CPP
@@ -78,11 +82,35 @@ namespace dotnow
             ResolveInteropTypeHandle(typeof(string));
             ResolveInteropTypeHandle(typeof(object));
         }
+
+        ~AppDomain()
+        {
+            // Ensure domain is destroyed on unload
+            Dispose();
+        }
         
         // Methods
         public void Dispose()
         {
-            // TODO - support unloading domain
+            // Check for already disposed
+            if (disposed == true)
+                return;
+
+            // Set dispose flag
+            disposed = true;
+
+            // Unload all contexts
+            foreach (AssemblyLoadContext context in assemblyLoadContexts.Values.Reverse().ToArray())
+                context.Dispose();
+
+            // Clear contexts and threads
+            assemblyLoadContexts.Clear();
+            threadContexts.Clear();
+
+            // Clear executables
+            interopTypeHandles.Clear();
+            interopFieldHandles.Clear();
+            interopMethodHandles.Clear();
         }
 
         internal ThreadContext GetThreadContext(int stackSize = ThreadContext.DefaultStackSize)
@@ -362,7 +390,7 @@ namespace dotnow
             if (interopTypeHandles.ContainsKey(hash) == false)
             {
                 // Create handle
-                CILTypeInfo handle = new CILTypeInfo(type);
+                CILTypeInfo handle = new CILTypeInfo(this, type);
 
                 // Add to cache
                 interopTypeHandles[hash] = handle;

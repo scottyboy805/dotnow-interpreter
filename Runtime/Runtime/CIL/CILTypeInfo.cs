@@ -24,6 +24,10 @@ namespace dotnow.Runtime.CIL
     {
         // Private
         private bool staticInit = false;
+        private AppDomain domain = null;
+
+        private readonly Lazy<CILTypeInfo[]> instanceFields;
+        private readonly Lazy<StackData[]> staticFields;
 
         // Public
         /// <summary>
@@ -40,28 +44,37 @@ namespace dotnow.Runtime.CIL
         public readonly TypeCode TypeCode;
         /// <summary>
         /// For CLR types it represents the first base type that is an interop type (not interpreted).
+        /// Only available for interpreted types.
         /// </summary>
         public readonly Type InteropBaseType;
         /// <summary>
         /// For CLR types it gets the interop base type and interface types that are implemented.
+        /// Only available for interpreted types.
         /// </summary>
         public readonly Type[] InteropImplementationTypes;
         /// <summary>
         /// The VTable used to get virtual methods from this type.
+        /// Only available for interpreted types which are not marked as sealed.
         /// </summary>
         public readonly CILVTable VTable;
+
+        // Properties
+        /// <summary>
+        /// The default field memory for an instance of this type, with each field initialized to default value.
+        /// Should be copied for each instance to reserve a unique memory for an instance.
+        /// Only available for interpreted types.
+        /// </summary>
+        public CILTypeInfo[] InstanceFields => instanceFields.Value;
         /// <summary>
         /// The memory where static field data is stored for this type.
+        /// Only available for interpreted types.
         /// </summary>
-        public readonly StackData[] StaticFields;
-        /// <summary>
-        /// For CLR instances it represents the number of instance fields.
-        /// </summary>
-        public readonly int InstanceSize;
+        public StackData[] StaticFields => staticFields.Value;
 
         // Constructor
-        internal CILTypeInfo(Type type)
+        internal CILTypeInfo(AppDomain domain, Type type)
         {
+            this.domain = domain;
             this.Type = type;
             this.Flags = GetFlags(type);
             this.TypeCode = Type.GetTypeCode(type);
@@ -79,8 +92,9 @@ namespace dotnow.Runtime.CIL
                 // Get the interop implementation types
                 this.InteropImplementationTypes = type.GetInterfaces();
 
-                // Get the type size
-                GetTypeSize((CLRType)type, out this.InstanceSize, out this.StaticFields);
+                // Initialize instance and static layout on demand
+                this.instanceFields = new(InitInstanceFields);
+                this.staticFields = new(InitStaticFields);
             }
         }
 
@@ -88,6 +102,42 @@ namespace dotnow.Runtime.CIL
         public override string ToString()
         {
             return $"{Type} = {Flags}";
+        }
+
+        private CILTypeInfo[] InitInstanceFields()
+        {
+            // Get instance size
+            int instanceSize = ((CLRType)Type).InstanceFields.Length;
+
+            // Init fields
+            CILTypeInfo[] instanceFields = new CILTypeInfo[instanceSize];
+
+            // Initialize fields
+            for (int i = 0; i < instanceSize; i++)
+            {
+                // Get the field type handle
+                instanceFields[i] = ((CLRType)Type).InstanceFields[i].FieldType.GetTypeInfo(domain);
+            }
+            return instanceFields;
+        }
+
+        private StackData[] InitStaticFields()
+        {
+            // Get static size
+            int staticSize = ((CLRType)Type).StaticFields.Length;
+
+            // Init fields
+            StackData[] staticFields = new StackData[staticSize];
+
+            for (int i = 0; i < staticSize; i++)
+            {
+                // Get the field type handle
+                CILTypeInfo fieldTypeInfo = ((CLRType)Type).StaticFields[i].FieldType.GetTypeInfo(domain);
+
+                // Init to default
+                staticFields[i] = StackData.Default(domain, fieldTypeInfo);
+            }
+            return staticFields;
         }
 
         public void StaticInitialize()
@@ -159,10 +209,21 @@ namespace dotnow.Runtime.CIL
             return current;
         }
 
-        private static void GetTypeSize(CLRType fromType, out int instanceSize, out StackData[] staticFields)
+        private static void GetTypeLayout(AppDomain domain, CLRType fromType, out StackData[] instanceFields, out StackData[] staticFields)
         {
             // Get instance size
-            instanceSize = fromType.InstanceFields.Length;
+            int instanceSize = fromType.InstanceFields.Length;
+
+            // Init fields
+            instanceFields = new StackData[instanceSize];
+
+            // Initialize fields
+            for (int i = 0; i < instanceSize; i++)
+            {
+                // Get the field type handle
+                CILTypeInfo fieldTypeInfo = fromType.InstanceFields[i].FieldType.GetTypeInfo(domain);
+                instanceFields[i] = StackData.Default(domain, fieldTypeInfo);
+            }
 
             // Get static size
             int staticSize = fromType.StaticFields.Length;
@@ -171,7 +232,11 @@ namespace dotnow.Runtime.CIL
             staticFields = new StackData[staticSize];
 
             for (int i = 0; i < staticSize; i++)
-                staticFields[i] = default;
+            {
+                // Get the field type handle
+                CILTypeInfo fieldTypeInfo = fromType.StaticFields[i].FieldType.GetTypeInfo(domain);
+                staticFields[i] = StackData.Default(domain, fieldTypeInfo);
+            }
         }
     }
 }

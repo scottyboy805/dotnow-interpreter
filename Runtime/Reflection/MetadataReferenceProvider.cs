@@ -10,7 +10,7 @@ namespace dotnow.Reflection
     /// <summary>
     /// Used to resolve and construct types from metadata, with full support for generics.
     /// </summary>
-    internal sealed class MetadataReferenceProvider : ISignatureTypeProvider<Type, MemberInfo>
+    internal sealed class MetadataReferenceProvider : IDisposable, ISignatureTypeProvider<Type, MemberInfo>
     {
         // Private
         private readonly AssemblyLoadContext assemblyLoadContext = null;
@@ -59,6 +59,11 @@ namespace dotnow.Reflection
         }
 
         // Methods
+        public void Dispose()
+        {
+            peReader.Dispose();
+        }
+
         public Type ResolveMetadataType(in EntityHandle handle)
         {
             // First resolve the type

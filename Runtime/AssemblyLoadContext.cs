@@ -11,7 +11,6 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
-using UnityEditor.VersionControl;
 
 namespace dotnow
 {
@@ -36,12 +35,13 @@ namespace dotnow
         }
 
         // Private
-        private readonly AppDomain appDomain;
-        private readonly CLRAssembly assembly;
+        private bool disposed = false;
+        private AppDomain appDomain;
+        private CLRAssembly assembly;
         /// <summary>
         /// Used to stream the assembly metadata and PE image from file or memory.
         /// </summary>
-        private readonly MetadataReferenceProvider metadataReferenceProvider;
+        private MetadataReferenceProvider metadataReferenceProvider;
         /// <summary>
         /// Reference to all interpreted assemblies that are dependent upon this context.
         /// Used to check whether we are able to unload this context, or whether it is still required by another context.
@@ -97,13 +97,21 @@ namespace dotnow
         public AppDomain AppDomain
         {
             [DebuggerStepThrough]
-            get => appDomain;
+            get
+            {
+                CheckDisposed();
+                return appDomain;
+            }
         }
 
         public Assembly Assembly
         {
             [DebuggerStepThrough]
-            get => assembly;
+            get
+            {
+                CheckDisposed();
+                return assembly;
+            }
         }
 
         // Constructor
@@ -158,9 +166,42 @@ namespace dotnow
         // Methods
         public void Dispose()
         {
+            // Check for already disposed
+            if (disposed == true)
+                return;
+
             // Check for referenced by other contexts
             if (clrDependenciesContexts.Count > 0)
                 throw new InvalidOperationException($"Cannot unload assembly context because it is referenced by {clrDependenciesContexts.First().Assembly.FullName}");
+
+            // Set disposed
+            disposed = true;
+
+            // Close stream
+            metadataReferenceProvider.Dispose();
+
+            // Clear metadata
+            memberDefinitions.Clear();
+
+            // Clear executables
+            stringDefinitions.Clear();
+            Array.Clear(typeDefinitions, 0, typeDefinitions.Length);
+            Array.Clear(typeSpecificationReferences, 0, typeSpecificationReferences.Length);
+            Array.Clear(fieldDefinitions, 0, fieldDefinitions.Length);
+            Array.Clear(methodDefinitions, 0, methodDefinitions.Length);
+            Array.Clear(memberSpecificationReferences, 0, memberSpecificationReferences.Length);
+            Array.Clear(typeReferences, 0, typeReferences.Length);
+            Array.Clear(typeSpecificationReferences, 0, typeSpecificationReferences.Length);
+            Array.Clear(memberReferences, 0, memberReferences.Length);
+            Array.Clear(memberSpecificationReferences, 0, memberSpecificationReferences.Length);
+
+            // Remove from domain
+            appDomain.assemblyLoadContexts.TryRemove(assembly, out _);
+
+            // Clear references
+            appDomain = null;
+            assembly = null;
+            metadataReferenceProvider = null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -388,7 +429,7 @@ namespace dotnow
             Type definedType = memberDefinitions[token] as Type;
 
             // Create the type handle
-            @ref = new CILTypeInfo(definedType);
+            @ref = new CILTypeInfo(appDomain, definedType);
 
             // Run initializer
             @ref.StaticInitialize();
@@ -444,7 +485,7 @@ namespace dotnow
                             if (referenceContext.typeDefinitions[definitionRow].Type == null)
                             {
                                 // Get the type info
-                                CILTypeInfo typeInfo = new CILTypeInfo(resolvedType);
+                                CILTypeInfo typeInfo = new CILTypeInfo(appDomain, resolvedType);
 
                                 // Initialize the type handle
                                 referenceContext.typeDefinitions[definitionRow] = typeInfo;
@@ -507,7 +548,7 @@ namespace dotnow
                 if (referenceContext.typeSpecificationDefinitions[specificationRow].Type == null)
                 {
                     // Initialize the type handle
-                    referenceContext.typeSpecificationDefinitions[specificationRow] = new CILTypeInfo(resolvedGenericType);
+                    referenceContext.typeSpecificationDefinitions[specificationRow] = new CILTypeInfo(appDomain, resolvedGenericType);
                 }
 
                 // Resolve the type handle
@@ -842,6 +883,12 @@ namespace dotnow
                     null,                       // Null context because the type is an interop type
                     hash);
             }
+        }
+
+        private void CheckDisposed()
+        {
+            if (disposed == true)
+                throw new ObjectDisposedException("Assembly load context");
         }
 
         private static void GetSpecificationTableSizes(MetadataReader metadataReader, out int typeSpecSize, out int methodSpecSize)

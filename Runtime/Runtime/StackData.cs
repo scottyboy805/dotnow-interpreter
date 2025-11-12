@@ -1083,6 +1083,12 @@ namespace dotnow.Runtime
                         dst.Ref = default(string);
                         break;
                     }
+                case TypeCode.DateTime:
+                    {
+                        dst.Type = StackType.Ref;
+                        dst.Ref = default(DateTime);
+                        break;
+                    }
                 case TypeCode.Object:
                     {
                         // Check for value type

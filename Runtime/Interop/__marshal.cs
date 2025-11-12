@@ -329,7 +329,7 @@ namespace dotnow.Interop
             if (boxedValueType == null)
                 throw new ArgumentNullException(nameof(boxedValueType));
 
-            object boxedCopy = FormatterServices.GetUninitializedObject(type);// metaType);
+            object boxedCopy = FormatterServices.GetUninitializedObject(type);
 
             // Get typed reference
             TypedReference srcRef = __makeref(boxedValueType);

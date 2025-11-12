@@ -2,6 +2,7 @@
 using dotnow.Reflection;
 using dotnow.Runtime.CIL;
 using System;
+using System.Linq;
 
 namespace dotnow.Runtime
 {
@@ -106,7 +107,11 @@ namespace dotnow.Runtime
         internal static CLRValueTypeInstance CreateInstance(AppDomain domain, CILTypeInfo typeInfo)
         {
             // Create dedicated memory - used for return to interop called where the stack would not survive
-            StackData[] dedicatedFields = new StackData[typeInfo.InstanceSize];
+            StackData[] dedicatedFields = new StackData[typeInfo.InstanceFields.Length];// typeInfo.InstanceFields.ToArray();
+
+            // Initialize field defaults
+            for (int i = 0; i < typeInfo.InstanceFields.Length; i++)
+                dedicatedFields[i] = StackData.Default(domain, typeInfo.InstanceFields[i]);
 
             // Create the instance
             return new CLRValueTypeInstance(domain, typeInfo, new Memory<StackData>(dedicatedFields));
@@ -115,7 +120,7 @@ namespace dotnow.Runtime
         internal static CLRValueTypeInstance CreateInstance(AppDomain domain, CILTypeInfo typeInfo, StackData[] stack, int sp)
         {
             // Create the instance
-            return new CLRValueTypeInstance(domain, typeInfo, new Memory<StackData>(stack, sp, typeInfo.InstanceSize));
+            return new CLRValueTypeInstance(domain, typeInfo, new Memory<StackData>(stack, sp, typeInfo.InstanceFields.Length));
         }
     }
 }

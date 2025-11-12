@@ -2,6 +2,7 @@
 using dotnow.Reflection;
 using dotnow.Runtime.CIL;
 using System;
+using System.Linq;
 using System.Runtime.Serialization;
 
 namespace dotnow.Runtime
@@ -24,7 +25,11 @@ namespace dotnow.Runtime
             this.Type = (CLRType)typeInfo.Type;
             this.InteropBase = CreateInteropBase(domain, typeInfo, existingProxy, this);
             this.InteropImplementations = CreateInteropInterfaces(domain, typeInfo, this);
-            this.Fields = new StackData[typeInfo.InstanceSize];
+            this.Fields = new StackData[typeInfo.InstanceFields.Length];
+
+            // Initialize field defaults
+            for (int i = 0; i < typeInfo.InstanceFields.Length; i++)
+                this.Fields[i] = StackData.Default(domain, typeInfo.InstanceFields[i]);
         }
 
         // Methods
