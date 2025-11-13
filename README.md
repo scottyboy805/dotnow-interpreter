@@ -15,7 +15,8 @@ The end goal is to create a performant and feature complete runtime for managed 
 - Support for debugging.
 
 # Dependencies
-- System.Reflection.Metadata (8.0.0.0) or newer. Used to read managed pe assembly images and metadata. 
+- System.Reflection.Metadata (8.0.0.0) or newer. Used to read managed pe assembly images and metadata.
+- (Optional) Microsoft.CodeAnalysis.CSharp (4.13.0.0) or newer. Only required for the code gen tool to generate bindings for interop API's.
 
 # Limitations
 dotnow is still very in early development although it is able to run most CIL code in its current form. There are however a few inherant limitations to the project:
