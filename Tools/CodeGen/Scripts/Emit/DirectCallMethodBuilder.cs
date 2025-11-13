@@ -65,7 +65,8 @@ namespace dotnow.CodeGen.Emit
 
             // Get the method
             return codeMethod
-                .WithLeadingTrivia(SyntaxFactory.Comment("Binding method generated for method: " + method.ToString()));
+                .WithLeadingTrivia(
+                    SyntaxFactory.Comment("// Binding method generated for method: " + method.ToString()));
         }
 
         protected virtual SyntaxList<AttributeListSyntax> BuildMethodCustomAttributes()
@@ -94,7 +95,7 @@ namespace dotnow.CodeGen.Emit
                     SyntaxFactory.ParseTypeName(method.DeclaringType.FullName)),
 
                 // Get method name
-                SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralToken,
+                SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression,
                     SyntaxFactory.Literal(method.Name)),
             };
 
@@ -154,20 +155,22 @@ namespace dotnow.CodeGen.Emit
             {
                 statements.Add(SyntaxFactory.LocalDeclarationStatement(
                     SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName(method.DeclaringType.FullName),
+                        SyntaxFactory.ParseTypeName(parameter.ParameterType.FullName),
                     SyntaxFactory.SingletonSeparatedList(
                         SyntaxFactory.VariableDeclarator(
                             SyntaxFactory.Identifier(argVar + arg++),
                             null,
                             SyntaxFactory.EqualsValueClause(
-                                BuildReadArgumentStackContextExpression(method.DeclaringType, arg - 1)))))));
+                                BuildReadArgumentStackContextExpression(parameter.ParameterType, arg - 1)))))));
             }
 
             // Call the static method
             InvocationExpressionSyntax invoke = SyntaxFactory.InvocationExpression(
                 // Type.method
-                SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleAssignmentExpression,
-                    SyntaxFactory.ParseTypeName(method.DeclaringType.FullName),
+                SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                    method.IsStatic == true
+                        ? SyntaxFactory.ParseTypeName(method.DeclaringType.FullName)
+                        : SyntaxFactory.IdentifierName(argVar + "0"),
                     SyntaxFactory.IdentifierName(method.Name)),
                 // (...)
                 BuildInvokeArgumentList());

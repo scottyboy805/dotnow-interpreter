@@ -1,21 +1,32 @@
-﻿//#if !UNITY_DISABLE
-//#if UNITY_EDITOR && NET_4_6
-//using UnityEngine;
-//using UnityEditor;
+﻿#if !UNITY_DISABLE
+#if UNITY_EDITOR && NET_4_6
+using UnityEngine;
+using UnityEditor;
+using dotnow.CodeGen.Emit;
+using Microsoft.CodeAnalysis;
+using System.IO;
 
-//namespace dotnow.BindingGenerator
-//{
-//    public class CreateBindingsMenu
-//    {
-//        // Methods
-//        [MenuItem("Tools/Bindings/Generate Mono Behaviour Bindings")]
-//        public static void GenerateBindings()
-//        {
-//            BindingsGeneratorService service = new BindingsGeneratorService();
+namespace dotnow.BindingGenerator
+{
+    public class CreateBindingsMenu
+    {
+        // Methods
+        [MenuItem("Tools/dotnow/CodeGen/Test Method")]
+        public static void GenerateBindings()
+        {
+            DirectCallMethodBuilder builder = new DirectCallMethodBuilder(typeof(Transform).GetMethod("Translate", new[] { typeof(float), typeof(float), typeof(float) }));
 
-//            service.GenerateBindingsForType(typeof(MonoBehaviour), "Assets/UnityEngine_MonoBehaviour_Generated.cs");
-//        }
-//    }
-//}
-//#endif
-//#endif
+            string source = builder.BuildMember()
+                .NormalizeWhitespace()
+                .ToFullString();
+
+            File.WriteAllText("testBinding.cs", source);
+
+            //BindingsGeneratorService service = new BindingsGeneratorService();
+
+            //service.GenerateBindingsForType(typeof(MonoBehaviour), "Assets/UnityEngine_MonoBehaviour_Generated.cs");
+        }
+    }
+}
+#endif
+#endif
