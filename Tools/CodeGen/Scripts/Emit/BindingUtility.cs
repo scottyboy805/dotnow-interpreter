@@ -96,11 +96,11 @@ namespace dotnow.CodeGen
                 return true;
 
             // Check generics
-            if(method.IsGenericMethod == true && method.GetGenericArguments().Any(t => IsReferenceType(t)) == true)
+            if(method.IsGenericMethod == true && method.GetGenericArguments().Any(t => IsRefStructType(t)) == true)
                 return true;
 
             // Check parameters
-            if(method.GetParameters().Select(p => p.ParameterType).Any(p => IsReferenceType(p)) == true)
+            if(method.GetParameters().Select(p => p.ParameterType).Any(p => IsRefStructType(p)) == true)
                 return true;
 
             return false;

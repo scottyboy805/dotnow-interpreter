@@ -80,7 +80,8 @@ namespace dotnow.BindingGenerator.Emit
                 .Where(m => !m.ContainsGenericParameters)
                 .Where(m => !m.IsConstructedGenericMethod)
                 .Where(m => !m.IsAbstract && !m.IsConstructor)
-                .Where(m => !m.IsDefined(typeof(ObsoleteAttribute), false));
+                .Where(m => !m.IsDefined(typeof(ObsoleteAttribute), false))
+                .Where(m => !BindingUtility.ContainsRefStructType(m));
         }
 
         public string GetTypeFlattenedName()
