@@ -1,0 +1,19 @@
+{
+    "name": "dotnow.Tests",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f656afbb727c4e8418169dff952bc121",
+        "GUID:8a4369281f9f4814ba6b6c0822806f38"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

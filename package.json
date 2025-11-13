@@ -1,0 +1,21 @@
+{
+  "name": "com.scottyboy805.dotnow",
+  "displayName": "dotnow interpreter",
+  "version": "0.1.0",
+  "unity": "2022.3",
+  "license": "MIT",
+  "description": "A pure C# CIL interpreter designed to load and execute managed code on IL2CPP (Unity) platforms.",
+  "keywords": [
+    "IL2CPP",
+    "CLR",
+    "CIL",
+    "Interpreter",
+    "Runtime",
+  ],
+  "author": {
+    "name": "scottyboy805",
+    "email": "scottyboy805@hotmail.co.uk",
+    "url": "https://github.com/scottyboy805"
+  },
+  "dependencies": {},
+}
