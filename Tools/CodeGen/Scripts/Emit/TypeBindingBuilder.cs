@@ -1,4 +1,5 @@
-﻿using dotnow.CodeGen.Emit;
+﻿using dotnow.CodeGen;
+using dotnow.CodeGen.Emit;
 using dotnow.Interop;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -68,7 +69,7 @@ namespace dotnow.BindingGenerator.Emit
         protected virtual AttributeSyntax BuildTypeCustomPreserveAttribute()
         {
             return SyntaxFactory.Attribute(
-                SyntaxFactory.IdentifierName(nameof(PreserveAttribute)));
+                SyntaxFactory.ParseName(typeof(PreserveAttribute).FullName));
         }
 
         private IEnumerable<MethodInfo> CollectMethod()
@@ -78,7 +79,8 @@ namespace dotnow.BindingGenerator.Emit
                 .Where(m => !m.IsSpecialName)
                 .Where(m => !m.ContainsGenericParameters)
                 .Where(m => !m.IsConstructedGenericMethod)
-                .Where(m => !m.IsAbstract && !m.IsConstructor);
+                .Where(m => !m.IsAbstract && !m.IsConstructor)
+                .Where(m => !m.IsDefined(typeof(ObsoleteAttribute), false));
         }
 
         public string GetTypeFlattenedName()

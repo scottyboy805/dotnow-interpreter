@@ -83,7 +83,7 @@ namespace dotnow.CodeGen.Emit
         protected virtual AttributeSyntax BuildMethodCustomPreserveAttribute()
         {
             return SyntaxFactory.Attribute(
-                SyntaxFactory.IdentifierName(nameof(PreserveAttribute)));
+                SyntaxFactory.ParseName(typeof(PreserveAttribute).FullName));
         }
 
         protected virtual AttributeSyntax BuildMethodCustomBindingAttribute()
@@ -101,11 +101,12 @@ namespace dotnow.CodeGen.Emit
 
             // Get argument types
             IEnumerable<ExpressionSyntax> argumentTypes = method.GetParameters().Select(p =>
-                BindingUtility.BuildTypeReference(p.ParameterType));
+                SyntaxFactory.TypeOfExpression(
+                    BindingUtility.BuildTypeReference(p.ParameterType)));
 
             // Build the attribute
             return SyntaxFactory.Attribute(
-                SyntaxFactory.IdentifierName(nameof(CLRMethodBindingAttribute)),
+                SyntaxFactory.ParseName(typeof(CLRMethodBindingAttribute).FullName),
                 SyntaxFactory.AttributeArgumentList(
                     SyntaxFactory.SeparatedList(
                         Enumerable.Concat(methodExpressions, argumentTypes)
@@ -161,7 +162,9 @@ namespace dotnow.CodeGen.Emit
                             SyntaxFactory.Identifier(argVar + arg++),
                             null,
                             SyntaxFactory.EqualsValueClause(
-                                BuildReadArgumentStackContextExpression(parameter.ParameterType, arg - 1)))))));
+                                parameter.IsOut == false
+                                    ? BuildReadArgumentStackContextExpression(parameter.ParameterType, arg - 1)
+                                    : SyntaxFactory.DefaultExpression(BindingUtility.BuildTypeReference(parameter.ParameterType))))))));
             }
 
             // Call the static method
@@ -235,12 +238,15 @@ namespace dotnow.CodeGen.Emit
             SyntaxToken special = default;
 
             // Check for out
-            if(parameter.IsOut == true)
+            if (parameter.IsOut == true)
+            {
                 special = SyntaxFactory.Token(SyntaxKind.OutKeyword);
-
+            }
             // Check for ref
-            if (parameter.ParameterType.IsByRef == true)
+            else if (parameter.ParameterType.IsByRef == true)
+            {
                 special = SyntaxFactory.Token(SyntaxKind.RefKeyword);
+            }
 
             // Build the argument
             return SyntaxFactory.Argument(
@@ -255,8 +261,37 @@ namespace dotnow.CodeGen.Emit
 
         protected virtual ExpressionSyntax BuildReadArgumentStackContextExpression(Type parameterType, int stackOffset)
         {
+            // Ref structs cannot be used as generic type arguments
+            if(BindingUtility.IsRefStructType(parameterType) == true)
+            {
+                // Read a reference type
+                return 
+                    SyntaxFactory.CastExpression(
+                        // (Type)context.ReadArgAny
+                        BindingUtility.BuildTypeReference(parameterType),
+                            SyntaxFactory.InvocationExpression(
+                            // context.ReadArgAny
+                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                // context
+                                SyntaxFactory.IdentifierName(contextArg),
+                                SyntaxFactory.IdentifierName(nameof(StackContext.ReadArgAny))),
+                            // (stackOffset)
+                            SyntaxFactory.ArgumentList(
+                                SyntaxFactory.SeparatedList(new[] 
+                                {
+                                    // typeof(...)
+                                    SyntaxFactory.Argument(
+                                        SyntaxFactory.TypeOfExpression(
+                                            BindingUtility.BuildTypeReference(parameterType))),
+                                    // stackOffset
+                                    SyntaxFactory.Argument(
+                                        SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression,
+                                            SyntaxFactory.Literal(stackOffset))) 
+                                }))));
+            }
+
             // Get the name of the method to call
-            string contextMethodName = parameterType.IsClass == true
+            string contextMethodName = BindingUtility.IsReferenceType(parameterType) == true
                 ? nameof(StackContext.ReadArgObject)
                 : nameof(StackContext.ReadArgValueType);
 
@@ -285,7 +320,7 @@ namespace dotnow.CodeGen.Emit
         protected virtual ExpressionSyntax BuildWriteArgumentStackContextExpression(Type parameterType, int stackOffset)
         {
             // Get the name of the method to call
-            string contextMethodName = parameterType.IsClass == true
+            string contextMethodName = BindingUtility.IsReferenceType(parameterType) == true
                 ? nameof(StackContext.WriteArgObject)
                 : nameof(StackContext.WriteArgValueType);
 
@@ -304,16 +339,21 @@ namespace dotnow.CodeGen.Emit
                             BindingUtility.BuildTypeReference(parameterType))))),
                 // (stackOffset)
                 SyntaxFactory.ArgumentList(
-                    SyntaxFactory.SingletonSeparatedList(
+                    SyntaxFactory.SeparatedList(new[]
+                    {
                         // stackOffset
                         SyntaxFactory.Argument(
-                            SyntaxFactory.IdentifierName(argVar + stackOffset)))));
+                            SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression,
+                                SyntaxFactory.Literal(stackOffset))),
+                        SyntaxFactory.Argument(
+                            SyntaxFactory.IdentifierName(argVar + stackOffset))
+                        })));
         }
 
         protected virtual ExpressionSyntax BuildWriteReturnStackContextExpression(Type returnType)
         {
             // Get the name of the method to call
-            string contextMethodName = returnType.IsClass == true
+            string contextMethodName = BindingUtility.IsReferenceType(returnType) == true
                 ? nameof(StackContext.ReturnObject)
                 : nameof(StackContext.ReturnValueType);
 
@@ -337,34 +377,6 @@ namespace dotnow.CodeGen.Emit
                         SyntaxFactory.Argument(
                             SyntaxFactory.IdentifierName(returnVar)))));
         }
-
-        //private void AddPreserveAttribute(CodeMemberMethod codeMethod)
-        //{
-        //    codeMethod.CustomAttributes.Add(new CodeAttributeDeclaration(
-        //        new CodeTypeReference(typeof(PreserveAttribute))));
-        //}
-
-        //private void AddMethodBindingAttribute(CodeMemberMethod codeMethod, MethodInfo methodInfo)
-        //{
-        //    List<CodeAttributeArgument> attributeArgs = new List<CodeAttributeArgument>
-        //    {
-        //        new CodeAttributeArgument(new CodeTypeOfExpression(methodInfo.DeclaringType)),
-        //        new CodeAttributeArgument(new CodePrimitiveExpression(methodInfo.Name)),
-        //        new CodeAttributeArgument(new CodePrimitiveExpression(methodInfo.IsGenericMethod))
-        //    };
-
-        //    var genericTypes = methodInfo.GetGenericArguments();
-        //    CodeExpression[] genericTypeExpressions = genericTypes.Select(t => new CodeTypeOfExpression(t)).ToArray<CodeExpression>();
-        //    attributeArgs.Add(new CodeAttributeArgument(new CodeArrayCreateExpression(typeof(Type), genericTypeExpressions)));
-
-        //    var parameterTypes = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
-        //    CodeExpression[] parameterTypeExpressions = parameterTypes.Select(t => new CodeTypeOfExpression(t)).ToArray<CodeExpression>();
-        //    attributeArgs.Add(new CodeAttributeArgument(new CodeArrayCreateExpression(typeof(Type), parameterTypeExpressions)));
-
-        //    codeMethod.CustomAttributes.Add(new CodeAttributeDeclaration(
-        //        new CodeTypeReference(typeof(CLRMethodBindingAttribute)),
-        //        attributeArgs.ToArray()));
-        //}
 
         private string GenerateMethodName(MethodInfo methodInfo)
         {
@@ -440,34 +452,5 @@ namespace dotnow.CodeGen.Emit
                 default: return type.Name;
             }
         }
-
-        //private void BuildMethodBody(CodeMemberMethod codeMethod, MethodInfo methodInfo)
-        //{
-        //    // Get type
-        //    Type objectType = methodInfo.DeclaringType;
-
-        //    // Check for instance
-        //    bool hasInstance = methodInfo.IsStatic == false;
-
-        //    // Check for instance
-        //    if (hasInstance == true)
-        //    {
-        //    }
-        //    else
-        //    {
-
-        //    }
-        //}
-
-        //private CodeExpression ReadStackContext(Type type, int offset)
-        //{
-        //    // Check for reference type
-        //    if (type.IsClass == true)
-        //    {
-        //        return new CodeMethodInvokeExpression(
-        //            new CodeVariableReferenceExpression(contextArg),
-        //            nameof(StackContext.ReadArgObject),)
-        //    }
-        //}
     }
 }
