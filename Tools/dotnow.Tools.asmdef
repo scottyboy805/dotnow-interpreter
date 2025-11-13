@@ -1,16 +1,16 @@
 {
-    "name": "dotnow.Tools",
+    "name": "dotnow.CodeGen",
     "rootNamespace": "",
     "references": [
         "GUID:f656afbb727c4e8418169dff952bc121"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
-    "precompiledReferences": [
-        "System.CodeDom.dll"
-    ],
+    "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [],
