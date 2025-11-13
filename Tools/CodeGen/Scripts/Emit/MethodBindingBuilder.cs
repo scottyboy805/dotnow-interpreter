@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis;
 
 namespace dotnow.CodeGen.Emit
 {
-    internal class MethodBindingBuilder
+    public class MethodBindingBuilder
     {
         // Protected
         protected readonly MethodInfo method = null;
@@ -168,15 +168,7 @@ namespace dotnow.CodeGen.Emit
             }
 
             // Call the static method
-            InvocationExpressionSyntax invoke = SyntaxFactory.InvocationExpression(
-                // Type.method
-                SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                    method.IsStatic == true
-                        ? BindingUtility.BuildTypeReference(method.DeclaringType)
-                        : SyntaxFactory.IdentifierName(argVar + "0"),
-                    SyntaxFactory.IdentifierName(method.Name)),
-                // (...)
-                BuildInvokeArgumentList());
+            ExpressionSyntax invoke = BuildInvoke();
 
             // Check for return value
             if(method.ReturnType != null && method.ReturnType != typeof(void))
@@ -224,6 +216,19 @@ namespace dotnow.CodeGen.Emit
             }
 
             return statements;
+        }
+
+        protected virtual ExpressionSyntax BuildInvoke()
+        {
+            return SyntaxFactory.InvocationExpression(
+                // Type.method
+                SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                    method.IsStatic == true
+                        ? BindingUtility.BuildTypeReference(method.DeclaringType)
+                        : SyntaxFactory.IdentifierName(argVar + "0"),
+                    SyntaxFactory.IdentifierName(method.Name)),
+                // (...)
+                BuildInvokeArgumentList());
         }
 
         protected virtual ArgumentListSyntax BuildInvokeArgumentList()

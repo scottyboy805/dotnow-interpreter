@@ -1,5 +1,4 @@
-﻿using dotnow.CodeGen;
-using dotnow.CodeGen.Emit;
+﻿using dotnow.CodeGen.Emit;
 using dotnow.Interop;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -9,9 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace dotnow.BindingGenerator.Emit
+namespace dotnow.CodeGen.Emit
 {
-    internal class TypeBindingBuilder
+    public class TypeBindingBuilder
     {
         // Protected
         protected readonly Type type = null;
@@ -28,8 +27,18 @@ namespace dotnow.BindingGenerator.Emit
             // Store all members
             List<MemberDeclarationSyntax> members = new();
 
+            // Build all property accessors
+            foreach((PropertyInfo, MethodInfo) accessor in CollectPropertyAccessors())
+            {
+                // Create the method builder
+                PropertyAccessorBindingBuilder accessorBuilder = new(accessor.Item1, accessor.Item2);
+
+                // Add to members
+                members.Add(accessorBuilder.BuildMember());
+            }
+
             // Build all methods
-            foreach(MethodInfo method in CollectMethod())
+            foreach(MethodInfo method in CollectMethods())
             {
                 // Create the method builder
                 MethodBindingBuilder methodBuilder = new(method);
@@ -72,16 +81,30 @@ namespace dotnow.BindingGenerator.Emit
                 SyntaxFactory.ParseName(typeof(PreserveAttribute).FullName));
         }
 
-        private IEnumerable<MethodInfo> CollectMethod()
+        private IEnumerable<(PropertyInfo, MethodInfo)> CollectPropertyAccessors()
+        {
+            return type.GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .SelectMany(p =>
+                    new[] { p.GetMethod, p.SetMethod }
+                        .Where(m => m != null && IsBindableMethod(m!, true))
+                        .Select(m => (Property: p, Accessor: m!)));
+        }
+
+        private IEnumerable<MethodInfo> CollectMethods()
         {
             return type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                .Where(m => m.DeclaringType != typeof(object) && m.DeclaringType != typeof(MarshalByRefObject))
-                .Where(m => !m.IsSpecialName)
-                .Where(m => !m.ContainsGenericParameters)
-                .Where(m => !m.IsConstructedGenericMethod)
-                .Where(m => !m.IsAbstract && !m.IsConstructor)
-                .Where(m => !m.IsDefined(typeof(ObsoleteAttribute), false))
-                .Where(m => !BindingUtility.ContainsRefStructType(m));
+                .Where(m => IsBindableMethod(m, false));
+        }
+
+        private bool IsBindableMethod(MethodInfo m, bool ignoreSpecialName)
+        {
+            return m.DeclaringType != typeof(object) && m.DeclaringType != typeof(MarshalByRefObject)
+                && (ignoreSpecialName == true || !m.IsSpecialName)
+                && !m.ContainsGenericParameters
+                && !m.IsConstructedGenericMethod
+                && !m.IsAbstract && !m.IsConstructor
+                && !m.IsDefined(typeof(ObsoleteAttribute), false)
+                && !BindingUtility.ContainsRefStructType(m);
         }
 
         public string GetTypeFlattenedName()
