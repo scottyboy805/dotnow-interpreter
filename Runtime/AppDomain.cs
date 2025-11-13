@@ -113,8 +113,21 @@ namespace dotnow
             interopMethodHandles.Clear();
         }
 
-        internal ThreadContext GetThreadContext(int stackSize = ThreadContext.DefaultStackSize)
+        public AssemblyLoadContext GetLoadContext(Assembly assembly)
         {
+            // Check for null
+            if (assembly == null)
+                throw new ArgumentNullException(nameof(assembly));
+
+            // Try to get the load context
+            assemblyLoadContexts.TryGetValue(assembly, out AssemblyLoadContext loadContext);
+
+            // Get the result
+            return loadContext;
+        }
+
+        internal ThreadContext GetThreadContext(int stackSize = ThreadContext.DefaultStackSize)
+        {            
             // Try to get context for thread
             ThreadContext context;
             if (threadContexts.TryGetValue(Thread.CurrentThread, out context) == true)
