@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if DOTNOW_ENABLE_TESTS
+using System;
 using System.IO;
 using System.Reflection;
 
@@ -47,3 +48,4 @@ namespace dotnow
         }
     }
 }
+#endif

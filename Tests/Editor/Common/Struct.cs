@@ -1,3 +1,4 @@
+#if DOTNOW_ENABLE_TESTS
 using NUnit.Framework;
 using System;
 using System.Reflection;
@@ -261,3 +262,4 @@ namespace dotnow.Common
         }
     }
 }
+#endif

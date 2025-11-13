@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿#if DOTNOW_ENABLE_TESTS
+using NUnit.Framework;
 using System.Reflection;
 using TestAssembly;
 
@@ -871,3 +872,4 @@ namespace dotnow.Common
         // ===== LEGACY COMPREHENSIVE TESTS FOR BACKWARD COMPATIBILITY =====
     }
 }
+#endif

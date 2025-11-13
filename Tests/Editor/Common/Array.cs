@@ -1,4 +1,5 @@
-﻿using dotnow;
+﻿#if DOTNOW_ENABLE_TESTS
+using dotnow;
 using dotnow.Interop;
 using NUnit.Framework;
 using System.Reflection;
@@ -53,3 +54,4 @@ namespace dotnow.Common
         }
     }
 }
+#endif
