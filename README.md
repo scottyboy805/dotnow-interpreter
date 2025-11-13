@@ -30,8 +30,41 @@ dotnow can be installed using the Unity package manager via the following git UR
 
 Alternativley check the [releases section](https://github.com/scottyboy805/dotnow-interpreter/releases) for .unitypackage versions.
 
-# Getting Started
-Take a look at the [wiki](https://github.com/scottyboy805/dotnow-interpreter/wiki) to get started.
+# Usage
+A dotnow `AppDomain` is required as a container for all interpreted code, and 1 or more assemblies can be loaded into the same domain. It is also possible to have multiple app domains in the same process.  
+dotnow implementes the full `System.Reflection` interface, meaning that once an assembly is loaded, you can use the normal reflection API to find types and invoke members.
+```cs
+// Create dotnow app domain as the main container
+// Be sure to use dotnow.AppDomain rather than System.AppDomain
+AppDomain domain = new AppDomain();
+
+// Load a managed assembly from file
+// Returns a System.Assembly representing the dotnow interpreted module. Any members invoked from this assembly will run under dotnow interpeter rather than Mono/Jit
+Assembly assembly = domain.LoadAssemblyFrom("MyAssembly.dll");
+
+// Use reflection as normal to find a type
+Type type = assembly.GetType("MyType");
+
+// Find a method that we can invoke
+MethodInfo method = type.GetMethod("MyMethod", BindingFlags.Static | BindingFlags.Public, Type.DefaultBinder, new Type[]{ typeof(int), typeof(string) }, null);
+
+// Now invoke the method the same as normal reflection with asome arguments, and dotnow will interpret the bytecode
+method.Invoke(null, new object[]{ 123, "Hello World" });
+
+// Unlike Mono/Jit, dotnow domains can be fully unloaded once you are finished with them
+domain.Dispose();
+```
+
+dotnow assemblies can also be unloaded without destroying the domain via the assemby load context. The domain caches all interop members, so it makes sense to reuse it if possible:
+```cs
+// Get the load context for a dotnow assembly
+AssemblyLoadContext loadContext = domain.GetLoadContext(assembly);
+
+// Now can can dispose just this context, and the domai and any other assemblies will remain in memory
+loadContext.Dispose();
+```
+
+Take a look at the [wiki](https://github.com/scottyboy805/dotnow-interpreter/wiki) for more samples.
 
 # Demos
 - Snake: A simple snake game that is dynamically loaded and interpreted on Unity WebGL with IL2CPP backend. Demo scripts use arrays, collections, generics, enums and derive from MonoBehaviour. Find the demo game [here](https://trivialinteractive.co.uk/products/demo/trivialclr/snake). Find the demo project in 'ExampleProjects/SnakeExample' (Game runtime scripts - dynamically loaded) and 'Assets/Examples/Snake' (Loading and setup code).
