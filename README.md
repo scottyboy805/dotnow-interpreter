@@ -25,7 +25,7 @@ dotnow is still very in early development although it is able to run most CIL co
 - AOT code for some generic types may not be emitted at build, causing runtime errors. For example If 'List`(int)' is not used inside the main project at any time but runtime interpreted code does use this generic type, it will cause a runtime exception stating (correctly) that no AOT code was generated. The workarounds for this are nasty hacks at the moment and involve declaring variables for all potential generic combinations ahead or time.
 
 # Installation
-dotnow can be installed using the Unity package manager via the following git URL. Follow [instructions here](https://docs.unity3d.com/Manual/upm-ui-giturl.html) for installing git packages in Unity.
+dotnow can be installed using the Unity package manager via the following git URL. Follow [instructions here](https://docs.unity3d.com/Manual/upm-ui-giturl.html) for installing git packages in Unity.  
 `https://github.com/scottyboy805/dotnow-interpreter.git`
 
 Alternativley check the [releases section](https://github.com/scottyboy805/dotnow-interpreter/releases) for .unitypackage versions.
