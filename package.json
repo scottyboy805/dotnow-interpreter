@@ -10,12 +10,12 @@
     "CLR",
     "CIL",
     "Interpreter",
-    "Runtime",
+    "Runtime"
   ],
   "author": {
     "name": "scottyboy805",
     "email": "scottyboy805@hotmail.co.uk",
     "url": "https://github.com/scottyboy805"
   },
-  "dependencies": {},
+  "dependencies": {}
 }
