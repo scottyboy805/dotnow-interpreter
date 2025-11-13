@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis;
 
 namespace dotnow.CodeGen.Emit
 {
-    internal class DirectCallMethodBuilder
+    internal class MethodBindingBuilder
     {
         // Protected
         protected readonly MethodInfo method = null;
@@ -22,7 +22,7 @@ namespace dotnow.CodeGen.Emit
         protected const string returnVar = "result";
 
         // Constructor
-        public DirectCallMethodBuilder(MethodInfo method)
+        public MethodBindingBuilder(MethodInfo method)
         {
             this.method = method;
         }
@@ -66,7 +66,7 @@ namespace dotnow.CodeGen.Emit
             // Get the method
             return codeMethod
                 .WithLeadingTrivia(
-                    SyntaxFactory.Comment("// Binding method generated for method: " + method.ToString()));
+                    SyntaxFactory.Comment("// Binding generated from method: " + method.ToString()));
         }
 
         protected virtual SyntaxList<AttributeListSyntax> BuildMethodCustomAttributes()
@@ -92,7 +92,7 @@ namespace dotnow.CodeGen.Emit
             { 
                 // Get declaring type
                 SyntaxFactory.TypeOfExpression(
-                    SyntaxFactory.ParseTypeName(method.DeclaringType.FullName)),
+                    BindingUtility.BuildTypeReference(method.DeclaringType)),
 
                 // Get method name
                 SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression,
@@ -101,7 +101,7 @@ namespace dotnow.CodeGen.Emit
 
             // Get argument types
             IEnumerable<ExpressionSyntax> argumentTypes = method.GetParameters().Select(p =>
-                SyntaxFactory.ParseTypeName(p.ParameterType.FullName));
+                BindingUtility.BuildTypeReference(p.ParameterType));
 
             // Build the attribute
             return SyntaxFactory.Attribute(
@@ -119,7 +119,7 @@ namespace dotnow.CodeGen.Emit
                 {
                     // Stack context parameter
                     SyntaxFactory.Parameter(
-                        default, default, SyntaxFactory.ParseTypeName(typeof(StackContext).FullName),
+                        default, default, BindingUtility.BuildTypeReference(typeof(StackContext)),
                         SyntaxFactory.Identifier(contextArg), null)
                 }));
         }
@@ -141,7 +141,7 @@ namespace dotnow.CodeGen.Emit
             {
                 statements.Add(SyntaxFactory.LocalDeclarationStatement(
                     SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName(method.DeclaringType.FullName),
+                        BindingUtility.BuildTypeReference(method.DeclaringType),
                     SyntaxFactory.SingletonSeparatedList(
                         SyntaxFactory.VariableDeclarator(
                             SyntaxFactory.Identifier(argVar + arg++),
@@ -155,7 +155,7 @@ namespace dotnow.CodeGen.Emit
             {
                 statements.Add(SyntaxFactory.LocalDeclarationStatement(
                     SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName(parameter.ParameterType.FullName),
+                        BindingUtility.BuildTypeReference(parameter.ParameterType),
                     SyntaxFactory.SingletonSeparatedList(
                         SyntaxFactory.VariableDeclarator(
                             SyntaxFactory.Identifier(argVar + arg++),
@@ -169,7 +169,7 @@ namespace dotnow.CodeGen.Emit
                 // Type.method
                 SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                     method.IsStatic == true
-                        ? SyntaxFactory.ParseTypeName(method.DeclaringType.FullName)
+                        ? BindingUtility.BuildTypeReference(method.DeclaringType)
                         : SyntaxFactory.IdentifierName(argVar + "0"),
                     SyntaxFactory.IdentifierName(method.Name)),
                 // (...)
@@ -181,7 +181,7 @@ namespace dotnow.CodeGen.Emit
                 // Assign return value to variable
                 statements.Add(SyntaxFactory.LocalDeclarationStatement(
                     SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName(method.ReturnType.FullName),
+                        BindingUtility.BuildTypeReference(method.ReturnType),
                     SyntaxFactory.SingletonSeparatedList(
                         SyntaxFactory.VariableDeclarator(
                             SyntaxFactory.Identifier(returnVar),
@@ -196,6 +196,22 @@ namespace dotnow.CodeGen.Emit
             }
 
             // Todo - handle ref/out arguments
+            int paramIndex = 0;
+            foreach (ParameterInfo parameter in method.GetParameters())
+            {
+                // Check for by ref or out
+                if (parameter.IsOut == true || parameter.ParameterType.IsByRef == true)
+                {
+                    // Add the call to write arg value back to stack
+                    statements.Add(SyntaxFactory.ExpressionStatement(
+                        BuildWriteArgumentStackContextExpression(parameter.ParameterType,
+                            method.IsStatic == false
+                                ? paramIndex + 1 :
+                                paramIndex)));
+                }
+
+                paramIndex++;
+            }
 
             // Check for return
             if (method.ReturnType != null && method.ReturnType != typeof(void))
@@ -256,7 +272,7 @@ namespace dotnow.CodeGen.Emit
                         // <type>
                         SyntaxFactory.TypeArgumentList(
                         SyntaxFactory.SingletonSeparatedList(
-                            SyntaxFactory.ParseTypeName(parameterType.FullName))))),
+                            BindingUtility.BuildTypeReference(parameterType))))),
                 // (stackOffset)
                 SyntaxFactory.ArgumentList(
                     SyntaxFactory.SingletonSeparatedList(
@@ -264,6 +280,34 @@ namespace dotnow.CodeGen.Emit
                         SyntaxFactory.Argument(
                             SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression,
                                 SyntaxFactory.Literal(stackOffset))))));
+        }
+
+        protected virtual ExpressionSyntax BuildWriteArgumentStackContextExpression(Type parameterType, int stackOffset)
+        {
+            // Get the name of the method to call
+            string contextMethodName = parameterType.IsClass == true
+                ? nameof(StackContext.WriteArgObject)
+                : nameof(StackContext.WriteArgValueType);
+
+            // Read a reference type
+            return SyntaxFactory.InvocationExpression(
+                // context.ReadArgObject<type>
+                SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                    // context
+                    SyntaxFactory.IdentifierName(contextArg),
+                    // ReadArgObject<type>
+                    SyntaxFactory.GenericName(
+                        SyntaxFactory.Identifier(contextMethodName),
+                        // <type>
+                        SyntaxFactory.TypeArgumentList(
+                        SyntaxFactory.SingletonSeparatedList(
+                            BindingUtility.BuildTypeReference(parameterType))))),
+                // (stackOffset)
+                SyntaxFactory.ArgumentList(
+                    SyntaxFactory.SingletonSeparatedList(
+                        // stackOffset
+                        SyntaxFactory.Argument(
+                            SyntaxFactory.IdentifierName(argVar + stackOffset)))));
         }
 
         protected virtual ExpressionSyntax BuildWriteReturnStackContextExpression(Type returnType)
@@ -285,7 +329,7 @@ namespace dotnow.CodeGen.Emit
                         // <type>
                         SyntaxFactory.TypeArgumentList(
                         SyntaxFactory.SingletonSeparatedList(
-                            SyntaxFactory.ParseTypeName(returnType.FullName))))),
+                            BindingUtility.BuildTypeReference(returnType))))),
                 // (stackOffset)
                 SyntaxFactory.ArgumentList(
                     SyntaxFactory.SingletonSeparatedList(
@@ -330,10 +374,10 @@ namespace dotnow.CodeGen.Emit
             {
                 if (methodInfo.DeclaringType.Namespace != null)
                 {
-                    nameBuilder.Append(methodInfo.DeclaringType.Namespace.Replace('.', '_'));
+                    nameBuilder.Append(BindingUtility.EscapeType(methodInfo.DeclaringType).Namespace.Replace('.', '_'));
                     nameBuilder.Append("_");
                 }
-                nameBuilder.Append(methodInfo.DeclaringType.Name.Replace('.', '_').Replace('<', '_').Replace('>', '_'));
+                nameBuilder.Append(BindingUtility.EscapeType(methodInfo.DeclaringType).Name.Replace('.', '_').Replace('<', '_').Replace('>', '_'));
                 nameBuilder.Append("_");
             }
 
@@ -358,6 +402,8 @@ namespace dotnow.CodeGen.Emit
 
         private string GetTypeAlias(Type type)
         {
+            type = BindingUtility.EscapeType(type);
+
             if (type == null) return "Null";
             if (type.IsGenericParameter) return $"T{type.GenericParameterPosition}";
             if (type.IsGenericType)
@@ -372,6 +418,8 @@ namespace dotnow.CodeGen.Emit
 
         private string GetSimpleTypeName(Type type)
         {
+            type = BindingUtility.EscapeType(type);
+
             if (type.IsEnum) return $"Enum{Enum.GetUnderlyingType(type).Name}";
             switch (Type.GetTypeCode(type))
             {

@@ -5,6 +5,7 @@ using UnityEditor;
 using dotnow.CodeGen.Emit;
 using Microsoft.CodeAnalysis;
 using System.IO;
+using dotnow.BindingGenerator.Emit;
 
 namespace dotnow.BindingGenerator
 {
@@ -14,7 +15,8 @@ namespace dotnow.BindingGenerator
         [MenuItem("Tools/dotnow/CodeGen/Test Method")]
         public static void GenerateBindings()
         {
-            DirectCallMethodBuilder builder = new DirectCallMethodBuilder(typeof(Transform).GetMethod("Translate", new[] { typeof(float), typeof(float), typeof(float) }));
+            //MethodBindingBuilder builder = new MethodBindingBuilder(typeof(Transform).GetMethod("Translate", new[] { typeof(float), typeof(float), typeof(float) }));
+            TypeBindingBuilder builder = new TypeBindingBuilder(typeof(Transform));
 
             string source = builder.BuildMember()
                 .NormalizeWhitespace()
