@@ -32,7 +32,7 @@ namespace dotnow.Runtime.CIL
             // Get sp max
             int spMax = sp + method.MaxStack;
 
-            // Check overflow - we'll handle this differently since we can't use unsafe
+            // Check overflow
             if (spMax >= threadContext.stack.Length)
                 threadContext.Throw<StackOverflowException>();
 
@@ -60,13 +60,18 @@ namespace dotnow.Runtime.CIL
                             break;
                         }
 
-                    case ILOpCode.Volatile: continue;
+                    #region Prefix
+                    case ILOpCode.Volatile:
+                        {
+                            continue;
+                        }
                     case ILOpCode.Constrained:
                         {
-                            // Read type
+                            // Read type token and we can just ignore it
                             FetchDecode<int>(instructions, ref pc);
                             continue;
                         }
+                    #endregion
 
                     #region Stack
                     case ILOpCode.Dup:
