@@ -28,7 +28,9 @@ namespace dotnow.Interop
             if ((field.Flags & CILFieldFlags.DirectReadDelegate) != 0)
             {
                 // Create spans for view of stack instance and return value
-                Span<StackData> stackArgs = MemoryMarshal.CreateSpan(ref instance, 1);
+                Span<StackData> stackArgs = (field.Flags & CILFieldFlags.This) != 0
+                    ? MemoryMarshal.CreateSpan(ref instance, 1)
+                    : default;
                 Span<StackData> stackReturn = MemoryMarshal.CreateSpan(ref value, 1);
 
                 // Create the stack context
