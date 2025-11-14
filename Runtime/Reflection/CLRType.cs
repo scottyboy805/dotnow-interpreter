@@ -7,8 +7,6 @@ using System.Reflection.Metadata.Ecma335;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Data;
-using dotnow.Runtime;
-using dotnow.Runtime.CIL;
 
 namespace dotnow.Reflection
 {
@@ -256,7 +254,13 @@ namespace dotnow.Reflection
 
         public override FieldInfo GetField(string name, BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            foreach (FieldInfo field in fields)
+            {
+                // Check for matching field
+                if (MatchFieldNameAndAttributes(field, bindingAttr, name) == true)
+                    return field;
+            }
+            return null;
         }
 
         public override FieldInfo[] GetFields(BindingFlags bindingAttr)

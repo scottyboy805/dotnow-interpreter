@@ -36,7 +36,7 @@ namespace dotnow.Reflection
         public override FieldAttributes Attributes => definition.Attributes;
         public override Type DeclaringType => declaringType;
         public override Type FieldType => fieldType.Value;        
-        public override Type ReflectedType => typeof(CLRFieldInfo);
+        public override Type ReflectedType => declaringType;
         public override RuntimeFieldHandle FieldHandle => throw new NotSupportedException();
         public override object GetRawConstantValue() => fieldConstant.Value;
         #endregion
