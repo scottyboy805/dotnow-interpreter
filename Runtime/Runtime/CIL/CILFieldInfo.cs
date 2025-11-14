@@ -38,9 +38,13 @@ namespace dotnow.Runtime.CIL
         /// </summary>
         public readonly CILFieldFlags Flags;
         /// <summary>
-        /// The optional delegate if an interop read or write binding is associated with this field.
+        /// The optional delegate if an interop read binding is associated with this field.
         /// </summary>
-        public readonly Delegate InteropAccess;
+        public readonly Delegate InteropReadAccess;
+        /// <summary>
+        /// The optional delegate if an interop write binding is associated with this field.
+        /// </summary>
+        public readonly Delegate InteropWriteAccess;
 
         // Constructor
         internal CILFieldInfo(AppDomain domain, FieldInfo field)
@@ -48,7 +52,7 @@ namespace dotnow.Runtime.CIL
             this.Field = field;
             this.DeclaringType = field.DeclaringType.GetTypeInfo(domain);
             this.FieldType = field.FieldType.GetTypeInfo(domain);
-            this.Flags = GetFlags(field, out this.InteropAccess);
+            this.Flags = GetFlags(field, out this.InteropReadAccess, out this.InteropWriteAccess);
         }
 
         // Methods
@@ -57,9 +61,10 @@ namespace dotnow.Runtime.CIL
             return $"{Field} = {Flags}";
         }
 
-        private static CILFieldFlags GetFlags(FieldInfo field, out Delegate interopAccess)
+        private static CILFieldFlags GetFlags(FieldInfo field, out Delegate interopReadAccess, out Delegate interopWriteAccess)
         {
-            interopAccess = null;
+            interopReadAccess = null;
+            interopWriteAccess = null;
 
             // Init flags
             CILFieldFlags flags = 0;
@@ -83,19 +88,13 @@ namespace dotnow.Runtime.CIL
             if(__bindings.TryGetDirectReadBinding(field, out DirectAccess read) == true)
             {
                 flags |= CILFieldFlags.DirectReadDelegate;
-                interopAccess = read;
-
-                // Important - clear interpreted flag since this is now considered an interop field via proxy and must be accessed by the marshal
-                flags &= ~CILFieldFlags.Interpreted;
+                interopReadAccess = read;
             }
             // Check for write binding
             else if(__bindings.TryGetDirectWriteBinding(field, out DirectAccess write) == true)
             {
                 flags |= CILFieldFlags.DirectWriteDelegate;
-                interopAccess = write;
-
-                // Important - clear interpreted flag since this is now considered an interop field via proxy and must be accessed by the marshal
-                flags &= ~CILFieldFlags.Interpreted;
+                interopWriteAccess = write;
             }
 
             return flags;

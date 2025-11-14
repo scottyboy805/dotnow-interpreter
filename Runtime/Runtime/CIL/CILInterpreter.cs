@@ -576,7 +576,7 @@ namespace dotnow.Runtime.CIL
                             // Load the method
                             CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
 
-                            // Pop the instance
+                            // Pop the instance - should always be a reference type or address, so no need to pass by ref and copy is fine
                             StackData instance = stack[--sp];
 
                             // Check for null
@@ -641,15 +641,15 @@ namespace dotnow.Runtime.CIL
                             CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
 
                             // Pop value and instance
-                            StackData value = stack[--sp];
-                            StackData instance = stack[--sp];
+                            ref StackData value = ref stack[--sp];
+                            ref StackData instance = ref stack[--sp];
 
                             // Check for null
                             if (instance.Ref == null)
                                 threadContext.Throw<NullReferenceException>();
 
                             // Set the field
-                            RuntimeField.SetInstanceFieldDirect(loadContext.AppDomain, field, instance, ref value);
+                            RuntimeField.SetInstanceFieldDirect(loadContext.AppDomain, field, ref instance, ref value);
 
                             // Debug execution
                             Debug.Instruction(op, pc - 5, value);
@@ -667,7 +667,7 @@ namespace dotnow.Runtime.CIL
                             CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
 
                             // Pop value
-                            StackData value = stack[--sp];
+                            ref StackData value = ref stack[--sp];
 
                             // Load the field
                             RuntimeField.SetStaticFieldDirect(loadContext.AppDomain, field, ref value);

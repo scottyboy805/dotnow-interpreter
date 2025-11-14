@@ -35,9 +35,10 @@ namespace dotnow.Interop
                 StackContext directAccessContext = new StackContext(appDomain, stackArgs, stackReturn);
 
                 // Call the delegate
-                Debug.LineFormat("[Marshal: Direct Read Access] Interop method binding: '{0}'", field.InteropAccess.Method);
-                ((DirectAccess)field.InteropAccess)(directAccessContext);
+                Debug.LineFormat("[Marshal: Direct Read Access] Interop method binding: '{0}'", field.InteropReadAccess.Method);
+                ((DirectAccess)field.InteropReadAccess)(directAccessContext);
             }
+            // Fall back to reflection to set the field - slow and with allocations
             else
             {
                 // Wrap the instance
@@ -55,20 +56,40 @@ namespace dotnow.Interop
             }
         }
 
-        public static void SetFieldInterop(AppDomain appDomain, in CILFieldInfo field, in StackData instance, ref StackData value)
+        public static void SetFieldInterop(AppDomain appDomain, in CILFieldInfo field, ref StackData instance, ref StackData value)
         {
-            // Wrap the instance
-            object unwrappedInstance = null;
-            object unwrappedValue = null;
+            // Check for write access
+            if ((field.Flags & CILFieldFlags.DirectWriteDelegate) != 0)
+            {
+                // Create spans for view of stack instance and value
+                Span<StackData> stackArgs = (field.Flags & CILFieldFlags.This) != 0
+                    ? MemoryMarshal.CreateSpan(ref instance, 2) // This is a bit unsafe because it relies on the fact that instance and value are in sequential memory, but it should always be the case
+                    : MemoryMarshal.CreateSpan(ref value, 1);
+                Span<StackData> stackReturn = default;
 
-            // Unwrap the instance
-            StackData.Unwrap(field.DeclaringType, instance, ref unwrappedInstance);
+                // Create the stack context
+                StackContext directAccessContext = new StackContext(appDomain, stackArgs, stackReturn);
 
-            // Unwrap the value
-            StackData.Unwrap(field.FieldType, value, ref unwrappedValue);
+                // Call the delegate
+                Debug.LineFormat("[Marshal: Direct Write Access] Interop method binding: '{0}'", field.InteropWriteAccess.Method);
+                ((DirectAccess)field.InteropWriteAccess)(directAccessContext);
+            }
+            // Fall back to reflection to set the field - slow and with allocations
+            else
+            {
+                // Wrap the instance
+                object unwrappedInstance = null;
+                object unwrappedValue = null;
 
-            // Set the value
-            field.Field.SetValue(unwrappedInstance, unwrappedValue);
+                // Unwrap the instance
+                StackData.Unwrap(field.DeclaringType, instance, ref unwrappedInstance);
+
+                // Unwrap the value
+                StackData.Unwrap(field.FieldType, value, ref unwrappedValue);
+
+                // Set the value
+                field.Field.SetValue(unwrappedInstance, unwrappedValue);
+            }
         }
 
         public static void InvokeConstructorInterop(ThreadContext threadContext, AppDomain appDomain, in CILTypeInfo type, in CILMethodInfo ctor, int spReturn, int spArg)

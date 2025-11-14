@@ -1,6 +1,5 @@
 ﻿using dotnow.Runtime.CIL;
 using System;
-using System.Reflection;
 
 namespace dotnow.Runtime
 {
@@ -99,9 +98,9 @@ namespace dotnow.Runtime
             public StackData Instance;
 
             // Constructor
-            public ByRefField(AppDomain appDomain, CILFieldInfo field, StackData instance)
+            public ByRefField(AppDomain appDomain, CILFieldInfo field,  StackData instance)
             {
-                AppDomain = appDomain;
+                this.AppDomain = appDomain;
                 this.Field = field;
                 this.Instance = instance;
             }
@@ -159,7 +158,7 @@ namespace dotnow.Runtime
                 if ((Field.Flags & CILFieldFlags.This) != 0)
                 {
                     // Read the instance field value
-                    RuntimeField.SetInstanceFieldDirect(AppDomain, Field, Instance, ref val);
+                    RuntimeField.SetInstanceFieldDirect(AppDomain, Field, ref Instance, ref val);
                 }
                 else
                 {
