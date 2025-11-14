@@ -116,11 +116,22 @@ namespace UnityEngine
             if(type.IsCLRType() == false)
                 return go.AddComponent(type);
 
-            MonoBehaviourProxy proxy = go.AddComponent<MonoBehaviourProxy>();
+            // Get nearest interop base
+            Type interopType = type;
+            while(interopType.IsCLRType() == true)
+                interopType = interopType.BaseType;
 
+            // Get proxy type
+            Type proxyType = __bindings.GetProxyBindingType(interopType);
+
+            // Add the component and get the proxy
+            ICLRProxy proxy = (ICLRProxy)go.AddComponent(proxyType);
+
+            // Create the dotnow instance which owns this proxy
             domain.CreateInstanceFromProxy(type, proxy);
 
-            return proxy;
+            // Get the component
+            return proxy as Component;
         }
     }
 }

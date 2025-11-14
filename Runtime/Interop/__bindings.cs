@@ -52,6 +52,15 @@ namespace dotnow.Interop
             return directCallGenericBindings.ContainsKey(method);
         }
 
+        public static Type GetProxyBindingType(Type forType)
+        {
+            // Check for binding available
+            if (proxyBindings.TryGetValue(forType, out Type proxyType) == false)
+                throw new Exception("No proxy binding is available for interop type: " + forType);
+
+            return proxyType;
+        }
+
         public static ICLRProxy CreateProxyBindingInstance(AppDomain appDomain, Type forType, ICLRInstance forInstance)
         {
             // Check for binding available
