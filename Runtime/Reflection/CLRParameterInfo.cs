@@ -15,10 +15,14 @@ namespace dotnow.Reflection
         #endregion
 
         // Constructor
-        internal CLRParameterInfo(MethodBase method, Type parameterType)
+        internal CLRParameterInfo(MethodBase method, string name, int sequence, ParameterAttributes attributes, Type parameterType)
         {
             base.MemberImpl = method;
             base.ClassImpl = parameterType;
+
+            this.NameImpl = name;
+            this.PositionImpl = sequence - 1;
+            this.AttrsImpl = attributes;
         }
     }
 }

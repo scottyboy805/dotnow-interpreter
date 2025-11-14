@@ -2,6 +2,7 @@
 using dotnow.Runtime.CIL;
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -190,11 +191,26 @@ namespace dotnow.Reflection
             // Init parameters
             CLRParameterInfo[] parameters = new CLRParameterInfo[signature.ParameterTypes.Length];
 
+            // Get metadata parameters
+            Parameter[] metaParameters = definition.GetParameters()
+                .Select(p => metadataProvider.MetadataReader.GetParameter(p))
+                .ToArray();
+
             // Setup parameters
             for (int i = 0; i < parameters.Length; i++)
             {
+                // Get the parameter
+                Parameter parameter = metaParameters[i];
+
+                // Get name
+                string parameterName = metadataProvider.MetadataReader.GetString(parameter.Name);
+
                 // Create parameter
-                parameters[i] = new CLRParameterInfo(this, signature.ParameterTypes[i]);
+                parameters[i] = new CLRParameterInfo(this, 
+                    parameterName,
+                    parameter.SequenceNumber,
+                    parameter.Attributes, 
+                    signature.ParameterTypes[i]);
             }
 
             // Get parameters

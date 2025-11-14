@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Text;
 
 namespace dotnow.Reflection
@@ -175,7 +176,11 @@ namespace dotnow.Reflection
                 }
 
                 // Create parameter
-                parameters[i] = new CLRParameterInfo(this, parameterType);
+                parameters[i] = new CLRParameterInfo(this,
+                    baseParameters[i].Name,
+                    baseParameters[i].Position,
+                    baseParameters[i].Attributes,
+                    parameterType);
             }
 
             // Get parameters
@@ -211,7 +216,7 @@ namespace dotnow.Reflection
             }
 
             // Create return param
-            return new CLRParameterInfo(this, returnType);
+            return new CLRParameterInfo(this, "Return", 0, 0, returnType);
         }
         #endregion
     }

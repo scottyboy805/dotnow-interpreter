@@ -3,6 +3,7 @@ using dotnow.Runtime;
 using dotnow.Runtime.CIL;
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -41,7 +42,7 @@ namespace dotnow.Reflection
         public override ParameterInfo ReturnParameter => returnParameter.Value;
         public override MethodAttributes Attributes => definition.Attributes;
         public override ICustomAttributeProvider ReturnTypeCustomAttributes => throw new NotImplementedException();
-        public override Type ReflectedType => typeof(CLRMethodInfo);
+        public override Type ReflectedType => declaringType;
         public override RuntimeMethodHandle MethodHandle => throw new NotSupportedException();
         #endregion
 
@@ -205,11 +206,26 @@ namespace dotnow.Reflection
             // Init parameters
             CLRParameterInfo[] parameters = new CLRParameterInfo[signature.ParameterTypes.Length];
 
+            // Get metadata parameters
+            Parameter[] metaParameters = definition.GetParameters()
+                .Select(p => metadataProvider.MetadataReader.GetParameter(p))
+                .ToArray();
+
             // Setup parameters
-            for(int i = 0; i < parameters.Length; i++)
+            for (int i = 0; i < parameters.Length; i++)
             {
+                // Get the parameter
+                Parameter parameter = metaParameters[i];
+
+                // Get name
+                string parameterName = metadataProvider.MetadataReader.GetString(parameter.Name);
+
                 // Create parameter
-                parameters[i] = new CLRParameterInfo(this, signature.ParameterTypes[i]);
+                parameters[i] = new CLRParameterInfo(this,
+                    parameterName,
+                    parameter.SequenceNumber,
+                    parameter.Attributes,
+                    signature.ParameterTypes[i]);
             }
 
             // Get parameters
@@ -222,7 +238,7 @@ namespace dotnow.Reflection
             MethodSignature<Type> signature = this.signature.Value;
 
             // Create return param
-            return new CLRParameterInfo(this, signature.ReturnType);   
+            return new CLRParameterInfo(this, "Return", 0, 0, signature.ReturnType);   
         }
 
         private MetadataDebugInformation InitDebugInformation()

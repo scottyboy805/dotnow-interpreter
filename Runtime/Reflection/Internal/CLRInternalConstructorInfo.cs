@@ -38,7 +38,7 @@ namespace dotnow.Reflection.Internal
             this.name = name;
             this.declaringType = declaringType;
             this.parameters = parameterTypes
-                .Select(p => new CLRParameterInfo(this, p))
+                .Select((p, i) => new CLRParameterInfo(this, i.ToString(), i, 0, p))
                 .ToArray();
             this.attributes = attributes;
             this.directInternalInstance = directInternalInstance;
