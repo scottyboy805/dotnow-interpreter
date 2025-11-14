@@ -9,6 +9,8 @@ namespace dotnow.Interop
         // Private
         private static readonly Dictionary<Type, Type> proxyBindings = new();
         private static readonly Dictionary<MethodBase, DirectInstance> directInstanceBindings = new();
+        private static readonly Dictionary<FieldInfo, DirectAccess> directReadBindings = new();
+        private static readonly Dictionary<FieldInfo, DirectAccess> directWriteBindings = new();
         private static readonly Dictionary<MethodBase, DirectCall> directCallBindings = new();
         private static readonly Dictionary<MethodBase, DirectCallGeneric> directCallGenericBindings = new();
 
@@ -28,6 +30,16 @@ namespace dotnow.Interop
         public static bool HasDirectInstanceBinding(MethodBase method)
         {
             return directInstanceBindings.ContainsKey(method);
+        }
+
+        public static bool HasDirectReadBinding(FieldInfo field)
+        {
+            return directReadBindings.ContainsKey(field);
+        }
+
+        public static bool HasDirectWriteBinding(FieldInfo field)
+        {
+            return directWriteBindings.ContainsKey(field);
         }
 
         public static bool HasDirectCallBinding(MethodBase method)
@@ -59,6 +71,16 @@ namespace dotnow.Interop
         public static bool TryGetDirectInstanceBinding(MethodBase method, out DirectInstance call)
         {
             return directInstanceBindings.TryGetValue(method, out call);
+        }
+
+        public static bool TryGetDirectReadBinding(FieldInfo field, out DirectAccess access)
+        {
+            return directReadBindings.TryGetValue(field, out access);
+        }
+
+        public static bool TryGetDirectWriteBinding(FieldInfo field, out DirectAccess access)
+        {
+            return directWriteBindings.TryGetValue(field, out access);
         }
 
         public static bool TryGetDirectCallBinding(MethodBase method, out DirectCall call)
@@ -113,6 +135,9 @@ namespace dotnow.Interop
 
                 // Direct instance
                 InitializeDirectInstanceBindings(types);
+
+                // Direct access
+                InitializeDirectAccessBindings(types);
 
                 // Direct call
                 InitializeDirectCallBindings(types);
@@ -252,6 +277,74 @@ namespace dotnow.Interop
             }
         }
 
+        private static void InitializeDirectAccessBindings(IEnumerable<Type> types)
+        {
+            // Process all types
+            foreach (Type type in types)
+            {
+                // Get all methods
+                foreach (MethodInfo method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    // Check for attribute
+                    CLRFieldBindingAttribute attribute = method.GetCustomAttribute<CLRFieldBindingAttribute>(false);
+
+                    // Check for found
+                    if (attribute == null)
+                        continue;
+
+                    // Check static
+                    if (method.IsStatic == false)
+                    {
+                        ReportBindingError("CLR field binding '{0}' must be marked as 'static'", method);
+                        continue;
+                    }
+
+                    // Check return
+                    if (method.ReturnType != typeof(void))
+                    {
+                        ReportBindingError("CLR field binding '{0}' must have a return type of 'void'", method);
+                        continue;
+                    }
+
+                    // Check parameters
+                    ParameterInfo[] parameters = method.GetParameters();
+
+                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(StackContext))
+                    {
+                        ReportBindingError("CLR field binding '{0}' must have a single parameter of type '{1}'", method, typeof(StackContext).FullName);
+                        continue;
+                    }
+
+                    // Get the method token
+                    FieldInfo bindingField = ResolveField(attribute.ResolveFieldBinding);
+
+                    // Check for no token
+                    if (bindingField == null)
+                    {
+                        ReportBindingError("CLR field binding '{0}' could not resolve the target field '{1}.{2}'", method, attribute.DeclaringType, attribute.FieldName);
+                        continue;
+                    }
+
+                    // Get the bindings collection depending on the access type
+                    Dictionary<FieldInfo, DirectAccess> bindings = attribute.FieldAccess == CLRFieldAccess.Read
+                        ? directReadBindings : directWriteBindings;
+
+                    // Check for already added
+                    if (bindings.ContainsKey(bindingField) == true)
+                    {
+                        ReportBindingError("CLR field binding is already registered for the target field '{1}.{2}'", attribute.DeclaringType, attribute.FieldName);
+                        continue;
+                    }
+
+                    // Method binding is valid and can be registered
+                    DirectAccess bindingDelegate = (DirectAccess)method.CreateDelegate(typeof(DirectAccess));
+
+                    // Register binding
+                    bindings[bindingField] = bindingDelegate;
+                }
+            }
+        }
+
         private static void InitializeDirectCallBindings(IEnumerable<Type> types)
         {
             // Process all types
@@ -303,7 +396,7 @@ namespace dotnow.Interop
                     // Check for already added
                     if(directCallBindings.ContainsKey(bindingMethod) == true)
                     {
-                        ReportBindingError("CLR method binding is already registered for the target method '{1}.{2}1'", attribute.DeclaringType, attribute.MethodName);
+                        ReportBindingError("CLR method binding is already registered for the target method '{1}.{2}'", attribute.DeclaringType, attribute.MethodName);
                         continue;
                     }
 
@@ -367,7 +460,7 @@ namespace dotnow.Interop
                     // Check for already added
                     if (directCallBindings.ContainsKey(bindingMethod) == true)
                     {
-                        ReportBindingError("CLR method binding is already registered for the target method '{1}.{2}1'", attribute.DeclaringType, attribute.MethodName);
+                        ReportBindingError("CLR method binding is already registered for the target method '{1}.{2}'", attribute.DeclaringType, attribute.MethodName);
                         continue;
                     }
 
@@ -381,6 +474,20 @@ namespace dotnow.Interop
         }
         #endregion
 
+        private static FieldInfo ResolveField(Func<FieldInfo> resolveField)
+        {
+            try
+            {
+                // Resolve the method
+                return resolveField();
+            }
+            catch (Exception e)
+            {
+                ReportBindingError("Could not resolve field binding: " + e);
+                return null;
+            }
+        }
+
         private static MethodBase ResolveMethod(Func<MethodBase> resolveMethod)
         {
             try
@@ -390,7 +497,7 @@ namespace dotnow.Interop
             }
             catch(Exception e)
             {
-                ReportBindingError("Could not resolve binding: " + e);
+                ReportBindingError("Could not resolve method binding: " + e);
                 return null;
             }
         }

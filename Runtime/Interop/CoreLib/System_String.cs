@@ -5,6 +5,14 @@ namespace dotnow.Interop.CoreLib
     {
         // Methods
         [Preserve]
+        [CLRFieldBinding(typeof(string), nameof(string.Empty), CLRFieldAccess.Read)]
+        public static void Empty_Read(StackContext context)
+        {
+            // Push string empty
+            context.ReturnObject(string.Empty);
+        }
+
+        [Preserve]
         [CLRMethodBinding(typeof(string), "get_Length")]
         public static void GetLength_Override(StackContext context)
         {
