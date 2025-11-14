@@ -111,7 +111,7 @@ namespace UnityEngine
         //    cache.InvokeProxyMethod(11, nameof(OnGUI));
         //}
 
-        public static Component AddComponent(AppDomain domain, Type type, GameObject go)
+        public static object AddComponent(AppDomain domain, Type type, GameObject go)
         {
             if(type.IsCLRType() == false)
                 return go.AddComponent(type);
@@ -128,10 +128,10 @@ namespace UnityEngine
             ICLRProxy proxy = (ICLRProxy)go.AddComponent(proxyType);
 
             // Create the dotnow instance which owns this proxy
-            domain.CreateInstanceFromProxy(type, proxy);
+            ICLRInstance instance = domain.CreateInstanceFromProxy(type, proxy);
 
             // Get the component
-            return proxy as Component;
+            return instance;
         }
     }
 }
