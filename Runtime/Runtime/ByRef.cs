@@ -91,12 +91,12 @@ namespace dotnow.Runtime
             public void SetValueR8(double value) => ((double[])Array)[Index] = value;
         }
 
-        private readonly struct ByRefField : IByRef
+        private struct ByRefField : IByRef
         {
             // Public             
             public readonly AppDomain AppDomain;
             public readonly CILFieldInfo Field;
-            public readonly StackData Instance;
+            public StackData Instance;
 
             // Constructor
             public ByRefField(AppDomain appDomain, CILFieldInfo field, StackData instance)
@@ -142,7 +142,7 @@ namespace dotnow.Runtime
                 if((Field.Flags & CILFieldFlags.This) != 0)
                 {
                     // Read the instance field value
-                    RuntimeField.GetInstanceFieldDirect(AppDomain, Field, Instance, ref val);
+                    RuntimeField.GetInstanceFieldDirect(AppDomain, Field, ref Instance, ref val);
                 }
                 else
                 {

@@ -551,14 +551,14 @@ namespace dotnow.Runtime.CIL
                             CILFieldInfo field = loadContext.GetFieldHandle(fieldHandle);
 
                             // Pop the instance
-                            StackData instance = stack[--sp];
+                            ref StackData instance = ref stack[--sp];
 
                             // Check for null
                             if (instance.Ref == null)
                                 threadContext.Throw<NullReferenceException>();
 
                             // Load the field
-                            RuntimeField.GetInstanceFieldDirect(loadContext.AppDomain, field, instance, ref stack[sp]);
+                            RuntimeField.GetInstanceFieldDirect(loadContext.AppDomain, field, ref instance, ref stack[sp]);
                             sp++;
 
                             // Debug execution

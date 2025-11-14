@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Threading;
 
@@ -21,20 +22,37 @@ namespace dotnow.Interop
         private static readonly ThreadLocal<Dictionary<int, object[]>> parameterListCache = new (() => new ());
 
         // Methods
-        public static void GetFieldInterop(AppDomain appDomain, in CILFieldInfo field, in StackData instance, ref StackData value)
+        public static void GetFieldInterop(AppDomain appDomain, in CILFieldInfo field, ref StackData instance, ref StackData value)
         {
-            // Wrap the instance
-            object unwrappedInstance = null;
+            // Check for read access
+            if ((field.Flags & CILFieldFlags.DirectReadDelegate) != 0)
+            {
+                // Create spans for view of stack instance and return value
+                Span<StackData> stackArgs = MemoryMarshal.CreateSpan(ref instance, 1);
+                Span<StackData> stackReturn = MemoryMarshal.CreateSpan(ref value, 1);
 
-            // Unwrap the instance
-            StackData.Unwrap(field.DeclaringType, instance, ref unwrappedInstance);
+                // Create the stack context
+                StackContext directAccessContext = new StackContext(appDomain, stackArgs, stackReturn);
 
-            // Get the value
-            object unwrappedValue = field.Field.GetValue(unwrappedInstance);
+                // Call the delegate
+                Debug.LineFormat("[Marshal: Direct Read Access] Interop method binding: '{0}'", field.InteropAccess.Method);
+                ((DirectAccess)field.InteropAccess)(directAccessContext);
+            }
+            else
+            {
+                // Wrap the instance
+                object unwrappedInstance = null;
 
-            // Wrap the value - Important to clear the value here so we don't end up setting a by ref value indirect when the intention is to just get the field value as is.
-            value = default;
-            StackData.Wrap(field.FieldType, unwrappedValue, ref value);
+                // Unwrap the instance
+                StackData.Unwrap(field.DeclaringType, instance, ref unwrappedInstance);
+
+                // Get the value
+                object unwrappedValue = field.Field.GetValue(unwrappedInstance);
+
+                // Wrap the value - Important to clear the value here so we don't end up setting a by ref value indirect when the intention is to just get the field value as is.
+                value = default;
+                StackData.Wrap(field.FieldType, unwrappedValue, ref value);
+            }
         }
 
         public static void SetFieldInterop(AppDomain appDomain, in CILFieldInfo field, in StackData instance, ref StackData value)
@@ -68,12 +86,8 @@ namespace dotnow.Interop
                 // Create the stack context
                 StackContext directCallContext = new StackContext(appDomain, stackArgs, stackReturn);
 
-                // Check for debug
-#if DEBUG
-                Debug.LineFormat("[Marshal: Direct Instance] Interop method binding: '{0}'", ctor.InteropCall.Method);
-#endif
-
                 // Call the delegate
+                Debug.LineFormat("[Marshal: Direct Instance] Interop method binding: '{0}'", ctor.InteropCall.Method);
                 ((DirectInstance)ctor.InteropCall)(directCallContext, type.Type);
             }
             // Check for reflection call
@@ -148,12 +162,8 @@ namespace dotnow.Interop
                 // Create the stack context
                 StackContext directCallContext = new StackContext(appDomain, stackArgs, stackReturn);
 
-                // Check for debug
-#if DEBUG
-                Debug.LineFormat("[Marshal: Direct Call] Interop method binding: '{0}'", method.InteropCall.Method);
-#endif
-
                 // Call the delegate
+                Debug.LineFormat("[Marshal: Direct Call] Interop method binding: '{0}'", method.InteropCall.Method);
                 ((DirectCall)method.InteropCall)(directCallContext);
             }
             // Check for generic direct call
@@ -182,12 +192,8 @@ namespace dotnow.Interop
             // Check for void call
             else if ((method.Flags & CILMethodFlags.VoidCallDelegate) != 0)
             {
-                // Check for debug
-#if DEBUG
-                Debug.LineFormat("[Marshal: Void Call] Interop method: '{0}'", method.InteropCall.Method);
-#endif
-
                 // Invoke via delegate
+                Debug.LineFormat("[Marshal: Void Call] Interop method: '{0}'", method.InteropCall.Method);
                 ((VoidCall)method.InteropCall)();
             }
             // Check for reflection call

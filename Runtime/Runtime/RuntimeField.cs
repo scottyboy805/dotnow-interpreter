@@ -97,7 +97,7 @@ namespace dotnow.Runtime
             if ((fieldInfo.Flags & CILFieldFlags.This) != 0)
             {
                 // Set instance field
-                GetInstanceFieldDirect(appDomain, fieldInfo, inst, ref val);
+                GetInstanceFieldDirect(appDomain, fieldInfo, ref inst, ref val);
             }
             else
             {
@@ -193,7 +193,7 @@ namespace dotnow.Runtime
                 throw new NotSupportedException(fieldInfo.ToString());
         }
 
-        internal static void GetInstanceFieldDirect(AppDomain appDomain, in CILFieldInfo fieldInfo, in StackData instance, ref StackData value)
+        internal static void GetInstanceFieldDirect(AppDomain appDomain, in CILFieldInfo fieldInfo, ref StackData instance, ref StackData value)
         {
             // Get the type handle
             CILTypeInfo fieldTypeInfo = fieldInfo.FieldType;
@@ -202,7 +202,7 @@ namespace dotnow.Runtime
             if ((fieldInfo.Flags & CILFieldFlags.Interop) != 0)
             {
                 // Get interop field value
-                __marshal.GetFieldInterop(appDomain, fieldInfo, instance, ref value);
+                __marshal.GetFieldInterop(appDomain, fieldInfo, ref instance, ref value);
             }
             // Check for interpreted
             else if ((fieldInfo.Flags & CILFieldFlags.Interpreted) != 0)
@@ -254,7 +254,8 @@ namespace dotnow.Runtime
             if ((fieldInfo.Flags & CILFieldFlags.Interop) != 0)
             {
                 // Get interop field value
-                __marshal.GetFieldInterop(appDomain, fieldInfo, default, ref value);
+                StackData inst = default;
+                __marshal.GetFieldInterop(appDomain, fieldInfo, ref inst, ref value);
             }
             // Check for interpreted
             else if ((fieldInfo.Flags & CILFieldFlags.Interpreted) != 0)
