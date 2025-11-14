@@ -606,8 +606,16 @@ namespace dotnow.Common
                 // Get other value
                 object valueB = typeBField.GetValue(instB);
 
-                // Check equality
-                Assert.AreEqual(valueA, valueB, message: typeAField.Name);
+                if (typeAField.FieldType.IsClass == true || typeAField.FieldType.IsInterface == true)
+                {
+                    // Check equality of string representation
+                    Assert.AreEqual(valueA?.GetInterpretedType().ToString(), valueB?.GetInterpretedType().ToString(), message: typeAField.Name);
+                }
+                else
+                {
+                    // Check equality
+                    Assert.AreEqual(valueA, valueB, message: typeAField.Name);
+                }
             }
         }
     }

@@ -42,6 +42,8 @@ namespace dotnow.Runtime.CIL
             // Get program counter
             int pcMax = instructions.Length;
 
+            CILTypeInfo constrainedType = null;
+
             // Main execution loop
             while (pc < pcMax && threadContext.abort == false)
             {
@@ -67,8 +69,14 @@ namespace dotnow.Runtime.CIL
                         }
                     case ILOpCode.Constrained:
                         {
-                            // Read type token and we can just ignore it
-                            FetchDecode<int>(instructions, ref pc);
+                            // Get method token
+                            int token = FetchDecode<int>(instructions, ref pc);
+
+                            // Get handle
+                            EntityHandle fieldHandle = MetadataTokens.EntityHandle(token);
+
+                            // Load the method
+                            constrainedType = loadContext.GetTypeHandle(fieldHandle);
                             continue;
                         }
                     #endregion
@@ -3743,7 +3751,7 @@ namespace dotnow.Runtime.CIL
                             else if ((callMethod.Flags & CILMethodFlags.Interop) != 0)
                             {
                                 // Call interop method
-                                __marshal.InvokeMethodInterop(threadContext, loadContext.AppDomain, null, callMethod, spReturn, spCall);
+                                __marshal.InvokeMethodInterop(threadContext, loadContext.AppDomain, constrainedType, callMethod, spReturn, spCall);
                             }
                             else
                                 throw new NotSupportedException("Method cannot be executed: " + callMethod);
@@ -3762,6 +3770,8 @@ namespace dotnow.Runtime.CIL
                             // Pop the frame
                             threadContext.PopMethodFrame();
 
+                            // Clear constraint
+                            constrainedType = null;
                             break;
                         }
                     case ILOpCode.Ret:
@@ -3820,6 +3830,10 @@ namespace dotnow.Runtime.CIL
 
                             // Load the method
                             CILTypeInfo unboxType = loadContext.GetTypeHandle(boxHandle);
+
+                            // Check for null reference
+                            if (stack[sp - 1].Ref == null)
+                                threadContext.Throw<NullReferenceException>();
 
                             try
                             {

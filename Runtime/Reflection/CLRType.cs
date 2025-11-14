@@ -254,7 +254,7 @@ namespace dotnow.Reflection
 
         public override FieldInfo GetField(string name, BindingFlags bindingAttr)
         {
-            foreach (FieldInfo field in fields)
+            foreach (FieldInfo field in EnumerateFields(this, bindingAttr))
             {
                 // Check for matching field
                 if (MatchFieldNameAndAttributes(field, bindingAttr, name) == true)
@@ -655,6 +655,26 @@ namespace dotnow.Reflection
 
             // Compare names
             return string.Compare(member.Name, name, ignoreCase) == 0;
+        }
+
+        private static IEnumerable<FieldInfo> EnumerateFields(Type type, BindingFlags bindingAttr)
+        {
+            // Get declared fields
+            IEnumerable<FieldInfo> topLevelFields = (type is not CLRType clrType)
+                ? type.GetFields(bindingAttr)
+                : clrType.fields;
+
+            // Enumerate top level
+            foreach (FieldInfo field in topLevelFields)
+                yield return field;
+
+            // Get base fields
+            if((bindingAttr & BindingFlags.FlattenHierarchy) != 0 && type.BaseType != null)
+            {
+                // Get derived
+                foreach(FieldInfo derivedField in EnumerateFields(type.BaseType, bindingAttr))
+                    yield return derivedField;
+            }
         }
 
         private T[] BuildMemberArray<T>() where T : MemberInfo

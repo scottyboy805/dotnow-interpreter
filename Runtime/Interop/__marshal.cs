@@ -204,12 +204,8 @@ namespace dotnow.Interop
                 // Create the stack context
                 StackContext directCallGenericContext = new StackContext(appDomain, stackArgs, stackReturn);
 
-                // Check for debug
-#if DEBUG
-                Debug.LineFormat("[Marshal: Direct Call Generic] Interop method binding: '{0}'", method.InteropCall.Method);
-#endif
-
                 // Call the delegate
+                Debug.LineFormat("[Marshal: Direct Call Generic] Interop method binding: '{0}'", method.InteropCall.Method);
                 ((DirectCallGeneric)method.InteropCall)(directCallGenericContext, genericArguments);
             }
             // Check for void call
