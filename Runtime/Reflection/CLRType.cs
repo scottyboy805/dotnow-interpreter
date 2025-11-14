@@ -323,7 +323,13 @@ namespace dotnow.Reflection
 
         public override Type GetNestedType(string name, BindingFlags bindingAttr)
         {
-            throw new NotImplementedException();
+            foreach (Type nested in EnumerateNestedTypes(this, bindingAttr))
+            {
+                // Check for matching field
+                if (MatchTypeNameAndAttributes(nested, bindingAttr, name) == true)
+                    return nested;
+            }
+            return null;
         }
 
         public override Type[] GetNestedTypes(BindingFlags bindingAttr)
@@ -657,26 +663,6 @@ namespace dotnow.Reflection
             return string.Compare(member.Name, name, ignoreCase) == 0;
         }
 
-        private static IEnumerable<FieldInfo> EnumerateFields(Type type, BindingFlags bindingAttr)
-        {
-            // Get declared fields
-            IEnumerable<FieldInfo> topLevelFields = (type is not CLRType clrType)
-                ? type.GetFields(bindingAttr)
-                : clrType.fields;
-
-            // Enumerate top level
-            foreach (FieldInfo field in topLevelFields)
-                yield return field;
-
-            // Get base fields
-            if((bindingAttr & BindingFlags.FlattenHierarchy) != 0 && type.BaseType != null)
-            {
-                // Get derived
-                foreach(FieldInfo derivedField in EnumerateFields(type.BaseType, bindingAttr))
-                    yield return derivedField;
-            }
-        }
-
         private T[] BuildMemberArray<T>() where T : MemberInfo
         {
             // Allocate new array
@@ -810,6 +796,46 @@ namespace dotnow.Reflection
             // Get this fields
             foreach (CLRFieldInfo field in type.fields)
                 yield return field;
+        }
+
+        private static IEnumerable<FieldInfo> EnumerateFields(Type type, BindingFlags bindingAttr)
+        {
+            // Get declared fields
+            IEnumerable<FieldInfo> topLevelFields = (type is not CLRType clrType)
+                ? type.GetFields(bindingAttr)
+                : clrType.fields;
+
+            // Enumerate top level
+            foreach (FieldInfo field in topLevelFields)
+                yield return field;
+
+            // Get base fields
+            if ((bindingAttr & BindingFlags.FlattenHierarchy) != 0 && type.BaseType != null)
+            {
+                // Get derived
+                foreach (FieldInfo derivedField in EnumerateFields(type.BaseType, bindingAttr))
+                    yield return derivedField;
+            }
+        }
+
+        private static IEnumerable<Type> EnumerateNestedTypes(Type type, BindingFlags bindingAttr)
+        {
+            // Get declared fields
+            IEnumerable<Type> topLevelNestedTypes = (type is not CLRType clrType)
+                ? type.GetNestedTypes(bindingAttr)
+                : clrType.nestedTypes;
+
+            // Enumerate top level
+            foreach (Type nestedType in topLevelNestedTypes)
+                yield return nestedType;
+
+            // Get base fields
+            if ((bindingAttr & BindingFlags.FlattenHierarchy) != 0 && type.BaseType != null)
+            {
+                // Get derived
+                foreach (Type derivedNestedType in EnumerateNestedTypes(type.BaseType, bindingAttr))
+                    yield return derivedNestedType;
+            }
         }
         #endregion
     }

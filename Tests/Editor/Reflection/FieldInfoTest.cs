@@ -141,12 +141,14 @@ namespace dotnow.Reflection
         [Test]
         public void TestFieldGetValue()
         {
+            AppDomain domain = new();
+
             // Test instance field
-            Type actualType = TestUtils.LoadTestType(nameof(TestFieldInfo));
-            object actualInstance = Activator.CreateInstance(actualType);
+            Type actualType = TestUtils.LoadTestType(nameof(TestFieldInfo), domain);
+            object actualInstance = domain.CreateInstance(actualType);
             object expectedInstance = new TestFieldInfo();
 
-            System.Reflection.FieldInfo actualField = GetActualField(nameof(TestFieldInfo.publicInstanceInt));
+            System.Reflection.FieldInfo actualField = actualType.GetField(nameof(TestFieldInfo.publicInstanceInt));
             System.Reflection.FieldInfo expectedField = typeof(TestFieldInfo).GetField(nameof(TestFieldInfo.publicInstanceInt));
 
             object expected = expectedField.GetValue(expectedInstance);
@@ -158,12 +160,14 @@ namespace dotnow.Reflection
         [Test]
         public void TestFieldSetValue()
         {
+            AppDomain domain = new();
+
             // Test instance field
-            Type actualType = TestUtils.LoadTestType(nameof(TestFieldInfo));
-            object actualInstance = Activator.CreateInstance(actualType);
+            Type actualType = TestUtils.LoadTestType(nameof(TestFieldInfo), domain);
+            object actualInstance = domain.CreateInstance(actualType);
             object expectedInstance = new TestFieldInfo();
 
-            System.Reflection.FieldInfo actualField = GetActualField(nameof(TestFieldInfo.publicInstanceInt));
+            System.Reflection.FieldInfo actualField = actualType.GetField(nameof(TestFieldInfo.publicInstanceInt));
             System.Reflection.FieldInfo expectedField = typeof(TestFieldInfo).GetField(nameof(TestFieldInfo.publicInstanceInt));
 
             int testValue = 12345;
@@ -326,7 +330,7 @@ namespace dotnow.Reflection
         public void TestInheritedFields()
         {
             // Test fields from base class - using nested types
-            Type actualType = TestUtils.LoadTestType($"{nameof(TestFieldInfo)}+DerivedFieldTest");
+            Type actualType = TestUtils.LoadTestType($"{nameof(TestFieldInfo)}").GetNestedType("DerivedFieldTest", BindingFlags.NonPublic);
             Type expectedType = typeof(TestFieldInfo.DerivedFieldTest);
 
             // Test accessing base field through derived type
@@ -356,7 +360,7 @@ namespace dotnow.Reflection
         public void TestStructFields()
         {
             // Test struct type fields - using nested type
-            Type actualStructType = TestUtils.LoadTestType($"{nameof(TestFieldInfo)}+TestStruct");
+            Type actualStructType = TestUtils.LoadTestType($"{nameof(TestFieldInfo)}").GetNestedType("TestStruct", BindingFlags.NonPublic);
             Type expectedStructType = typeof(TestFieldInfo.TestStruct);
 
             System.Reflection.FieldInfo actualStructField = actualStructType.GetField("structField");
@@ -405,7 +409,7 @@ namespace dotnow.Reflection
         public void TestEnumFields()
         {
             // Test enum type - using nested enum
-            Type actualEnumType = TestUtils.LoadTestType($"{nameof(TestFieldInfo)}+TestEnum");
+            Type actualEnumType = TestUtils.LoadTestType($"{nameof(TestFieldInfo)}").GetNestedType("TestEnum", BindingFlags.NonPublic);
             Type expectedEnumType = typeof(TestFieldInfo.TestEnum);
 
             // Test enum value fields

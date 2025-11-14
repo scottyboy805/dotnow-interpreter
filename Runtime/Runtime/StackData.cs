@@ -56,6 +56,11 @@ namespace dotnow.Runtime
         /// Represents an address to a by ref element, via a <see cref="IByRef"/>.
         /// </summary>
         ByRef,
+
+
+        //ByRefStack,
+        //ByRefElement,
+        //ByRefField,
     }
 
     [StructLayout(LayoutKind.Explicit)]
@@ -80,9 +85,12 @@ namespace dotnow.Runtime
         [FieldOffset(16)]
         public object Ref;      // 24 bytes        
 
+        [FieldOffset(24)]
+        public long Register;   // 32 bytes
+
         // Properties
-        public int Address => Ref != null ? 1 : 0;
-        public bool IsByRef => Type == StackType.ByRef && Ref is IByRef;
+        public readonly int Address => Ref != null ? 1 : 0;
+        public readonly bool IsByRef => /*Type == StackType.ByRefStack || Type == StackType.ByRefElement || Type == StackType.ByRefField;*/ Type == StackType.ByRef && Ref is IByRef;
 
         // Methods
         public override string ToString()
