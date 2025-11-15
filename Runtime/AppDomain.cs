@@ -27,6 +27,15 @@ namespace dotnow
     public delegate void DirectCallGeneric(StackContext stack, Type[] genericTypes);    // Used to call interop generic methods directly
     public delegate void DirectAccess(StackContext stack);                              // Used to access interop fields directly
 
+    [Flags]
+    public enum AppDomainOptions : uint
+    {
+        DisableDirectInstanceBindings = 1 << 0,
+        DisableDirectCallBindings = 1 << 1,
+        DisableDirectReadAccessBindings = 1 << 2,
+        DisableDirectWriteAccessBindings = 1 << 3,
+    }
+
     public sealed class AppDomain : IDisposable
     {
         // Internal
@@ -45,6 +54,8 @@ namespace dotnow
         private bool disposed = false;
 
         // Public
+        public readonly AppDomainOptions Options = 0;
+
 #if !UNITY_EDITOR && ENABLE_IL2CPP
         public const bool IsJITAvailable = false;
 #else
@@ -62,8 +73,10 @@ namespace dotnow
             }
         }
 
-        public AppDomain()
+        public AppDomain(AppDomainOptions options = 0)
         {
+            this.Options = options;
+
             // Initialize built in types
             ResolveInteropTypeHandle(typeof(void));
             ResolveInteropTypeHandle(typeof(sbyte));

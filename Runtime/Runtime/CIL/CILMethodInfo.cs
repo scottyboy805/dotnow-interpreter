@@ -110,7 +110,7 @@ namespace dotnow.Runtime.CIL
 
             this.Method = method;
             this.DeclaringType = method.DeclaringType.GetTypeInfo(domain);
-            this.Flags = GetFlags(method, returnType, parameters, out this.InteropCall);
+            this.Flags = GetFlags(domain, method, returnType, parameters, out this.InteropCall);
             this.ReturnType = returnType != null ? returnType.GetTypeInfo(domain) : typeof(void).GetTypeInfo(domain);
             this.ParameterTypes = parameters.Select(p => p.ParameterType.GetTypeInfo(domain)).ToArray();
             this.ParameterFlags = parameters.Select(p => p.ParameterType.IsByRef ? CILParameterFlags.ByRef : 0).ToArray();
@@ -136,7 +136,7 @@ namespace dotnow.Runtime.CIL
             return $"{Method} = {Flags}";
         }
 
-        private static CILMethodFlags GetFlags(MethodBase method, Type returnType, ParameterInfo[] parameters, out Delegate interopCall)
+        private static CILMethodFlags GetFlags(AppDomain domain, MethodBase method, Type returnType, ParameterInfo[] parameters, out Delegate interopCall)
         {
             MethodInfo methodInfo = method as MethodInfo;
 
@@ -201,8 +201,8 @@ namespace dotnow.Runtime.CIL
                 if (isCtor == true)
                 {
                     // Check for direct instance
-                    DirectInstance directCall;
-                    if (__bindings.TryGetDirectInstanceBinding(bindingMethod, out directCall) == true || method is CLRInternalConstructorInfo)
+                    DirectInstance directCall = null;
+                    if ((domain.Options & AppDomainOptions.DisableDirectInstanceBindings) == 0 && __bindings.TryGetDirectInstanceBinding(bindingMethod, out directCall) == true || method is CLRInternalConstructorInfo)
                     {
                         flags |= CILMethodFlags.DirectInstanceDelegate;
                         interopCall = directCall;
@@ -221,8 +221,8 @@ namespace dotnow.Runtime.CIL
                 else
                 {
                     // Check direct call
-                    DirectCall directCall;
-                    if (__bindings.TryGetDirectCallBinding(bindingMethod, out directCall) == true || method is CLRInternalMethodInfo)
+                    DirectCall directCall = null;
+                    if ((domain.Options & AppDomainOptions.DisableDirectCallBindings) == 0 && __bindings.TryGetDirectCallBinding(bindingMethod, out directCall) == true || method is CLRInternalMethodInfo)
                     {
                         flags |= CILMethodFlags.DirectCallDelegate;
                         interopCall = directCall;
@@ -239,8 +239,8 @@ namespace dotnow.Runtime.CIL
                     }
 
                     // Check generic direct call
-                    DirectCallGeneric directCallGeneric;
-                    if (__bindings.TryGetDirectCallGenericBinding(bindingMethod, out directCallGeneric) == true || method is CLRInternalMethodInfo)
+                    DirectCallGeneric directCallGeneric = null;
+                    if ((domain.Options & AppDomainOptions.DisableDirectInstanceBindings) == 0 && __bindings.TryGetDirectCallGenericBinding(bindingMethod, out directCallGeneric) == true || method is CLRInternalMethodInfo)
                     {
                         flags |= CILMethodFlags.DirectCallGenericDelegate;
                         interopCall = directCallGeneric;
