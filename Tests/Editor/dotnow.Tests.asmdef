@@ -3,7 +3,9 @@
     "rootNamespace": "",
     "references": [
         "GUID:f656afbb727c4e8418169dff952bc121",
-        "GUID:8a4369281f9f4814ba6b6c0822806f38"
+        "GUID:8a4369281f9f4814ba6b6c0822806f38",
+        "Unity.PerformanceTesting",
+        "Unity.PerformanceTesting.Editor"
     ],
     "includePlatforms": [
         "Editor"
@@ -19,6 +21,11 @@
             "name": "com.unity.test-framework",
             "expression": "",
             "define": "DOTNOW_ENABLE_TESTS"
+        },
+        {
+            "name": "com.unity.test-framework.performance",
+            "expression": "",
+            "define": "DOTNOW_ENABLE_PERFORMANCE_TESTS"
         }
     ],
     "noEngineReferences": false
